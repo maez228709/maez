@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENGRAVIS · Gabarra 27m · TAERA Astillero</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dark:#080d1a;--dark2:#0d1525;--dark3:#131f35;
+  --teal:#1D9E75;--teal2:#5DCAA5;--teal3:#E1F5EE;
+  --text:#e8edf5;--text2:#8a9ab5;--text3:#4a5a75;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --card:#0f1b2e;--card2:#152235;
+  --warn:#BA7517;--warn2:#FAEEDA;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* HEADER */
+header{background:var(--dark2);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.15em;color:var(--teal2);}
+.logo span{color:var(--text2);font-size:13px;font-family:'DM Sans',sans-serif;letter-spacing:.05em;margin-left:12px;font-weight:300;}
+.lang-toggle{display:flex;gap:4px;}
+.lang-btn{background:transparent;border:.5px solid var(--border2);color:var(--text2);padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.lang-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+.taera-tag{font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;}
+
+/* HERO */
+.hero{background:var(--dark2);border-bottom:1px solid var(--border);padding:2rem 2rem 1.5rem;}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;}
+.hero-tag{display:inline-block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal2);border:.5px solid var(--teal);padding:3px 10px;border-radius:3px;margin-bottom:.5rem;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:1;color:#fff;letter-spacing:.02em;}
+.hero-sub{font-size:12px;color:var(--text2);font-weight:300;margin-top:4px;}
+.credit{text-align:right;font-size:10px;color:var(--text3);line-height:1.7;}
+.credit strong{color:var(--text2);font-weight:500;display:block;font-size:11px;}
+.dims{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;}
+.dim{background:var(--dark3);border:.5px solid var(--border);border-radius:6px;padding:.6rem .5rem;text-align:center;}
+.dv{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--teal);line-height:1;}
+.du{font-size:9px;color:var(--text2);}
+.dl{font-size:9px;color:var(--text3);margin-top:1px;}
+
+/* LAYOUT */
+.main{display:grid;grid-template-columns:1fr 380px;gap:0;min-height:calc(100vh - 56px - 120px);}
+
+/* VIEWER */
+.viewer-col{border-right:1px solid var(--border);}
+#vwrap{width:100%;height:360px;background:var(--dark2);position:relative;overflow:hidden;}
+.vbadge{position:absolute;top:10px;left:12px;font-size:10px;color:var(--teal2);background:rgba(0,0,0,0.6);padding:3px 8px;border-radius:3px;z-index:2;}
+.vhint{position:absolute;bottom:10px;right:12px;font-size:9px;color:rgba(255,255,255,0.2);z-index:2;}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--dark2);}
+.tab{padding:.6rem 1.1rem;font-size:11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.tab:hover{color:var(--text2);}
+.tab.active{color:var(--teal2);border-bottom-color:var(--teal);}
+.tab-content{display:none;padding:1rem 1.25rem;}
+.tab-content.active{display:block;}
+
+/* SWBS GROUPS */
+.swbs-group{margin-bottom:.75rem;border:.5px solid var(--border);border-radius:8px;overflow:hidden;}
+.swbs-group.included{border-color:rgba(29,158,117,0.4);}
+.swbs-head{display:flex;align-items:center;gap:8px;padding:.6rem .9rem;cursor:pointer;background:var(--card);}
+.swbs-head:hover{background:var(--card2);}
+.swbs-code{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--teal);min-width:40px;}
+.swbs-name{flex:1;font-size:12px;font-weight:500;}
+.swbs-total{font-size:12px;font-variant-numeric:tabular-nums;color:var(--teal2);min-width:80px;text-align:right;}
+.swbs-total.off{color:var(--text3);text-decoration:line-through;}
+.swbs-chk{width:16px;height:16px;border:.5px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.swbs-chk.on{background:var(--teal);border-color:var(--teal);}
+.swbs-arr{font-size:9px;color:var(--text3);}
+.swbs-body{display:none;border-top:.5px solid var(--border);padding:.75rem 1rem;background:rgba(0,0,0,0.2);}
+.swbs-body.open{display:block;}
+
+/* LINES */
+.line{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:.5px solid var(--border);font-size:11px;}
+.line:last-child{border-bottom:none;}
+.ll{color:var(--text2);}
+.ln{font-size:9px;color:var(--text3);margin-top:1px;}
+.lv{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:8px;color:var(--text);}
+.lv.acc{color:var(--teal2);}
+
+/* PARAM ROWS */
+.param-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:.5px solid var(--border);font-size:11px;}
+.param-row:last-child{border-bottom:none;}
+.param-lbl{color:var(--text2);flex:1;}
+.param-input{background:rgba(255,255,255,0.05);border:.5px solid var(--border2);border-radius:4px;color:var(--text);padding:3px 8px;font-size:11px;font-family:'DM Sans',sans-serif;width:90px;text-align:right;}
+.param-input:focus{outline:none;border-color:var(--teal);}
+.param-unit{font-size:10px;color:var(--text3);min-width:30px;}
+
+/* COMPLEXITY */
+.complexity-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;}
+.cx-card{background:var(--dark3);border:.5px solid var(--border);border-radius:6px;padding:.5rem .7rem;}
+.cx-lbl{font-size:9px;color:var(--text3);margin-bottom:3px;}
+.cx-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--teal);}
+
+/* SLIDER ROW */
+.sl-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:.5px solid var(--border);}
+.sl-lbl{font-size:11px;color:var(--text2);flex:1;}
+.sl-pct{font-size:11px;font-weight:500;color:var(--teal2);min-width:32px;text-align:right;}
+.sl-usd{font-size:11px;color:var(--text3);min-width:65px;text-align:right;}
+input[type=range]{accent-color:var(--teal);flex:1;}
+
+/* RIGHT PANEL */
+.right-col{background:var(--dark2);}
+.panel-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);}
+.sticky-total{padding:1rem;border-bottom:1px solid var(--border);}
+.total-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+.tc{background:var(--dark3);border-radius:6px;padding:.5rem .6rem;}
+.tc-lbl{font-size:9px;color:var(--text3);margin-bottom:1px;}
+.tc-val{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--teal);}
+.grand{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:.5px solid var(--border);}
+.grand-lbl{font-size:12px;font-weight:500;}
+.grand-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--teal2);}
+
+/* SUMMARY TABLE */
+.sum-table{width:100%;border-collapse:collapse;font-size:10px;}
+.sum-table th{text-align:left;color:var(--text3);font-weight:400;padding:4px 6px;border-bottom:.5px solid var(--border);font-size:9px;text-transform:uppercase;letter-spacing:.08em;}
+.sum-table td{padding:5px 6px;border-bottom:.5px solid var(--border);color:var(--text2);}
+.sum-table td.acc{color:var(--teal2);font-weight:500;}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table tr.total-row td{color:var(--text);font-weight:500;border-top:.5px solid var(--border2);}
+
+/* PAINT TABLE */
+.paint-zone{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+.pz{border-radius:6px;padding:.5rem .7rem;font-size:10px;}
+.pz.ov{background:rgba(24,95,165,0.15);border:.5px solid rgba(24,95,165,0.3);}
+.pz.om{background:rgba(59,109,17,0.15);border:.5px solid rgba(59,109,17,0.3);}
+.pz-title{font-size:9px;font-weight:500;margin-bottom:3px;}
+.pz.ov .pz-title{color:#85B7EB;}
+.pz.om .pz-title{color:#97C459;}
+.pz-detail{color:var(--text3);line-height:1.6;}
+
+/* BADGE */
+.badge{display:inline-block;font-size:8px;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;}
+.badge-fao{background:rgba(29,158,117,0.2);color:var(--teal2);}
+.badge-ref{background:rgba(186,117,23,0.2);color:var(--warn);}
+
+/* DOWNLOAD BTN */
+.dl-btn{width:100%;background:var(--teal);border:none;color:#fff;padding:.7rem;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.1em;cursor:pointer;transition:background .15s;}
+.dl-btn:hover{background:#0F6E56;}
+
+/* SECTION LABEL */
+.sec{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.08em;color:var(--text3);margin:1rem 0 .4rem;padding-bottom:3px;border-bottom:.5px solid var(--border);}
+
+/* REF BOX */
+.ref{font-size:9px;color:var(--text3);padding:.4rem .6rem;background:rgba(0,0,0,0.3);border-radius:4px;line-height:1.6;margin-top:6px;}
+
+/* FOOTER */
+footer{background:var(--dark2);border-top:1px solid var(--border);padding:.75rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+.foot-logo{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.12em;color:var(--text2);}
+.foot-logo span{color:var(--teal);}
+.foot-note{font-size:9px;color:var(--text3);}
+
+@media(max-width:900px){
+  .main{grid-template-columns:1fr;}
+  .dims{grid-template-columns:repeat(3,1fr);}
+  .hero-top{flex-direction:column;gap:.75rem;}
+  .credit{text-align:left;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="logo">ENGRAVIS <span>· HDG Platform</span></div>
+    <div class="taera-tag" id="taera-tag">TAERA Astillero · Piloto</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-top">
+    <div>
+      <div class="hero-tag" id="h-tag">TAERA Astillero · Cotización Técnica 2025</div>
+      <div class="hero-title" id="h-title">Gabarra de Carga Seca 27 m</div>
+      <div class="hero-sub" id="h-sub">Río / zona protegida · Estructura SWBS · Referencia FAO FTP 239</div>
+    </div>
+    <div class="credit">
+      <strong id="c-dev">Desarrollado por:</strong>
+      Ing. Miguel Ángel Engracia Zambrano<br>
+      <span style="font-style:italic;font-size:9px;">M.Sc. Ingeniería Naval · ESPOL</span><br>
+      <span style="color:var(--teal2);font-size:9px;">mengracia@sdcecuador.com</span><br>
+      <span style="font-size:8px;margin-top:2px;display:block;" id="c-pilot">Piloto ENGRAVIS/HDG · SDC Ecuador</span>
+    </div>
+  </div>
+  <div class="dims">
+    <div class="dim"><div class="dv">27.0</div><div class="du">m</div><div class="dl" id="d1">Eslora</div></div>
+    <div class="dim"><div class="dv">6.5</div><div class="du">m</div><div class="dl" id="d2">Manga</div></div>
+    <div class="dim"><div class="dv">1.5</div><div class="du">m</div><div class="dl" id="d3">Puntal</div></div>
+    <div class="dim"><div class="dv">0.8</div><div class="du">m</div><div class="dl" id="d4">Calado</div></div>
+    <div class="dim"><div class="dv">263</div><div class="du">CUNO</div><div class="dl">27×6.5×1.5</div></div>
+    <div class="dim"><div class="dv">7,488</div><div class="du">HH</div><div class="dl" id="d5">Disponibles</div></div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- LEFT COL -->
+  <div class="viewer-col">
+    <div id="vwrap">
+      <div class="vbadge" id="vbadge">Cargando modelo 3D...</div>
+      <div class="vhint" id="vhint">Arrastrar · Scroll zoom</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('t-swbs')" id="tab-swbs" data-es="Grupos SWBS" data-en="SWBS Groups">Grupos SWBS</div>
+      <div class="tab" onclick="showTab('t-params')" id="tab-params" data-es="Parámetros" data-en="Parameters">Parámetros</div>
+      <div class="tab" onclick="showTab('t-pintura')" id="tab-pintura" data-es="Pintura" data-en="Painting">Pintura</div>
+      <div class="tab" onclick="showTab('t-adicionales')" id="tab-adicionales" data-es="Adicionales" data-en="Additional">Adicionales</div>
+    </div>
+
+    <!-- TAB: SWBS -->
+    <div class="tab-content active" id="t-swbs">
+      <div id="swbs-container"></div>
+    </div>
+
+    <!-- TAB: PARAMS -->
+    <div class="tab-content" id="t-params">
+      <div class="sec" id="p-sec1">Características fijas del modelo</div>
+      <div class="line"><div class="ll" id="p-sep">Separación entre mamparos</div><div class="lv">3 espacios / 4 mamparos transv.</div></div>
+      <div class="line"><div class="ll" id="p-bod">Número de bodegas</div><div class="lv">3 independientes</div></div>
+      <div class="line"><div class="ll" id="p-bit">Bitas de amarre</div><div class="lv">6 unidades</div></div>
+      <div class="line"><div class="ll" id="p-esc">Escotillas de cubierta</div><div class="lv">3 escotillas con tapa</div></div>
+      <div class="line"><div class="ll" id="p-zona">Zona de operación</div><div class="lv" id="p-zona-v">Río / zona protegida</div></div>
+
+      <div class="sec" style="margin-top:1rem;" id="p-sec2">Parámetros editables</div>
+      <div class="param-row">
+        <div class="param-lbl" id="p-espfondo">Espesor fondo (mm)</div>
+        <input class="param-input" type="number" value="12" id="ep-fondo" onchange="recalc()">
+        <div class="param-unit">mm</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="p-espcostado">Espesor costados (mm)</div>
+        <input class="param-input" type="number" value="8" id="ep-costado" onchange="recalc()">
+        <div class="param-unit">mm</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="p-espcubierta">Espesor cubierta (mm)</div>
+        <input class="param-input" type="number" value="6" id="ep-cubierta" onchange="recalc()">
+        <div class="param-unit">mm</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="p-densidad">Densidad acero (kg/m³)</div>
+        <input class="param-input" type="number" value="7850" id="ep-dens" onchange="recalc()">
+        <div class="param-unit">kg/m³</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="p-hoficial">Tarifa oficial ($/h)</div>
+        <input class="param-input" type="number" value="8" id="ep-oficial" onchange="recalc()">
+        <div class="param-unit">$/h</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="p-hasistente">Tarifa asistente ($/h)</div>
+        <input class="param-input" type="number" value="5" id="ep-asistente" onchange="recalc()">
+        <div class="param-unit">$/h</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="p-meses">Meses construcción</div>
+        <input class="param-input" type="number" value="6" id="ep-meses" onchange="recalc()">
+        <div class="param-unit">meses</div>
+      </div>
+
+      <div class="sec" style="margin-top:1rem;" id="p-sec3">Áreas y volúmenes calculados</div>
+      <div class="line"><div class="ll">Área fondo</div><div class="lv acc" id="calc-afondo">175.5 m²</div></div>
+      <div class="line"><div class="ll">Área costados</div><div class="lv acc" id="calc-acostado">81.0 m²</div></div>
+      <div class="line"><div class="ll">Área cubierta</div><div class="lv acc" id="calc-acubierta">175.5 m²</div></div>
+      <div class="line"><div class="ll">Área mamparos</div><div class="lv acc" id="calc-amamp">58.5 m²</div></div>
+      <div class="line"><div class="ll">Área mojada (obra viva)</div><div class="lv acc" id="calc-aov">105.0 m²</div></div>
+      <div class="line"><div class="ll" id="p-vtotal">Volumen desplazado</div><div class="lv acc" id="calc-vol">140.4 m³</div></div>
+      <div class="line"><div class="ll" id="p-peso">Peso acero estimado</div><div class="lv acc" id="calc-peso">37.2 TM</div></div>
+    </div>
+
+    <!-- TAB: PINTURA -->
+    <div class="tab-content" id="t-pintura">
+      <div class="sec" id="pin-sec1">Separación obra viva / obra muerta</div>
+      <div class="paint-zone">
+        <div class="pz ov">
+          <div class="pz-title" id="pin-ov">Obra viva (bajo calado 0.8m)</div>
+          <div class="pz-detail">~105 m² · 4 capas<br>Antifouling incluido</div>
+        </div>
+        <div class="pz om">
+          <div class="pz-title" id="pin-om">Obra muerta (sobre calado)</div>
+          <div class="pz-detail">~310 m² · 3 capas<br>Acabado poliuretano</div>
+        </div>
+      </div>
+      <table class="sum-table" style="margin-bottom:.75rem;">
+        <tr><th id="pin-th1">Zona</th><th>C1</th><th>C2</th><th>C3</th><th>C4</th><th id="pin-th2">$/m²</th></tr>
+        <tr><td style="color:#85B7EB;" id="pin-ov2">Obra viva</td><td>Shop primer</td><td>Epoxi coal tar ×2</td><td>Sealer AF</td><td>Antifouling</td><td class="acc">$30</td></tr>
+        <tr><td style="color:#97C459;" id="pin-om2">Obra muerta</td><td>Shop primer</td><td>Epoxi</td><td>Poliuretano</td><td>—</td><td class="acc">$22</td></tr>
+      </table>
+
+      <div class="sec" id="pin-sec2">Parámetros de pintura</div>
+      <div class="param-row">
+        <div class="param-lbl" id="pin-arenado">Arenado Sa 2.5 ($/m²)</div>
+        <input class="param-input" type="number" value="12" id="pp-arenado" onchange="recalc()">
+        <div class="param-unit">$/m²</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="pin-matov">Material obra viva ($/m²)</div>
+        <input class="param-input" type="number" value="30" id="pp-matov" onchange="recalc()">
+        <div class="param-unit">$/m²</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="pin-matom">Material obra muerta ($/m²)</div>
+        <input class="param-input" type="number" value="22" id="pp-matom" onchange="recalc()">
+        <div class="param-unit">$/m²</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="pin-mopin">MO aplicación ($/m²)</div>
+        <input class="param-input" type="number" value="15" id="pp-mo" onchange="recalc()">
+        <div class="param-unit">$/m²</div>
+      </div>
+      <div class="ref" id="pin-ref">FAO FTP239 Tabla 2 — sistema dos componentes (obra viva). Obra muerta: criterio técnico SDC Ecuador (poliuretano zona río). El FAO no distingue explícitamente obra viva/muerta en gabarras fluviales.</div>
+    </div>
+
+    <!-- TAB: ADICIONALES -->
+    <div class="tab-content" id="t-adicionales">
+      <div class="sec" id="ad-sec1">Adicionales y consumibles <span class="badge badge-fao">FAO §4</span></div>
+      <div class="param-row">
+        <div class="param-lbl" id="ad-cons">Consumibles soldadura (% acero)</div>
+        <input class="param-input" type="number" value="15" id="ap-cons" onchange="recalc()">
+        <div class="param-unit">%</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="ad-desp">Desperdicio planchas (%)</div>
+        <input class="param-input" type="number" value="10" id="ap-desp" onchange="recalc()">
+        <div class="param-unit">%</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="ad-log">Logística y transporte ($)</div>
+        <input class="param-input" type="number" value="3500" id="ap-log" onchange="recalc()">
+        <div class="param-unit">USD</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="ad-insp">Inspecciones / RNA ($)</div>
+        <input class="param-input" type="number" value="8500" id="ap-insp" onchange="recalc()">
+        <div class="param-unit">USD</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="ad-perm">Permisos y legislativo ($)</div>
+        <input class="param-input" type="number" value="2200" id="ap-perm" onchange="recalc()">
+        <div class="param-unit">USD</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="ad-bot">Botadura y pruebas ($)</div>
+        <input class="param-input" type="number" value="3500" id="ap-bot" onchange="recalc()">
+        <div class="param-unit">USD</div>
+      </div>
+      <div class="param-row">
+        <div class="param-lbl" id="ad-cont">Contingencia (%)</div>
+        <input class="param-input" type="number" value="8" id="ap-cont" onchange="recalc()">
+        <div class="param-unit">%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COL -->
+  <div class="right-col">
+    <div class="panel-header" id="rp-header">Resumen de cotización</div>
+    <div class="sticky-total">
+      <div class="total-grid">
+        <div class="tc"><div class="tc-lbl" id="rt-costo">Costo directo</div><div class="tc-val" id="t-costo">$0</div></div>
+        <div class="tc"><div class="tc-lbl" id="rt-util">Utilidad</div><div class="tc-val" id="t-util">$0</div></div>
+        <div class="tc"><div class="tc-lbl" id="rt-adic">Adicionales</div><div class="tc-val" id="t-adic">$0</div></div>
+        <div class="tc"><div class="tc-lbl" id="rt-cont">Contingencia</div><div class="tc-val" id="t-cont">$0</div></div>
+      </div>
+      <div class="grand">
+        <div>
+          <div class="grand-lbl" id="rt-total">Total cotización</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px;" id="rt-sel">0 grupos incluidos</div>
+        </div>
+        <div class="grand-val" id="grand">$0 USD</div>
+      </div>
+    </div>
+
+    <div style="padding:.75rem 1rem;">
+      <div class="sec" id="rs-title">Por tipo de facturación</div>
+      <table class="sum-table" id="billing-table">
+        <tr><th id="bt-tipo">Tipo</th><th id="bt-cant">Cantidad</th><th id="bt-val">Valor unit.</th><th id="bt-total">Total</th></tr>
+        <tr><td id="bt-peso">Por peso</td><td id="bv-peso">—</td><td id="bv-peso-u">—</td><td class="acc" id="bv-peso-t">—</td></tr>
+        <tr><td id="bt-area">Por área</td><td id="bv-area">—</td><td id="bv-area-u">—</td><td class="acc" id="bv-area-t">—</td></tr>
+        <tr><td id="bt-hh">Por HH</td><td id="bv-hh">—</td><td id="bv-hh-u">—</td><td class="acc" id="bv-hh-t">—</td></tr>
+        <tr><td id="bt-monto">Por monto</td><td>—</td><td>—</td><td class="acc" id="bv-monto-t">—</td></tr>
+      </table>
+
+      <div class="sec" style="margin-top:1rem;" id="rs-swbs">Desglose por grupo SWBS</div>
+      <div id="swbs-summary"></div>
+    </div>
+
+    <button class="dl-btn" onclick="generatePDF()" id="dl-btn">
+      Generar Documento Resumen PDF
+    </button>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-logo">ENGRAVIS <span>·</span> HDG</div>
+  <div class="foot-note" id="foot-note">Ing. Miguel Ángel Engracia Zambrano · M.Sc. Ingeniería Naval ESPOL · mengracia@sdcecuador.com · TAERA Astillero · SDC Ecuador 2025</div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// LANGUAGE
+const T={
+  es:{
+    'h-tag':'TAERA Astillero · Cotización Técnica 2025',
+    'h-title':'Gabarra de Carga Seca 27 m',
+    'h-sub':'Río / zona protegida · Estructura SWBS · Referencia FAO FTP 239',
+    'c-dev':'Desarrollado por:',
+    'c-pilot':'Piloto ENGRAVIS/HDG · SDC Ecuador',
+    'd1':'Eslora','d2':'Manga','d3':'Puntal','d4':'Calado','d5':'Disponibles',
+    'tab-swbs':'Grupos SWBS','tab-params':'Parámetros','tab-pintura':'Pintura','tab-adicionales':'Adicionales',
+    'p-sec1':'Características fijas del modelo','p-sec2':'Parámetros editables','p-sec3':'Áreas y volúmenes calculados',
+    'p-sep':'Separación entre mamparos','p-bod':'Número de bodegas','p-bit':'Bitas de amarre',
+    'p-esc':'Escotillas de cubierta','p-zona':'Zona de operación','p-zona-v':'Río / zona protegida',
+    'p-espfondo':'Espesor fondo (mm)','p-espcostado':'Espesor costados (mm)','p-espcubierta':'Espesor cubierta (mm)',
+    'p-densidad':'Densidad acero (kg/m³)','p-hoficial':'Tarifa oficial ($/h)','p-hasistente':'Tarifa asistente ($/h)',
+    'p-meses':'Meses construcción','p-vtotal':'Volumen desplazado','p-peso':'Peso acero estimado',
+    'pin-sec1':'Separación obra viva / obra muerta','pin-sec2':'Parámetros de pintura',
+    'pin-ov':'Obra viva (bajo calado 0.8m)','pin-om':'Obra muerta (sobre calado)',
+    'pin-th1':'Zona','pin-th2':'$/m²','pin-ov2':'Obra viva','pin-om2':'Obra muerta',
+    'pin-arenado':'Arenado Sa 2.5 ($/m²)','pin-matov':'Material obra viva ($/m²)',
+    'pin-matom':'Material obra muerta ($/m²)','pin-mopin':'MO aplicación ($/m²)',
+    'pin-ref':'FAO FTP239 Tabla 2 — sistema dos componentes (obra viva). Obra muerta: criterio técnico SDC Ecuador.',
+    'ad-sec1':'Adicionales y consumibles','ad-cons':'Consumibles soldadura (% acero)',
+    'ad-desp':'Desperdicio planchas (%)','ad-log':'Logística y transporte ($)',
+    'ad-insp':'Inspecciones / RNA ($)','ad-perm':'Permisos y legislativo ($)',
+    'ad-bot':'Botadura y pruebas ($)','ad-cont':'Contingencia (%)',
+    'rp-header':'Resumen de cotización','rt-costo':'Costo directo','rt-util':'Utilidad',
+    'rt-adic':'Adicionales','rt-cont':'Contingencia','rt-total':'Total cotización','rt-sel':'0 grupos incluidos',
+    'rs-title':'Por tipo de facturación','rs-swbs':'Desglose por grupo SWBS',
+    'bt-tipo':'Tipo','bt-cant':'Cantidad','bt-val':'Valor unit.','bt-total':'Total',
+    'bt-peso':'Por peso','bt-area':'Por área','bt-hh':'Por HH','bt-monto':'Por monto',
+    'dl-btn':'Generar Documento Resumen PDF',
+    'foot-note':'Ing. Miguel Ángel Engracia Zambrano · M.Sc. Ingeniería Naval ESPOL · mengracia@sdcecuador.com · TAERA Astillero',
+    'vhint':'Arrastrar · Scroll zoom',
+  },
+  en:{
+    'h-tag':'TAERA Shipyard · Technical Quotation 2025',
+    'h-title':'Dry Cargo Barge 27 m',
+    'h-sub':'River / protected area · SWBS Structure · Reference FAO FTP 239',
+    'c-dev':'Developed by:',
+    'c-pilot':'ENGRAVIS/HDG Pilot · SDC Ecuador',
+    'd1':'LOA','d2':'Beam','d3':'Depth','d4':'Draft','d5':'Available',
+    'tab-swbs':'SWBS Groups','tab-params':'Parameters','tab-pintura':'Painting','tab-adicionales':'Additional',
+    'p-sec1':'Fixed model characteristics','p-sec2':'Editable parameters','p-sec3':'Calculated areas & volumes',
+    'p-sep':'Bulkhead spacing','p-bod':'Number of holds','p-bit':'Mooring bitts',
+    'p-esc':'Deck hatches','p-zona':'Operating zone','p-zona-v':'River / protected area',
+    'p-espfondo':'Bottom plate thickness (mm)','p-espcostado':'Side plate thickness (mm)','p-espcubierta':'Deck plate thickness (mm)',
+    'p-densidad':'Steel density (kg/m³)','p-hoficial':'Officer rate ($/h)','p-hasistente':'Assistant rate ($/h)',
+    'p-meses':'Construction months','p-vtotal':'Displaced volume','p-peso':'Estimated steel weight',
+    'pin-sec1':'Underwater / above water separation','pin-sec2':'Painting parameters',
+    'pin-ov':'Underwater hull (below 0.8m draft)','pin-om':'Topside (above draft)',
+    'pin-th1':'Zone','pin-th2':'$/m²','pin-ov2':'Underwater','pin-om2':'Topside',
+    'pin-arenado':'Sandblasting Sa 2.5 ($/m²)','pin-matov':'UW material ($/m²)',
+    'pin-matom':'Topside material ($/m²)','pin-mopin':'Application labor ($/m²)',
+    'pin-ref':'FAO FTP239 Table 2 — two-component system (underwater hull). Topside: SDC Ecuador technical criteria.',
+    'ad-sec1':'Additional costs & consumables','ad-cons':'Welding consumables (% steel)',
+    'ad-desp':'Plate wastage (%)','ad-log':'Logistics & transport ($)',
+    'ad-insp':'Inspections / Class ($)','ad-perm':'Permits & regulatory ($)',
+    'ad-bot':'Launching & trials ($)','ad-cont':'Contingency (%)',
+    'rp-header':'Quotation summary','rt-costo':'Direct cost','rt-util':'Profit',
+    'rt-adic':'Additional','rt-cont':'Contingency','rt-total':'Total quotation','rt-sel':'0 groups included',
+    'rs-title':'By billing type','rs-swbs':'SWBS group breakdown',
+    'bt-tipo':'Type','bt-cant':'Quantity','bt-val':'Unit value','bt-total':'Total',
+    'bt-peso':'By weight','bt-area':'By area','bt-hh':'By manhour','bt-monto':'Fixed amount',
+    'dl-btn':'Generate Summary PDF Document',
+    'foot-note':'Ing. Miguel Ángel Engracia Zambrano · M.Sc. Naval Engineering ESPOL · mengracia@sdcecuador.com · TAERA Shipyard',
+    'vhint':'Drag to rotate · Scroll zoom',
+  }
+};
+let lang='es';
+function setLang(l){
+  lang=l;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()));
+  Object.keys(T[l]).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=T[l][id];});
+  document.querySelectorAll('.tab[data-'+l+']').forEach(t=>t.textContent=t.dataset[l]);
+  buildSWBS();
+}
+
+// SWBS DATA
+const SWBS_DATA=[
+  {code:'100',name:{es:'100 · Estructura del casco',en:'100 · Hull Structure'},sel:true,util:20,billing:'peso',
+   items:[
+    {l:{es:'130 · Planchaje fondo 12mm (16.5 TM)',en:'130 · Bottom plating 12mm'},v:'$13,500',billing:'peso',qty:'16.5 TM'},
+    {l:{es:'130 · Planchaje doble fondo 9mm (12.4 TM)',en:'130 · Double bottom 9mm'},v:'$7,676',billing:'peso',qty:'12.4 TM'},
+    {l:{es:'130 · Planchaje costados 8mm (5.1 TM)',en:'130 · Side plating 8mm'},v:'$2,785',billing:'peso',qty:'5.1 TM'},
+    {l:{es:'140/150 · Cubierta y mamparos 6mm (13.9 TM)',en:'140/150 · Deck & bulkheads 6mm'},v:'$5,641',billing:'peso',qty:'13.9 TM'},
+    {l:{es:'120 · Perfiles y refuerzos (10.2 TM)',en:'120 · Framing & stiffeners'},v:'$10,710',billing:'peso',qty:'10.2 TM'},
+    {l:{es:'MO estructural — 7,488 HH',en:'Structural labor — 7,488 MH'},v:'$48,672',billing:'hh',qty:'7,488 HH'},
+   ],costo:89000},
+  {code:'180',name:{es:'180 · Protección y pintura',en:'180 · Hull Protection'},sel:true,util:25,billing:'area',
+   items:[
+    {l:{es:'Obra viva — arenado + 4 capas (105 m²)',en:'Underwater — blasting + 4 coats'},v:'$14,700',billing:'area',qty:'105 m²'},
+    {l:{es:'Obra muerta — arenado + 3 capas (310 m²)',en:'Topside — blasting + 3 coats'},v:'$21,700',billing:'area',qty:'310 m²'},
+    {l:{es:'Ánodos de sacrificio zinc',en:'Zinc sacrificial anodes'},v:'$1,400',billing:'monto'},
+   ],costo:37800},
+  {code:'200',name:{es:'200 · Planta propulsora',en:'200 · Propulsion Plant'},sel:false,util:15,billing:'monto',
+   items:[
+    {l:{es:'220 · 2× motor diésel marino ~500 HP',en:'220 · 2× marine diesel ~500 HP'},v:'$95,000',billing:'monto'},
+    {l:{es:'230 · 2× hélice bronce 4 palas',en:'230 · 2× bronze propeller'},v:'$12,000',billing:'monto'},
+    {l:{es:'240 · 2× línea de eje + caja reductora',en:'240 · 2× shaft line + gearbox'},v:'$26,400',billing:'monto'},
+    {l:{es:'Instalación + alineación + pruebas',en:'Installation + alignment + trials'},v:'$22,000',billing:'hh'},
+   ],costo:158600},
+  {code:'500',name:{es:'500 · Sistemas auxiliares',en:'500 · Auxiliary Systems'},sel:true,util:20,billing:'monto',
+   items:[
+    {l:{es:'520 · Compuerta hidráulica completa',en:'520 · Complete hydraulic gate'},v:'$38,500',billing:'monto'},
+    {l:{es:'540 · Sistema contraincendios básico',en:'540 · Basic fire protection'},v:'$2,800',billing:'monto'},
+    {l:{es:'550 · Bombas de achique/sentina',en:'550 · Bilge pumps'},v:'$2,500',billing:'monto'},
+   ],costo:43800},
+  {code:'630',name:{es:'630 · Equipo de cubierta',en:'630 · Deck Equipment'},sel:false,util:20,billing:'monto',
+   items:[
+    {l:{es:'Sistema de anclaje (2× ancla + cadena + winche)',en:'Anchoring system'},v:'$26,400',billing:'monto'},
+    {l:{es:'6× bitas de amarre acero fundido',en:'6× mooring bitts'},v:'$4,200',billing:'monto'},
+    {l:{es:'Defensas + pasarela + escalas',en:'Fenders + gangway + ladders'},v:'$4,900',billing:'monto'},
+   ],costo:35500},
+  {code:'800',name:{es:'800 · Ingeniería y gestión',en:'800 · Engineering & Management'},sel:true,util:30,billing:'monto',
+   items:[
+    {l:{es:'820 · Diseño naval — planos de construcción',en:'820 · Naval design — construction drawings'},v:'$18,000',billing:'monto'},
+    {l:{es:'830 · Clasificación RNA Ecuador',en:'830 · RNA Ecuador classification'},v:'$8,500',billing:'monto'},
+    {l:{es:'840 · Pruebas y entrega',en:'840 · Trials & delivery'},v:'$3,500',billing:'monto'},
+   ],costo:30000},
+];
+
+function fmt(n){return '$'+Math.round(n).toLocaleString('en-US');}
+
+function buildSWBS(){
+  const cont=document.getElementById('swbs-container');
+  cont.innerHTML='';
+  SWBS_DATA.forEach((g,i)=>{
+    const pc=g.costo*(1+g.util/100);
+    const div=document.createElement('div');
+    div.className='swbs-group'+(g.sel?' included':'');
+    div.id='sg-'+g.code;
+    div.innerHTML=`
+      <div class="swbs-head" data-idx="${i}">
+        <div class="swbs-chk${g.sel?' on':''}" id="schk-${g.code}">
+          ${g.sel?'<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>':''}
+        </div>
+        <div class="swbs-code">${g.code}</div>
+        <div class="swbs-name">${g.name[lang]}</div>
+        <div class="swbs-total${g.sel?'':' off'}" id="stot-${g.code}">${fmt(pc)}</div>
+        <div class="swbs-arr" id="sarr-${g.code}">▼</div>
+      </div>
+      <div class="swbs-body" id="sbody-${g.code}">
+        ${g.items.map(it=>`<div class="line"><div><div class="ll">${it.l[lang]}</div></div><div class="lv">${it.v}</div></div>`).join('')}
+        <div class="sl-row">
+          <span class="sl-lbl" id="util-lbl-${g.code}">${lang==='es'?'Utilidad':'Profit'}</span>
+          <input type="range" min="0" max="60" step="1" value="${g.util}" oninput="updateUtil(${i},this.value)"/>
+          <span class="sl-pct" id="upct-${g.code}">${g.util}%</span>
+          <span class="sl-usd" id="uusd-${g.code}">${fmt(g.costo*g.util/100)}</span>
+        </div>
+        <div class="line" style="margin-top:4px;">
+          <div class="ll">${lang==='es'?'Precio al cliente':'Client price'}</div>
+          <div class="lv acc" id="ucli-${g.code}">${fmt(pc)}</div>
+        </div>
+      </div>`;
+    cont.appendChild(div);
+  });
+
+  cont.addEventListener('click',function(e){
+    const chk=e.target.closest('.swbs-chk');
+    if(chk){
+      const head=chk.closest('.swbs-head');
+      toggleSel(parseInt(head.dataset.idx));return;
+    }
+    const head=e.target.closest('.swbs-head');
+    if(head&&!e.target.closest('input')){
+      const code=head.closest('.swbs-group').id.replace('sg-','');
+      const body=document.getElementById('sbody-'+code);
+      const arr=document.getElementById('sarr-'+code);
+      body.classList.toggle('open');
+      arr.textContent=body.classList.contains('open')?'▲':'▼';
+    }
+  });
+  recalc();
+}
+
+function toggleSel(i){
+  const g=SWBS_DATA[i];g.sel=!g.sel;
+  document.getElementById('sg-'+g.code).className='swbs-group'+(g.sel?' included':'');
+  const chk=document.getElementById('schk-'+g.code);
+  chk.className='swbs-chk'+(g.sel?' on':'');
+  chk.innerHTML=g.sel?'<svg width="10" height="10" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>':'';
+  document.getElementById('stot-'+g.code).className='swbs-total'+(g.sel?'':' off');
+  recalc();
+}
+
+function updateUtil(i,v){
+  const g=SWBS_DATA[i];g.util=parseInt(v);
+  const util=g.costo*g.util/100;const pc=g.costo+util;
+  document.getElementById('upct-'+g.code).textContent=g.util+'%';
+  document.getElementById('uusd-'+g.code).textContent=fmt(util);
+  document.getElementById('ucli-'+g.code).textContent=fmt(pc);
+  document.getElementById('stot-'+g.code).textContent=fmt(pc);
+  recalc();
+}
+
+function recalc(){
+  // PARAMS
+  const dens=parseFloat(document.getElementById('ep-dens').value)||7850;
+  const ef=parseFloat(document.getElementById('ep-fondo').value)||12;
+  const ec=parseFloat(document.getElementById('ep-costado').value)||8;
+  const ecu=parseFloat(document.getElementById('ep-cubierta').value)||6;
+  const tof=parseFloat(document.getElementById('ep-oficial').value)||8;
+  const tas=parseFloat(document.getElementById('ep-asistente').value)||5;
+  const mes=parseFloat(document.getElementById('ep-meses').value)||6;
+  const cons=parseFloat(document.getElementById('ap-cons').value)||15;
+  const desp=parseFloat(document.getElementById('ap-desp').value)||10;
+  const log=parseFloat(document.getElementById('ap-log').value)||3500;
+  const insp=parseFloat(document.getElementById('ap-insp').value)||8500;
+  const perm=parseFloat(document.getElementById('ap-perm').value)||2200;
+  const bot=parseFloat(document.getElementById('ap-bot').value)||3500;
+  const cont=parseFloat(document.getElementById('ap-cont').value)||8;
+  const arenado=parseFloat(document.getElementById('pp-arenado').value)||12;
+  const matov=parseFloat(document.getElementById('pp-matov').value)||30;
+  const matom=parseFloat(document.getElementById('pp-matom').value)||22;
+  const mopaint=parseFloat(document.getElementById('pp-mo').value)||15;
+
+  // AREAS (27×6.5×1.5, calado 0.8)
+  const aFondo=27*6.5; const aCostado=27*1.5*2; const aCubierta=27*6.5;
+  const aMamp=6.5*1.5*4; const aOV=27*6.5*2*0.8+6.5*0.8*2;
+  const aOM=(aCubierta+aCostado+aFondo)-aOV;
+  const vol=27*6.5*0.8; 
+  const pesoFondo=(aFondo*ef/1000)*dens/1000;
+  const pesoCostado=(aCostado*ec/1000)*dens/1000;
+  const pesoCubierta=(aCubierta*ecu/1000)*dens/1000;
+  const pesoTotal=pesoFondo+pesoCostado+pesoCubierta+(aMamp*6/1000*dens/1000);
+
+  document.getElementById('calc-afondo').textContent=aFondo.toFixed(1)+' m²';
+  document.getElementById('calc-acostado').textContent=aCostado.toFixed(1)+' m²';
+  document.getElementById('calc-acubierta').textContent=aCubierta.toFixed(1)+' m²';
+  document.getElementById('calc-amamp').textContent=aMamp.toFixed(1)+' m²';
+  document.getElementById('calc-aov').textContent=aOV.toFixed(1)+' m²';
+  document.getElementById('calc-vol').textContent=vol.toFixed(1)+' m³';
+  document.getElementById('calc-peso').textContent=pesoTotal.toFixed(1)+' TM';
+
+  // MO
+  const HH=(3*tof+3*tas)*8*26*mes;
+  const adicionales=log+insp+perm+bot;
+  const pintCost=(aOV*(arenado+matov+mopaint))+(aOM*(arenado+matom+mopaint));
+
+  // TOTALS
+  let costDir=0,utilTotal=0,cnt=0;
+  let pesoTotal2=0,areaTotal=0,hhTotal=0,montoTotal=0;
+  SWBS_DATA.forEach(g=>{
+    if(!g.sel)return;
+    cnt++;
+    const util=g.costo*g.util/100;
+    costDir+=g.costo;utilTotal+=util;
+    if(g.billing==='peso')pesoTotal2+=g.costo;
+    else if(g.billing==='area')areaTotal+=g.costo;
+    else if(g.billing==='hh')hhTotal+=g.costo;
+    else montoTotal+=g.costo;
+  });
+  const subTotal=costDir+utilTotal+adicionales;
+  const contingencia=subTotal*(cont/100);
+  const grand=subTotal+contingencia;
+
+  document.getElementById('t-costo').textContent=fmt(costDir);
+  document.getElementById('t-util').textContent=fmt(utilTotal);
+  document.getElementById('t-adic').textContent=fmt(adicionales);
+  document.getElementById('t-cont').textContent=fmt(contingencia);
+  document.getElementById('grand').textContent=fmt(grand)+' USD';
+  document.getElementById('rt-sel').textContent=cnt+' '+(lang==='es'?'grupos incluidos':'groups included');
+
+  // BILLING TABLE
+  document.getElementById('bv-peso').textContent=pesoTotal.toFixed(1)+' TM';
+  document.getElementById('bv-peso-u').textContent='$7/kg ref.';
+  document.getElementById('bv-peso-t').textContent=fmt(pesoTotal2);
+  document.getElementById('bv-area').textContent=(aOV+aOM).toFixed(0)+' m²';
+  document.getElementById('bv-area-u').textContent='~$22-30/m²';
+  document.getElementById('bv-area-t').textContent=fmt(areaTotal);
+  document.getElementById('bv-hh').textContent=Math.round(HH)+' HH';
+  document.getElementById('bv-hh-u').textContent='$'+((3*tof+3*tas)/6).toFixed(2)+'/h prom';
+  document.getElementById('bv-hh-t').textContent=fmt(hhTotal);
+  document.getElementById('bv-monto-t').textContent=fmt(montoTotal);
+
+  // SWBS SUMMARY
+  const sumEl=document.getElementById('swbs-summary');
+  sumEl.innerHTML='';
+  SWBS_DATA.filter(g=>g.sel).forEach(g=>{
+    const pc=g.costo*(1+g.util/100);
+    const row=document.createElement('div');
+    row.className='line';
+    row.innerHTML=`<div class="ll">${g.name[lang]}</div><div class="lv acc">${fmt(pc)}</div>`;
+    sumEl.appendChild(row);
+  });
+  const totRow=document.createElement('div');
+  totRow.className='line';totRow.style.borderTop='.5px solid rgba(255,255,255,0.15)';totRow.style.marginTop='4px';
+  totRow.innerHTML=`<div class="ll" style="font-weight:500">${lang==='es'?'Total':'Total'}</div><div class="lv acc" style="font-size:14px;">${fmt(grand)} USD</div>`;
+  sumEl.appendChild(totRow);
+}
+
+function showTab(id){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const tabMap={'t-swbs':'tab-swbs','t-params':'tab-params','t-pintura':'tab-pintura','t-adicionales':'tab-adicionales'};
+  document.getElementById(tabMap[id]).classList.add('active');
+}
+
+function generatePDF(){
+  const sel=SWBS_DATA.filter(g=>g.sel);
+  let rows=sel.map(g=>`<tr><td>${g.name[lang]}</td><td>${g.billing}</td><td>${fmt(g.costo)}</td><td>${g.util}%</td><td>${fmt(g.costo*(1+g.util/100))}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cotización Gabarra 27m</title>
+  <style>body{font-family:Arial,sans-serif;padding:2cm;color:#111;}h1{font-size:18px;margin-bottom:4px;}h2{font-size:13px;color:#555;margin-bottom:1.5cm;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#0d1525;color:#fff;padding:6px 8px;text-align:left;}td{padding:5px 8px;border-bottom:1px solid #ddd;}.total{font-size:14px;font-weight:bold;margin-top:1cm;text-align:right;}.footer{margin-top:2cm;font-size:9px;color:#888;border-top:1px solid #ddd;padding-top:8px;}</style></head>
+  <body>
+  <h1>TAERA Astillero · Cotización Técnica · Gabarra de Carga Seca 27 m</h1>
+  <h2>Ing. Miguel Ángel Engracia Zambrano · M.Sc. Ingeniería Naval ESPOL · mengracia@sdcecuador.com</h2>
+  <p style="font-size:11px;margin-bottom:.5cm;">Río / zona protegida · LOA 27m × 6.5m × 1.5m · Calado 0.8m · SWBS · FAO FTP239</p>
+  <table><tr><th>Grupo SWBS</th><th>Facturación</th><th>Costo directo</th><th>Utilidad</th><th>Precio cliente</th></tr>${rows}</table>
+  <div class="total">Total cotización: ${document.getElementById('grand').textContent}</div>
+  <div class="footer">Documento generado por ENGRAVIS/HDG Platform · Piloto SDC Ecuador 2025 · Metodología FAO FTP239 · Estimación conceptual — validez 30 días</div>
+  </body></html>`);
+  w.document.close();setTimeout(()=>w.print(),500);
+}
+
+// 3D VIEWER
+buildSWBS();
+setTimeout(()=>{
+  const wrap=document.getElementById('vwrap');
+  const W=wrap.clientWidth||700,H=360;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setSize(W,H);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
+  wrap.insertBefore(renderer.domElement,wrap.firstChild);
+  const scene=new THREE.Scene();const camera=new THREE.PerspectiveCamera(45,W/H,0.01,2000);
+  scene.add(new THREE.AmbientLight(0xffffff,0.7));
+  const d1=new THREE.DirectionalLight(0xffffff,1.2);d1.position.set(5,8,5);scene.add(d1);
+  const d2=new THREE.DirectionalLight(0x88ccff,0.4);d2.position.set(-5,3,-5);scene.add(d2);
+  let drag=false,px=0,py=0,rotX=0.25,rotY=0.4,zf=1;
+  const pivot=new THREE.Group();scene.add(pivot);
+  const el=renderer.domElement;
+  el.addEventListener('mousedown',e=>{drag=true;px=e.clientX;py=e.clientY;});
+  window.addEventListener('mouseup',()=>drag=false);
+  window.addEventListener('mousemove',e=>{if(!drag)return;rotY+=(e.clientX-px)*0.007;rotX+=(e.clientY-py)*0.007;rotX=Math.max(-1.2,Math.min(1.2,rotX));px=e.clientX;py=e.clientY;});
+  el.addEventListener('wheel',e=>{zf*=e.deltaY>0?1.1:0.9;zf=Math.max(0.2,Math.min(8,zf));e.preventDefault();},{passive:false});
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+  s.onload=()=>{
+    new THREE.GLTFLoader().load('https://maez228709.github.io/maez/GABARRA.glb',
+      gltf=>{
+        const model=gltf.scene;
+        const box=new THREE.Box3().setFromObject(model);
+        model.position.sub(box.getCenter(new THREE.Vector3()));
+        pivot.add(model);
+        const sz=box.getSize(new THREE.Vector3());
+        camera.position.set(0,sz.y*0.5,sz.z*2.2);camera.lookAt(0,0,0);
+        document.getElementById('vbadge').textContent='Modelo 3D · Gabarra 27m';
+      },()=>{},
+      ()=>{document.getElementById('vbadge').textContent='Modelo cargado — vista simplificada';}
+    );
+  };
+  document.head.appendChild(s);
+  (function animate(){requestAnimationFrame(animate);pivot.rotation.x=rotX;pivot.rotation.y=rotY;camera.zoom=zf;camera.updateProjectionMatrix();renderer.render(scene,camera);})();
+},400);
+</script>
+</body>
+</html>
