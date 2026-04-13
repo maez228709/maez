@@ -356,7 +356,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
 <div id="toast"></div>
 
 <script>
-// ── SUPABASE CLIENT ──────────────────────────────────────────────
+
+// ── SUPABASE CLIENT ─────────────────────────────────────
 const { createClient } = supabase;
 const sb = createClient('https://ukcfzijdegclgavjtrug.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrY2Z6aWpkZWdjbGdhdmp0cnVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTI2NTAsImV4cCI6MjA5MTMyODY1MH0.5pBebPqehEuiFRf0-VFkBVws6AT6oGf7OzimUzhbg1o');
 const CO_ID = 'a1b2c3d4-0000-0000-0000-000000000001';
@@ -365,18 +366,38 @@ let currentUser = null;
 let currentProfile = null;
 let companyModules = [];
 
-// ── ROLE LABELS ──────────────────────────────────────────────────
+// ── ROLE LABELS ──────────────────────────────────────────
 const ROLES = {
-  'admin':      { label:'Administrador',     lifecycle:'Gestión global de empresa',             icon:'⚙️' },
-  'shipyard':   { label:'Jefe de Dique',     lifecycle:'Mantenimiento en dique',                icon:'⚓' },
-  'designer':   { label:'Diseñador Naval',   lifecycle:'Diseño y construcción',                 icon:'✏️' },
-  'captain':    { label:'Capitán',           lifecycle:'Navegación y bitácora de viaje',        icon:'⛵' },
-  'inspector':  { label:'Inspector Naval',   lifecycle:'Inspección y certificación',            icon:'🔍' },
-  'supplier':   { label:'Proveedor',         lifecycle:'Suministro de materiales y servicios',  icon:'📦' },
-  'consultant': { label:'Consultor',         lifecycle:'Asesoría técnica especializada',        icon:'💼' },
-  'fleet':      { label:'Jefe de Flota',     lifecycle:'Gestión y operación de flota',          icon:'🚢' },
-  'researcher': { label:'Investigador',      lifecycle:'Análisis, estudios y tesis',            icon:'🎓' },
-  'authority':  { label:'Autoridad',         lifecycle:'Regulación y fiscalización naval',      icon:'🏛️' },
+  'admin':      { label:'Administrador',    lifecycle:'Gestión global de empresa',            icon:'⚙️' },
+  'shipyard':   { label:'Jefe de Dique',    lifecycle:'Mantenimiento en dique',               icon:'⚓' },
+  'designer':   { label:'Diseñador Naval',  lifecycle:'Diseño y construcción',                icon:'✏️' },
+  'captain':    { label:'Capitán',          lifecycle:'Navegación y bitácora de viaje',       icon:'⛵' },
+  'inspector':  { label:'Inspector Naval',  lifecycle:'Inspección y certificación',           icon:'🔍' },
+  'supplier':   { label:'Proveedor',        lifecycle:'Suministro de materiales y servicios', icon:'📦' },
+  'consultant': { label:'Consultor',        lifecycle:'Asesoría técnica especializada',       icon:'💼' },
+  'fleet':      { label:'Jefe de Flota',    lifecycle:'Gestión y operación de flota',         icon:'🚢' },
+  'researcher': { label:'Investigador',     lifecycle:'Análisis, estudios y tesis',           icon:'🎓' },
+  'authority':  { label:'Autoridad',        lifecycle:'Regulación y fiscalización naval',     icon:'🏛️' }
+};
+
+const MODULE_CFG = {
+  projects:   { icon:'📋', label:'Proyectos' },
+  viewer3d:   { icon:'🧊', label:'Visor 3D' },
+  workorders: { icon:'🔧', label:'Órdenes de trabajo' },
+  inventory:  { icon:'📦', label:'Inventario' },
+  rrhh:       { icon:'👥', label:'Recursos humanos' },
+  accounting: { icon:'📊', label:'Contabilidad' },
+  hdgmind:    { icon:'🤖', label:'HDG Mind' },
+  structural: { icon:'🏗️', label:'Análisis estructural' },
+  documents:  { icon:'📁', label:'Documentos' },
+  reports:    { icon:'📈', label:'Informes' }
+};
+
+const PAGE_LABELS = {
+  home:'Inicio', profile:'Mi perfil', admin:'Administración',
+  projects:'Proyectos', viewer3d:'Visor 3D', workorders:'Órdenes de trabajo',
+  inventory:'Inventario', rrhh:'Recursos humanos', accounting:'Contabilidad',
+  documents:'Documentos', reports:'Informes'
 };
 
 function getRole(role) {
@@ -384,51 +405,52 @@ function getRole(role) {
 }
 
 function getInitials(name) {
-  return (name||'U').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  return (name||'U').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
 }
 
-// ── AUTH FUNCTIONS ───────────────────────────────────────────────
+// ── AUTH ─────────────────────────────────────────────────
 async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-password').value;
+  var email = document.getElementById('login-email').value.trim();
+  var pass  = document.getElementById('login-password').value;
   if (!email || !pass) { showAlert('login-error','Completa todos los campos'); return; }
 
-  const btn = document.getElementById('btn-login');
+  var btn = document.getElementById('btn-login');
   btn.disabled = true;
   btn.innerHTML = '<div class="spin"></div> Ingresando...';
   hideAlert('login-error');
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  var result = await sb.auth.signInWithPassword({ email: email, password: pass });
 
-  if (error) {
-    showAlert('login-error', error.message === 'Invalid login credentials'
+  if (result.error) {
+    var msg = result.error.message === 'Invalid login credentials'
       ? 'Email o contraseña incorrectos'
-      : error.message);
+      : result.error.message;
+    showAlert('login-error', msg);
     btn.disabled = false;
     btn.textContent = 'Ingresar';
     return;
   }
 
-  currentUser = data.user;
+  currentUser = result.data.user;
   await loadProfile();
+  await loadCompanyModules();
   showApp();
 }
 
 async function doLogout() {
   await sb.auth.signOut();
-  currentUser = null;
-  currentProfile = null;
+  currentUser = null; currentProfile = null;
   showScreen('sc-login');
   document.getElementById('login-password').value = '';
   toast('Sesión cerrada');
 }
 
 async function doForgot() {
-  const email = document.getElementById('forgot-email').value.trim();
+  var email = document.getElementById('forgot-email').value.trim();
   if (!email) { showAlert('login-error','Ingresa tu email'); return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email);
-  if (error) { showAlert('login-error', error.message); return; }
-  showAlert('login-success','✓ Enlace enviado. Revisa tu correo.');
+  var result = await sb.auth.resetPasswordForEmail(email);
+  if (result.error) { showAlert('login-error', result.error.message); return; }
+  showAlert('login-success','Enlace enviado. Revisa tu correo.');
 }
 
 function showForgot() {
@@ -436,50 +458,38 @@ function showForgot() {
   document.getElementById('form-forgot').style.display = 'block';
   hideAlert('login-error');
 }
-
 function showLogin() {
   document.getElementById('form-login').style.display = 'block';
   document.getElementById('form-forgot').style.display = 'none';
-  hideAlert('login-error');
-  hideAlert('login-success');
+  hideAlert('login-error'); hideAlert('login-success');
 }
 
-// ── LOAD PROFILE ─────────────────────────────────────────────────
+// ── LOAD DATA ────────────────────────────────────────────
 async function loadProfile() {
-  const { data } = await sb
-    .from('user_profile')
-    .select('*')
-    .eq('auth_id', currentUser.id)
-    .single();
+  var result = await sb.from('user_profile').select('*').eq('auth_id', currentUser.id).single();
+  currentProfile = result.data;
 
-  currentProfile = data;
-
-  if (!data) {
-    // Perfil no encontrado — crear básico
-    const { data: newp } = await sb.from('user_profile').insert({
+  if (!currentProfile) {
+    var ins = await sb.from('user_profile').insert({
       auth_id: currentUser.id,
       email: currentUser.email,
       full_name: currentUser.email.split('@')[0],
       global_role: 'shipyard',
       company_id: CO_ID,
-      status: 'active'
+      status: 'active',
+      is_active: true
     }).select().single();
-    currentProfile = newp;
+    currentProfile = ins.data;
   }
 }
 
 async function loadCompanyModules() {
-  const { data } = await sb
-    .from('company_modules')
-    .select('*')
-    .eq('company_id', CO_ID)
-    .eq('is_active', true);
-  companyModules = data || [];
+  var result = await sb.from('company_modules').select('*').eq('company_id', CO_ID).eq('is_active', true);
+  companyModules = result.data || [];
 }
 
-// ── SHOW APP ─────────────────────────────────────────────────────
-async function showApp() {
-  await loadCompanyModules();
+// ── SHOW APP ─────────────────────────────────────────────
+function showApp() {
   showScreen('sc-app');
   updateTopbar();
   buildSidebar();
@@ -487,12 +497,13 @@ async function showApp() {
 }
 
 function updateTopbar() {
-  const p = currentProfile;
+  var p = currentProfile;
   if (!p) return;
-  const role = getRole(p.global_role);
-  const ini = getInitials(p.full_name);
+  var role = getRole(p.global_role);
+  var ini = getInitials(p.full_name);
+  var firstName = (p.full_name || 'Usuario').split(' ')[0];
   document.getElementById('top-avatar').textContent = ini;
-  document.getElementById('top-name').textContent = p.full_name?.split(' ')[0] || 'Usuario';
+  document.getElementById('top-name').textContent = firstName;
   document.getElementById('top-role').textContent = role.label;
   if (p.global_role === 'admin') {
     document.getElementById('nav-admin').style.display = 'flex';
@@ -500,235 +511,184 @@ function updateTopbar() {
 }
 
 function buildSidebar() {
-  const MODULE_ICONS = {
-    projects:   { icon:'📋', label:'Proyectos' },
-    viewer3d:   { icon:'🧊', label:'Visor 3D' },
-    workorders: { icon:'🔧', label:'Órdenes de trabajo' },
-    inventory:  { icon:'📦', label:'Inventario' },
-    rrhh:       { icon:'👥', label:'Recursos humanos' },
-    accounting: { icon:'📊', label:'Contabilidad' },
-    hdgmind:    { icon:'🤖', label:'HDG Mind' },
-    structural: { icon:'🏗️', label:'Análisis estructural' },
-    documents:  { icon:'📁', label:'Documentos' },
-    reports:    { icon:'📈', label:'Informes' },
-  };
-
-  const nav = document.getElementById('nav-modules');
+  var nav = document.getElementById('nav-modules');
   nav.innerHTML = '<div class="sidebar-label">Módulos</div>';
-
-  companyModules.forEach(m => {
-    const cfg = MODULE_ICONS[m.module_key] || { icon:'◾', label: m.module_name };
-    const el = document.createElement('div');
+  companyModules.forEach(function(m) {
+    var cfg = MODULE_CFG[m.module_key] || { icon:'◾', label: m.module_name };
+    var el = document.createElement('div');
     el.className = 'nav-item';
     el.id = 'nav-' + m.module_key;
-    el.onclick = () => navigate(m.module_key);
-    el.innerHTML = `<span class="nav-icon">${cfg.icon}</span>${cfg.label}`;
+    el.setAttribute('data-page', m.module_key);
+    el.onclick = function() { navigate(this.getAttribute('data-page')); };
+    el.innerHTML = '<span class="nav-icon">' + cfg.icon + '</span>' + cfg.label;
     nav.appendChild(el);
   });
+  var sbComp = document.getElementById('sb-company');
+  if (sbComp) sbComp.textContent = 'TAERA Cía. Ltda.';
 }
 
-// ── NAVIGATE ─────────────────────────────────────────────────────
+// ── NAVIGATE ─────────────────────────────────────────────
 function navigate(page) {
-  // Update active nav
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const navEl = document.getElementById('nav-'+page);
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var navEl = document.getElementById('nav-' + page);
   if (navEl) navEl.classList.add('active');
 
-  // Update breadcrumb
-  const labels = {
-    home:'Inicio', profile:'Mi perfil', admin:'Administración',
-    projects:'Proyectos', viewer3d:'Visor 3D', workorders:'Órdenes de trabajo',
-    inventory:'Inventario', rrhh:'Recursos humanos', accounting:'Contabilidad',
-    documents:'Documentos', reports:'Informes',
-  };
-  const bc = document.getElementById('breadcrumb');
-  bc.innerHTML = page === 'home'
-    ? '<span class="crumb active">Inicio</span>'
-    : `<span class="crumb" onclick="navigate(`home`)">Inicio</span>
-       <span class="crumb-sep">›</span>
-       <span class="crumb active">${labels[page]||page}</span>`;
+  var label = PAGE_LABELS[page] || page;
+  var bc = document.getElementById('breadcrumb');
+  if (page === 'home') {
+    bc.innerHTML = '<span class="crumb active">Inicio</span>';
+  } else {
+    bc.innerHTML = '<span class="crumb" onclick="navigate('home')">Inicio</span>' +
+      '<span class="crumb-sep">›</span>' +
+      '<span class="crumb active">' + label + '</span>';
+  }
 
-  // Render page
-  const mc = document.getElementById('main-content');
-  switch(page) {
-    case 'home':       renderHome(mc); break;
-    case 'profile':    renderProfile(mc); break;
-    case 'admin':      renderAdmin(mc); break;
-    case 'projects':   renderComingSoon(mc,'Proyectos','📋','Gestión de proyectos de dique'); break;
-    case 'workorders': renderComingSoon(mc,'Órdenes de trabajo','🔧','Crear y gestionar órdenes de trabajo'); break;
-    case 'viewer3d':   renderComingSoon(mc,'Visor 3D','🧊','Gemelo digital interactivo'); break;
-    default:           renderComingSoon(mc,labels[page]||page,'◾','Módulo en construcción'); break;
+  var mc = document.getElementById('main-content');
+  if (page === 'home')    { renderHome(mc); }
+  else if (page === 'profile')  { renderProfile(mc); }
+  else if (page === 'admin')    { renderAdmin(mc); }
+  else { renderComingSoon(mc, label, (MODULE_CFG[page] && MODULE_CFG[page].icon) || '◾'); }
+}
+
+// ── HOME ─────────────────────────────────────────────────
+async function renderHome(mc) {
+  var p = currentProfile;
+  var role = getRole(p && p.global_role);
+  var d = new Date();
+  var days = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  var months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var firstName = p && p.full_name ? p.full_name.split(' ')[1] || p.full_name.split(' ')[0] : 'Usuario';
+
+  mc.innerHTML =
+    '<div class="page-header">' +
+      '<div class="page-title">Buenos días, ' + firstName + ' 👋</div>' +
+      '<div class="page-sub">' + days[d.getDay()] + ' ' + d.getDate() + ' de ' + months[d.getMonth()] + ' de ' + d.getFullYear() + ' · ' + role.label + '</div>' +
+    '</div>' +
+    '<div class="stats-grid">' +
+      '<div class="stat-card"><div class="stat-icon" style="background:#E6F1FB;">📋</div><div class="stat-val" id="st-proj">—</div><div class="stat-label">Proyectos activos</div></div>' +
+      '<div class="stat-card"><div class="stat-icon" style="background:#E1F5EE;">🔧</div><div class="stat-val" id="st-ot">—</div><div class="stat-label">Órdenes de trabajo</div></div>' +
+      '<div class="stat-card"><div class="stat-icon" style="background:#FAEEDA;">⛵</div><div class="stat-val" id="st-asset">—</div><div class="stat-label">Embarcaciones</div></div>' +
+      '<div class="stat-card"><div class="stat-icon" style="background:#F1EFE8;">👥</div><div class="stat-val" id="st-users">—</div><div class="stat-label">Usuarios activos</div></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+      '<div class="card">' +
+        '<div class="card-header"><div class="card-title">Módulos activos</div>' +
+        (p && p.global_role === 'admin' ? '<button class="edit-btn" onclick="navigate('admin')">Gestionar</button>' : '') +
+        '</div>' +
+        '<div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="home-modules"></div>' +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-header"><div class="card-title">Mi perfil</div>' +
+        '<button class="edit-btn" onclick="navigate('profile')">Ver perfil</button></div>' +
+        '<div class="card-body">' +
+          '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">' +
+            '<div class="profile-avatar-big" style="width:48px;height:48px;font-size:18px;">' + getInitials(p && p.full_name) + '</div>' +
+            '<div><div style="font-weight:600;">' + (p && p.full_name || '—') + '</div>' +
+            '<div style="font-size:12px;color:var(--text2);">' + (p && p.title || role.label) + '</div></div>' +
+          '</div>' +
+          '<div style="display:grid;gap:0;">' +
+            '<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--bdr);"><span style="color:var(--text2);">Email</span><span style="font-weight:500;">' + (p && p.email || '—') + '</span></div>' +
+            '<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--bdr);"><span style="color:var(--text2);">Rol</span><span style="font-weight:500;">' + role.label + '</span></div>' +
+            '<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;"><span style="color:var(--text2);">Ciclo de vida</span><span style="font-weight:500;color:var(--brand)">' + role.lifecycle + '</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  // Load stats async
+  var r1 = await sb.from('project').select('id', {count:'exact'}).eq('lead_company_id', CO_ID).eq('status','active');
+  var r2 = await sb.from('record').select('id', {count:'exact'});
+  var r3 = await sb.from('asset').select('id', {count:'exact'}).eq('owner_company_id', CO_ID);
+  var r4 = await sb.from('user_profile').select('id', {count:'exact'}).eq('company_id', CO_ID);
+  var el;
+  el = document.getElementById('st-proj');  if(el) el.textContent = r1.count || 0;
+  el = document.getElementById('st-ot');    if(el) el.textContent = r2.count || 0;
+  el = document.getElementById('st-asset'); if(el) el.textContent = r3.count || 0;
+  el = document.getElementById('st-users'); if(el) el.textContent = r4.count || 0;
+  // Bind admin/profile buttons after DOM render
+  var btnAdmin = document.getElementById('btn-goto-admin');
+  if (btnAdmin) btnAdmin.onclick = function() { navigate('admin'); };
+  var btnProf = document.getElementById('btn-goto-profile');
+  if (btnProf) btnProf.onclick = function() { navigate('profile'); };
+
+  // Modules
+  var mEl = document.getElementById('home-modules');
+  if (mEl) {
+    mEl.innerHTML = companyModules.map(function(m) {
+      var cfg = MODULE_CFG[m.module_key] || { icon:'◾', label: m.module_name };
+      return '<div onclick="navigate('' + m.module_key + '')" style="padding:10px;background:var(--bg);border-radius:8px;cursor:pointer;" onmouseover="this.style.background='var(--brand-light)'" onmouseout="this.style.background='var(--bg)'">' +
+        '<div style="font-size:20px;margin-bottom:4px;">' + cfg.icon + '</div>' +
+        '<div style="font-size:11px;font-weight:500;">' + cfg.label + '</div>' +
+      '</div>';
+    }).join('');
   }
 }
 
-// ── HOME PAGE ────────────────────────────────────────────────────
-async function renderHome(mc) {
-  const p = currentProfile;
-  const role = getRole(p?.global_role);
-  const d = new Date();
-  const days = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-
-  mc.innerHTML = `
-    <div class="page-header">
-      <div class="page-title">Buenos días, ${p?.full_name?.split(' ')[1] || p?.full_name || 'Usuario'} 👋</div>
-      <div class="page-sub">${days[d.getDay()]} ${d.getDate()} de ${months[d.getMonth()]} de ${d.getFullYear()} · ${role.label} · ${role.lifecycle}</div>
-    </div>
-
-    <div class="stats-grid" id="home-stats">
-      <div class="stat-card"><div class="stat-icon" style="background:#E6F1FB;">📋</div><div class="stat-val" id="st-proj">—</div><div class="stat-label">Proyectos activos</div></div>
-      <div class="stat-card"><div class="stat-icon" style="background:#E1F5EE;">🔧</div><div class="stat-val" id="st-ot">—</div><div class="stat-label">Órdenes de trabajo</div></div>
-      <div class="stat-card"><div class="stat-icon" style="background:#FAEEDA;">⛵</div><div class="stat-val" id="st-asset">—</div><div class="stat-label">Embarcaciones</div></div>
-      <div class="stat-card"><div class="stat-icon" style="background:#F1EFE8;">👥</div><div class="stat-val" id="st-users">—</div><div class="stat-label">Usuarios activos</div></div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Módulos activos</div>
-          ${p?.global_role === 'admin' ? '<button class="edit-btn" onclick="navigate(`admin`)">Gestionar</button>' : ''}
-        </div>
-        <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="home-modules"></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Mi perfil</div>
-          <button class="edit-btn" onclick="navigate(`profile`)">Ver perfil</button>
-        </div>
-        <div class="card-body">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-            <div class="profile-avatar-big" style="width:48px;height:48px;font-size:18px;">${getInitials(p?.full_name)}</div>
-            <div>
-              <div style="font-weight:600;">${p?.full_name||'—'}</div>
-              <div style="font-size:12px;color:var(--text2);">${p?.title||role.label}</div>
-            </div>
-          </div>
-          <div style="display:grid;gap:6px;">
-            <div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--bdr);">
-              <span style="color:var(--text2);">Email</span><span style="font-weight:500;">${p?.email||'—'}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--bdr);">
-              <span style="color:var(--text2);">Rol</span><span style="font-weight:500;">${role.label}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;">
-              <span style="color:var(--text2);">Ciclo de vida</span><span style="font-weight:500;color:var(--brand)">${role.lifecycle}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-
-  // Load stats
-  const [proj, ot, assets, users] = await Promise.all([
-    sb.from('project').select('id',{count:'exact'}).eq('lead_company_id',CO_ID).eq('status','active'),
-    sb.from('record').select('id',{count:'exact'}).eq('project_id','b0000005-bb00-0000-0000-000000000005'),
-    sb.from('asset').select('id',{count:'exact'}).eq('owner_company_id',CO_ID),
-    sb.from('user_profile').select('id',{count:'exact'}).eq('company_id',CO_ID).eq('is_active',true),
-  ]);
-  document.getElementById('st-proj').textContent  = proj.count  || 0;
-  document.getElementById('st-ot').textContent    = ot.count    || 0;
-  document.getElementById('st-asset').textContent = assets.count|| 0;
-  document.getElementById('st-users').textContent = users.count || 0;
-
-  // Modules
-  const mEl = document.getElementById('home-modules');
-  const MODULE_ICONS = {projects:'📋',viewer3d:'🧊',workorders:'🔧',inventory:'📦',rrhh:'👥',accounting:'📊',hdgmind:'🤖',structural:'🏗️',documents:'📁',reports:'📈'};
-  mEl.innerHTML = companyModules.map(m => `
-    <div onclick="navigate(`${m.module_key}`)" style="padding:10px;background:var(--bg);border-radius:8px;cursor:pointer;transition:background .12s;" onmouseover="this.style.background='var(--brand-light)'" onmouseout="this.style.background='var(--bg)'">
-      <div style="font-size:20px;margin-bottom:4px;">${MODULE_ICONS[m.module_key]||'◾'}</div>
-      <div style="font-size:11px;font-weight:500;color:var(--text);">${m.module_name}</div>
-    </div>`).join('');
-}
-
-// ── PROFILE PAGE ─────────────────────────────────────────────────
+// ── PROFILE ──────────────────────────────────────────────
 function renderProfile(mc) {
-  const p = currentProfile;
+  var p = currentProfile;
   if (!p) return;
-  const role = getRole(p.global_role);
-  const ini = getInitials(p.full_name);
+  var role = getRole(p.global_role);
+  var ini = getInitials(p.full_name);
 
-  mc.innerHTML = `
-    <div class="page-header">
-      <div class="page-title">Mi perfil</div>
-      <div class="page-sub">Datos personales y profesionales</div>
-    </div>
-    <div class="profile-hero">
-      <div class="profile-avatar-big">${ini}</div>
-      <div style="flex:1;">
-        <div class="profile-name">${p.full_name||'—'}</div>
-        <div class="profile-title">${p.title||'—'} · ${p.company_id?'TAERA Cía. Ltda.':'—'}</div>
-        <div class="profile-tags">
-          <span class="tag tag-blue">${role.icon} ${role.label}</span>
-          <span class="tag tag-green">${role.lifecycle}</span>
-          ${p.contract_type?`<span class="tag tag-gray">Contrato ${p.contract_type}</span>`:''}</div>
-      </div>
-      <button class="edit-btn" onclick="openEditProfile()">✏️ Editar perfil</button>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Información personal</div></div>
-        <div class="card-body">
-          <div class="profile-grid">
-            ${field('Email',p.email)}
-            ${field('Teléfono',p.phone||'—')}
-            ${field('Cédula',p.cedula||'—')}
-            ${field('Tipo de sangre',p.blood_type||'—')}
-            ${field('Fecha ingreso',p.hire_date?new Date(p.hire_date).toLocaleDateString('es-EC'):'—')}
-            ${field('Tipo contrato',p.contract_type||'—')}
-            ${field('Talla camiseta',p.shirt_size||'—')}
-            ${field('Talla zapatos',p.shoe_size||'—')}
-            <div class="profile-field" style="grid-column:span 2">
-              <div class="profile-field-label">Dirección</div>
-              <div class="profile-field-val">${p.address||'—'}</div>
-            </div>
-            <div class="profile-field" style="grid-column:span 2">
-              <div class="profile-field-label">Contacto de emergencia</div>
-              <div class="profile-field-val">${p.emergency_contact||'—'}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Información profesional</div></div>
-        <div class="card-body">
-          <div class="profile-grid">
-            ${field('Cargo',p.title||'—')}
-            ${field('Rol',role.label)}
-            ${field('Ciclo de vida',role.lifecycle)}
-            ${field('Idioma',p.language==='es'?'Español':'English')}
-          </div>
-          ${p.bio?`<div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text2);">${p.bio}</div>`:''}
-        </div>
-      </div>
-    </div>`;
-}
+  function fld(label, val) {
+    return '<div class="profile-field"><div class="profile-field-label">' + label + '</div><div class="profile-field-val">' + (val||'—') + '</div></div>';
+  }
 
-function field(label, val) {
-  return `<div class="profile-field">
-    <div class="profile-field-label">${label}</div>
-    <div class="profile-field-val">${val}</div>
-  </div>`;
+  mc.innerHTML =
+    '<div class="page-header"><div class="page-title">Mi perfil</div><div class="page-sub">Datos personales y profesionales</div></div>' +
+    '<div class="profile-hero">' +
+      '<div class="profile-avatar-big">' + ini + '</div>' +
+      '<div style="flex:1;">' +
+        '<div class="profile-name">' + (p.full_name||'—') + '</div>' +
+        '<div class="profile-title">' + (p.title||'—') + '</div>' +
+        '<div class="profile-tags">' +
+          '<span class="tag tag-blue">' + role.icon + ' ' + role.label + '</span>' +
+          '<span class="tag tag-green">' + role.lifecycle + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="edit-btn" onclick="openEditProfile()">✏️ Editar perfil</button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+      '<div class="card"><div class="card-header"><div class="card-title">Información personal</div></div>' +
+      '<div class="card-body"><div class="profile-grid">' +
+        fld('Email', p.email) + fld('Teléfono', p.phone) +
+        fld('Cédula', p.cedula) + fld('Tipo de sangre', p.blood_type) +
+        fld('Talla camiseta', p.shirt_size) + fld('Talla zapatos', p.shoe_size) +
+        fld('Fecha ingreso', p.hire_date ? new Date(p.hire_date).toLocaleDateString('es-EC') : null) +
+        fld('Tipo contrato', p.contract_type) +
+        '<div class="profile-field" style="grid-column:span 2"><div class="profile-field-label">Dirección</div><div class="profile-field-val">' + (p.address||'—') + '</div></div>' +
+        '<div class="profile-field" style="grid-column:span 2"><div class="profile-field-label">Contacto de emergencia</div><div class="profile-field-val">' + (p.emergency_contact||'—') + '</div></div>' +
+      '</div></div></div>' +
+      '<div class="card"><div class="card-header"><div class="card-title">Información profesional</div></div>' +
+      '<div class="card-body"><div class="profile-grid">' +
+        fld('Cargo', p.title) + fld('Rol', role.label) +
+        fld('Ciclo de vida', role.lifecycle) + fld('Idioma', p.language === 'es' ? 'Español' : 'English') +
+      '</div>' +
+      (p.bio ? '<div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text2);">' + p.bio + '</div>' : '') +
+      '</div></div>' +
+    '</div>';
 }
 
 function openEditProfile() {
-  const p = currentProfile;
-  document.getElementById('ep-name').value     = p.full_name||'';
-  document.getElementById('ep-title').value    = p.title||'';
-  document.getElementById('ep-phone').value    = p.phone||'';
-  document.getElementById('ep-cedula').value   = p.cedula||'';
-  document.getElementById('ep-blood').value    = p.blood_type||'';
-  document.getElementById('ep-shirt').value    = p.shirt_size||'';
-  document.getElementById('ep-shoe').value     = p.shoe_size||'';
-  document.getElementById('ep-address').value  = p.address||'';
-  document.getElementById('ep-emergency').value= p.emergency_contact||'';
-  document.getElementById('ep-bio').value      = p.bio||'';
+  var p = currentProfile;
+  document.getElementById('ep-name').value      = p.full_name || '';
+  document.getElementById('ep-title').value     = p.title || '';
+  document.getElementById('ep-phone').value     = p.phone || '';
+  document.getElementById('ep-cedula').value    = p.cedula || '';
+  document.getElementById('ep-blood').value     = p.blood_type || '';
+  document.getElementById('ep-shirt').value     = p.shirt_size || '';
+  document.getElementById('ep-shoe').value      = p.shoe_size || '';
+  document.getElementById('ep-address').value   = p.address || '';
+  document.getElementById('ep-emergency').value = p.emergency_contact || '';
+  document.getElementById('ep-bio').value       = p.bio || '';
   openModal('modal-edit-profile');
 }
 
 async function saveProfile() {
-  const btn = document.getElementById('ep-save');
+  var btn = document.getElementById('ep-save');
   btn.disabled = true; btn.textContent = 'Guardando...';
-
-  const updates = {
+  var updates = {
     full_name:         document.getElementById('ep-name').value.trim(),
     title:             document.getElementById('ep-title').value.trim(),
     phone:             document.getElementById('ep-phone').value.trim(),
@@ -738,171 +698,152 @@ async function saveProfile() {
     shoe_size:         document.getElementById('ep-shoe').value.trim(),
     address:           document.getElementById('ep-address').value.trim(),
     emergency_contact: document.getElementById('ep-emergency').value.trim(),
-    bio:               document.getElementById('ep-bio').value.trim(),
+    bio:               document.getElementById('ep-bio').value.trim()
   };
-
-  const { error } = await sb.from('user_profile')
-    .update(updates)
-    .eq('auth_id', currentUser.id);
-
+  var result = await sb.from('user_profile').update(updates).eq('auth_id', currentUser.id);
   btn.disabled = false; btn.textContent = 'Guardar cambios';
-
-  if (error) { toast('Error al guardar: '+error.message); return; }
-
+  if (result.error) { toast('Error: ' + result.error.message); return; }
   Object.assign(currentProfile, updates);
   closeModal('modal-edit-profile');
   updateTopbar();
   navigate('profile');
-  toast('✓ Perfil actualizado correctamente');
+  toast('✓ Perfil actualizado');
 }
 
-// ── ADMIN PAGE ───────────────────────────────────────────────────
+// ── ADMIN ────────────────────────────────────────────────
 async function renderAdmin(mc) {
-  if (currentProfile?.global_role !== 'admin') {
+  if (!currentProfile || currentProfile.global_role !== 'admin') {
     mc.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--text3);">Acceso restringido — solo administradores</div>';
     return;
   }
-  mc.innerHTML = `
-    <div class="page-header">
-      <div class="page-title">Administración</div>
-      <div class="page-sub">Gestión de empresa, usuarios y módulos</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">
-      <div class="stat-card" style="cursor:pointer;" onclick="toast('Gestión de usuarios — próximamente')">
-        <div class="stat-icon" style="background:#E1F5EE;">👥</div>
-        <div class="stat-val" id="adm-users">—</div>
-        <div class="stat-label">Usuarios registrados</div>
-        <div class="stat-change">Gestionar →</div>
-      </div>
-      <div class="stat-card" style="cursor:pointer;" onclick="toast('Gestión de módulos — próximamente')">
-        <div class="stat-icon" style="background:#E6F1FB;">🧩</div>
-        <div class="stat-val" id="adm-mods">—</div>
-        <div class="stat-label">Módulos activos</div>
-        <div class="stat-change">Configurar →</div>
-      </div>
-      <div class="stat-card" style="cursor:pointer;" onclick="toast('Configuración de empresa — próximamente')">
-        <div class="stat-icon" style="background:#FAEEDA;">🏢</div>
-        <div class="stat-val">1</div>
-        <div class="stat-label">Empresa registrada</div>
-        <div class="stat-change">Editar →</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Módulos de la plataforma</div>
-        <span style="font-size:11px;color:var(--text3);">Activa o desactiva módulos para tu empresa</span>
-      </div>
-      <div class="card-body" id="admin-modules-list"></div>
-    </div>`;
+  mc.innerHTML =
+    '<div class="page-header"><div class="page-title">Administración</div><div class="page-sub">Gestión de empresa, usuarios y módulos</div></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">' +
+      '<div class="stat-card" style="cursor:pointer;" onclick="toast('Gestión de usuarios — próximamente')">' +
+        '<div class="stat-icon" style="background:#E1F5EE;">👥</div>' +
+        '<div class="stat-val" id="adm-users">—</div>' +
+        '<div class="stat-label">Usuarios registrados</div>' +
+        '<div class="stat-change">Gestionar →</div>' +
+      '</div>' +
+      '<div class="stat-card" style="cursor:pointer;" onclick="toast('Módulos — próximamente')">' +
+        '<div class="stat-icon" style="background:#E6F1FB;">🧩</div>' +
+        '<div class="stat-val" id="adm-mods">—</div>' +
+        '<div class="stat-label">Módulos activos</div>' +
+        '<div class="stat-change">Configurar →</div>' +
+      '</div>' +
+      '<div class="stat-card">' +
+        '<div class="stat-icon" style="background:#FAEEDA;">🏢</div>' +
+        '<div class="stat-val">1</div>' +
+        '<div class="stat-label">Empresa</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<div class="card-header"><div class="card-title">Módulos de la plataforma</div>' +
+      '<span style="font-size:11px;color:var(--text3);">Activa o desactiva módulos para tu empresa</span></div>' +
+      '<div class="card-body" id="admin-modules-list"><div style="text-align:center;padding:1rem;"><div class="spin"></div></div></div>' +
+    '</div>';
 
-  const { count: uc } = await sb.from('user_profile').select('id',{count:'exact'}).eq('company_id',CO_ID);
-  document.getElementById('adm-users').textContent = uc||0;
+  var r1 = await sb.from('user_profile').select('id', {count:'exact'}).eq('company_id', CO_ID);
+  var el = document.getElementById('adm-users');
+  if (el) el.textContent = r1.count || 0;
 
-  const { data: allMods } = await sb.from('company_modules').select('*').eq('company_id',CO_ID);
-  document.getElementById('adm-mods').textContent = (allMods||[]).filter(m=>m.is_active).length;
+  var r2 = await sb.from('company_modules').select('*').eq('company_id', CO_ID);
+  var allMods = r2.data || [];
+  var el2 = document.getElementById('adm-mods');
+  if (el2) el2.textContent = allMods.filter(function(m){ return m.is_active; }).length;
 
-  const MODULE_ICONS = {projects:'📋',viewer3d:'🧊',workorders:'🔧',inventory:'📦',rrhh:'👥',accounting:'📊',hdgmind:'🤖',structural:'🏗️',documents:'📁',reports:'📈'};
-  const mEl = document.getElementById('admin-modules-list');
-  mEl.innerHTML = (allMods||[]).map(m => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:20px;">${MODULE_ICONS[m.module_key]||'◾'}</span>
-        <div>
-          <div style="font-size:13px;font-weight:500;">${m.module_name}</div>
-          <div style="font-size:11px;color:var(--text3);">${m.module_key}</div>
-        </div>
-      </div>
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <span style="font-size:11px;color:var(--text2);">${m.is_active?'Activo':'Inactivo'}</span>
-        <div onclick="toggleModule('${m.id}',${m.is_active},'${m.module_key}')" 
-          style="width:36px;height:20px;border-radius:10px;background:${m.is_active?'var(--green)':'var(--bdr2)'};position:relative;cursor:pointer;transition:background .2s;" id="tog-${m.id}">
-          <div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:${m.is_active?'18px':'2px'};transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);" id="tog-dot-${m.id}"></div>
-        </div>
-      </label>
-    </div>`).join('');
+  var mEl = document.getElementById('admin-modules-list');
+  if (!mEl) return;
+  mEl.innerHTML = allMods.map(function(m) {
+    var cfg = MODULE_CFG[m.module_key] || { icon:'◾' };
+    var bg = m.is_active ? 'var(--green)' : 'var(--bdr2)';
+    var left = m.is_active ? '18px' : '2px';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);">' +
+      '<div style="display:flex;align-items:center;gap:12px;">' +
+        '<span style="font-size:20px;">' + cfg.icon + '</span>' +
+        '<div><div style="font-size:13px;font-weight:500;">' + m.module_name + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);">' + m.module_key + '</div></div>' +
+      '</div>' +
+      '<div onclick="toggleModule('' + m.id + '',' + m.is_active + ')" ' +
+        'style="width:36px;height:20px;border-radius:10px;background:' + bg + ';position:relative;cursor:pointer;transition:background .2s;" ' +
+        'id="tog-' + m.id + '">' +
+        '<div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:' + left + ';transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);" id="tog-dot-' + m.id + '"></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
-async function toggleModule(id, currentState, key) {
-  const newState = !currentState;
-  const { error } = await sb.from('company_modules').update({is_active:newState}).eq('id',id);
-  if (error) { toast('Error: '+error.message); return; }
-
-  // Update UI
-  const tog = document.getElementById('tog-'+id);
-  const dot = document.getElementById('tog-dot-'+id);
-  tog.style.background = newState ? 'var(--green)' : 'var(--bdr2)';
-  dot.style.left = newState ? '18px' : '2px';
-
-  // Reload modules
+async function toggleModule(id, currentState) {
+  var newState = !currentState;
+  var result = await sb.from('company_modules').update({is_active: newState}).eq('id', id);
+  if (result.error) { toast('Error: ' + result.error.message); return; }
+  var tog = document.getElementById('tog-' + id);
+  var dot = document.getElementById('tog-dot-' + id);
+  if (tog) tog.style.background = newState ? 'var(--green)' : 'var(--bdr2)';
+  if (dot) dot.style.left = newState ? '18px' : '2px';
   await loadCompanyModules();
   buildSidebar();
-  toast(`Módulo ${newState?'activado':'desactivado'}: ${key}`);
+  toast('Módulo ' + (newState ? 'activado' : 'desactivado'));
 }
 
-// ── COMING SOON ──────────────────────────────────────────────────
-function renderComingSoon(mc, title, icon, desc) {
-  mc.innerHTML = `
-    <div class="page-header">
-      <div class="page-title">${icon} ${title}</div>
-      <div class="page-sub">${desc}</div>
-    </div>
-    <div class="card" style="text-align:center;padding:3rem;">
-      <div style="font-size:48px;margin-bottom:1rem;opacity:.3;">${icon}</div>
-      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">En construcción</div>
-      <div style="font-size:13px;color:var(--text2);">Este módulo está siendo desarrollado.<br>Estará disponible próximamente.</div>
-    </div>`;
+// ── COMING SOON ──────────────────────────────────────────
+function renderComingSoon(mc, title, icon) {
+  mc.innerHTML =
+    '<div class="page-header"><div class="page-title">' + icon + ' ' + title + '</div><div class="page-sub">Módulo en desarrollo</div></div>' +
+    '<div class="card" style="text-align:center;padding:3rem;">' +
+      '<div style="font-size:48px;margin-bottom:1rem;opacity:.3;">' + icon + '</div>' +
+      '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">En construcción</div>' +
+      '<div style="font-size:13px;color:var(--text2);">Este módulo estará disponible próximamente.</div>' +
+    '</div>';
 }
 
-// ── UTILS ────────────────────────────────────────────────────────
+// ── UTILS ────────────────────────────────────────────────
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
 }
-
 function showAlert(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg; el.style.display = 'block';
+  var el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
 }
 function hideAlert(id) {
-  const el = document.getElementById(id);
-  if(el) el.style.display = 'none';
+  var el = document.getElementById(id);
+  if (el) el.style.display = 'none';
 }
-
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function toggleDropdown() { document.getElementById('user-dropdown-menu').classList.toggle('open'); }
+function closeDropdown()  { document.getElementById('user-dropdown-menu').classList.remove('open'); }
 
-function toggleDropdown() {
-  document.getElementById('user-dropdown-menu').classList.toggle('open');
-}
-function closeDropdown() {
-  document.getElementById('user-dropdown-menu').classList.remove('open');
-}
-document.addEventListener('click', e => {
-  if (!document.getElementById('user-dropdown').contains(e.target)) closeDropdown();
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('user-dropdown');
+  if (dd && !dd.contains(e.target)) closeDropdown();
 });
 
 function toast(msg) {
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 
-// ── CHECK SESSION ON LOAD ─────────────────────────────────────────
-window.addEventListener('load', async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    currentUser = session.user;
+// ── SESSION ON LOAD ──────────────────────────────────────
+window.addEventListener('load', async function() {
+  var result = await sb.auth.getSession();
+  if (result.data && result.data.session) {
+    currentUser = result.data.session.user;
     await loadProfile();
+    await loadCompanyModules();
     showApp();
   }
 });
 
-// Enter key on login
-document.addEventListener('keydown', e => {
+document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && document.getElementById('sc-login').classList.contains('active')) {
     doLogin();
   }
 });
+
 </script>
+
 </body>
 </html>
