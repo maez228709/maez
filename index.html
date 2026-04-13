@@ -973,6 +973,7 @@ function renderProjectList(mc) {
     '<div class="proj-grid" id="proj-grid"></div>';
 
   var grid = document.getElementById('proj-grid');
+  setTimeout(bindFilterTabs, 0);
   if (!filtered.length) {
     grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text3);">No hay proyectos con este filtro.</div>';
     return;
@@ -1021,7 +1022,7 @@ function renderProjectList(mc) {
 
 function makeFilterTab(val, label) {
   var on = projFilter === val ? ' on' : '';
-  return '<div class="filter-tab' + on + '" onclick="setProjFilter('' + val + '')">' + label + '</div>';
+  return '<div class="filter-tab' + on + '" data-fval="' + val + '">' + label + '</div>';
 }
 
 function setProjFilter(f) {
@@ -1042,9 +1043,13 @@ function openProjectDetail(projId) {
   // Breadcrumb
   var bc = document.getElementById('breadcrumb');
   bc.innerHTML =
-    '<span class="crumb" onclick="navigate(\'projects\')">Proyectos</span>' +
+    '<span class="crumb" id="bc-projects-link">Proyectos</span>' +
     '<span class="crumb-sep">›</span>' +
     '<span class="crumb active">' + p.name + '</span>';
+  setTimeout(function() {
+    var bl = document.getElementById('bc-projects-link');
+    if (bl) bl.onclick = function() { navigate('projects'); };
+  }, 0);
 
   var vare    = a.dock_in  ? new Date(a.dock_in).toLocaleDateString('es-EC')  : '—';
   var desvare = a.dock_out ? new Date(a.dock_out).toLocaleDateString('es-EC') : '—';
