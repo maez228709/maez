@@ -238,8 +238,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
           <span style="font-size:10px;color:var(--text3);margin-left:2px;">▾</span>
         </div>
         <div class="dropdown-menu" id="user-dropdown-menu">
-          <div class="dropdown-item" onclick="navigate('profile');closeDropdown()">👤 Mi perfil</div>
-          <div class="dropdown-item" onclick="navigate('settings');closeDropdown()">⚙️ Configuración</div>
+          <div class="dropdown-item" id="dd-profile">👤 Mi perfil</div>
+          <div class="dropdown-item" id="dd-settings">⚙️ Configuración</div>
           <div class="dropdown-divider"></div>
           <div class="dropdown-item danger" onclick="doLogout()">🚪 Cerrar sesión</div>
         </div>
@@ -538,7 +538,7 @@ function navigate(page) {
   if (page === 'home') {
     bc.innerHTML = '<span class="crumb active">Inicio</span>';
   } else {
-    bc.innerHTML = '<span class="crumb" onclick="navigate('home')">Inicio</span>' +
+    bc.innerHTML = '<span class="crumb" id="bc-home">Inicio</span>' +
       '<span class="crumb-sep">›</span>' +
       '<span class="crumb active">' + label + '</span>';
   }
@@ -573,13 +573,13 @@ async function renderHome(mc) {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
       '<div class="card">' +
         '<div class="card-header"><div class="card-title">Módulos activos</div>' +
-        (p && p.global_role === 'admin' ? '<button class="edit-btn" onclick="navigate('admin')">Gestionar</button>' : '') +
+        (p && p.global_role === 'admin' ? '<button class="edit-btn" id="btn-goto-admin">Gestionar</button>' : '') +
         '</div>' +
         '<div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="home-modules"></div>' +
       '</div>' +
       '<div class="card">' +
         '<div class="card-header"><div class="card-title">Mi perfil</div>' +
-        '<button class="edit-btn" onclick="navigate('profile')">Ver perfil</button></div>' +
+        '<button class="edit-btn" id="btn-goto-profile">Ver perfil</button></div>' +
         '<div class="card-body">' +
           '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">' +
             '<div class="profile-avatar-big" style="width:48px;height:48px;font-size:18px;">' + getInitials(p && p.full_name) + '</div>' +
@@ -605,22 +605,28 @@ async function renderHome(mc) {
   el = document.getElementById('st-ot');    if(el) el.textContent = r2.count || 0;
   el = document.getElementById('st-asset'); if(el) el.textContent = r3.count || 0;
   el = document.getElementById('st-users'); if(el) el.textContent = r4.count || 0;
-  // Bind admin/profile buttons after DOM render
-  var btnAdmin = document.getElementById('btn-goto-admin');
-  if (btnAdmin) btnAdmin.onclick = function() { navigate('admin'); };
-  var btnProf = document.getElementById('btn-goto-profile');
-  if (btnProf) btnProf.onclick = function() { navigate('profile'); };
+  var btnA = document.getElementById('btn-goto-admin');
+  if (btnA) btnA.onclick = function() { navigate('admin'); };
+  var btnP = document.getElementById('btn-goto-profile');
+  if (btnP) btnP.onclick = function() { navigate('profile'); };
+  var bcH = document.getElementById('bc-home');
+  if (bcH) bcH.onclick = function() { navigate('home'); };
 
   // Modules
   var mEl = document.getElementById('home-modules');
   if (mEl) {
-    mEl.innerHTML = companyModules.map(function(m) {
+    mEl.innerHTML = '';
+    companyModules.forEach(function(m) {
       var cfg = MODULE_CFG[m.module_key] || { icon:'◾', label: m.module_name };
-      return '<div onclick="navigate('' + m.module_key + '')" style="padding:10px;background:var(--bg);border-radius:8px;cursor:pointer;" onmouseover="this.style.background='var(--brand-light)'" onmouseout="this.style.background='var(--bg)'">' +
-        '<div style="font-size:20px;margin-bottom:4px;">' + cfg.icon + '</div>' +
-        '<div style="font-size:11px;font-weight:500;">' + cfg.label + '</div>' +
-      '</div>';
-    }).join('');
+      var d = document.createElement('div');
+      d.style.cssText = 'padding:10px;background:var(--bg);border-radius:8px;cursor:pointer;';
+      d.setAttribute('data-mod', m.module_key);
+      d.onmouseover = function(){ this.style.background='var(--brand-light)'; };
+      d.onmouseout  = function(){ this.style.background='var(--bg)'; };
+      d.onclick = function(){ navigate(this.getAttribute('data-mod')); };
+      d.innerHTML = '<div style="font-size:20px;margin-bottom:4px;">' + cfg.icon + '</div><div style="font-size:11px;font-weight:500;">' + cfg.label + '</div>';
+      mEl.appendChild(d);
+    });
   }
 }
 
@@ -719,13 +725,13 @@ async function renderAdmin(mc) {
   mc.innerHTML =
     '<div class="page-header"><div class="page-title">Administración</div><div class="page-sub">Gestión de empresa, usuarios y módulos</div></div>' +
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">' +
-      '<div class="stat-card" style="cursor:pointer;" onclick="toast('Gestión de usuarios — próximamente')">' +
+      '<div class="stat-card" style="cursor:pointer;" id="btn-adm-users">' +
         '<div class="stat-icon" style="background:#E1F5EE;">👥</div>' +
         '<div class="stat-val" id="adm-users">—</div>' +
         '<div class="stat-label">Usuarios registrados</div>' +
         '<div class="stat-change">Gestionar →</div>' +
       '</div>' +
-      '<div class="stat-card" style="cursor:pointer;" onclick="toast('Módulos — próximamente')">' +
+      '<div class="stat-card" style="cursor:pointer;" id="btn-adm-mods">' +
         '<div class="stat-icon" style="background:#E6F1FB;">🧩</div>' +
         '<div class="stat-val" id="adm-mods">—</div>' +
         '<div class="stat-label">Módulos activos</div>' +
@@ -751,26 +757,35 @@ async function renderAdmin(mc) {
   var allMods = r2.data || [];
   var el2 = document.getElementById('adm-mods');
   if (el2) el2.textContent = allMods.filter(function(m){ return m.is_active; }).length;
+  var bu = document.getElementById('btn-adm-users');
+  if (bu) bu.onclick = function() { toast('Gestión de usuarios — próximamente'); };
+  var bm = document.getElementById('btn-adm-mods');
+  if (bm) bm.onclick = function() { toast('Módulos — próximamente'); };
 
   var mEl = document.getElementById('admin-modules-list');
   if (!mEl) return;
-  mEl.innerHTML = allMods.map(function(m) {
+  mEl.innerHTML = '';
+  allMods.forEach(function(m) {
     var cfg = MODULE_CFG[m.module_key] || { icon:'◾' };
-    var bg = m.is_active ? 'var(--green)' : 'var(--bdr2)';
-    var left = m.is_active ? '18px' : '2px';
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);">' +
-      '<div style="display:flex;align-items:center;gap:12px;">' +
-        '<span style="font-size:20px;">' + cfg.icon + '</span>' +
-        '<div><div style="font-size:13px;font-weight:500;">' + m.module_name + '</div>' +
-        '<div style="font-size:11px;color:var(--text3);">' + m.module_key + '</div></div>' +
-      '</div>' +
-      '<div onclick="toggleModule('' + m.id + '',' + m.is_active + ')" ' +
-        'style="width:36px;height:20px;border-radius:10px;background:' + bg + ';position:relative;cursor:pointer;transition:background .2s;" ' +
-        'id="tog-' + m.id + '">' +
-        '<div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:' + left + ';transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);" id="tog-dot-' + m.id + '"></div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);';
+    var info = document.createElement('div');
+    info.style.cssText = 'display:flex;align-items:center;gap:12px;';
+    info.innerHTML = '<span style="font-size:20px;">' + cfg.icon + '</span><div><div style="font-size:13px;font-weight:500;">' + m.module_name + '</div><div style="font-size:11px;color:var(--text3);">' + m.module_key + '</div></div>';
+    var tog = document.createElement('div');
+    tog.id = 'tog-' + m.id;
+    tog.style.cssText = 'width:36px;height:20px;border-radius:10px;background:' + (m.is_active ? 'var(--green)' : 'var(--bdr2)') + ';position:relative;cursor:pointer;transition:background .2s;';
+    tog.setAttribute('data-id', m.id);
+    tog.setAttribute('data-state', m.is_active ? '1' : '0');
+    tog.onclick = function() { toggleModule(this.getAttribute('data-id'), this.getAttribute('data-state') === '1'); };
+    var dot = document.createElement('div');
+    dot.id = 'tog-dot-' + m.id;
+    dot.style.cssText = 'width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:' + (m.is_active ? '18px' : '2px') + ';transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);';
+    tog.appendChild(dot);
+    row.appendChild(info);
+    row.appendChild(tog);
+    mEl.appendChild(row);
+  });
 }
 
 async function toggleModule(id, currentState) {
@@ -818,6 +833,13 @@ function closeDropdown()  { document.getElementById('user-dropdown-menu').classL
 document.addEventListener('click', function(e) {
   var dd = document.getElementById('user-dropdown');
   if (dd && !dd.contains(e.target)) closeDropdown();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  var ddp = document.getElementById('dd-profile');
+  if (ddp) ddp.onclick = function() { navigate('profile'); closeDropdown(); };
+  var dds = document.getElementById('dd-settings');
+  if (dds) dds.onclick = function() { toast('Configuración — próximamente'); closeDropdown(); };
 });
 
 function toast(msg) {
