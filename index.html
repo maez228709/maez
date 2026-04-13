@@ -159,6 +159,51 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
 .modal-body{padding:1.25rem;}
 .modal-footer{padding:1rem 1.25rem;border-top:1px solid var(--bdr);display:flex;gap:10px;justify-content:flex-end;}
 
+
+/* ── PROJECTS MODULE ── */
+.proj-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;}
+.search-bar{display:flex;align-items:center;gap:8px;flex:1;max-width:320px;}
+.search-input{flex:1;padding:8px 12px;border:1px solid var(--bdr2);border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;outline:none;color:var(--text);}
+.search-input:focus{border-color:var(--brand);}
+.filter-tabs{display:flex;gap:6px;margin-bottom:1rem;}
+.filter-tab{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--bdr);color:var(--text2);cursor:pointer;transition:all .12s;}
+.filter-tab.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.proj-card{background:var(--white);border:1px solid var(--bdr);border-radius:10px;cursor:pointer;transition:all .15s;overflow:hidden;}
+.proj-card:hover{border-color:var(--brand);box-shadow:0 2px 12px rgba(29,95,165,.08);transform:translateY(-1px);}
+.proj-card.active-proj{border-color:var(--green);border-width:2px;box-shadow:0 2px 16px rgba(29,158,117,.12);}
+.proj-card-thumb{height:100px;background:linear-gradient(135deg,#f0f4f8 0%,#e8edf5 100%);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:var(--brand);opacity:.3;position:relative;}
+.proj-card.active-proj .proj-card-thumb{background:linear-gradient(135deg,#E1F5EE 0%,#E6F1FB 100%);opacity:1;}
+.active-banner{position:absolute;top:8px;right:8px;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.06em;}
+.proj-card-body{padding:12px;}
+.proj-card-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.proj-card-meta{font-size:11px;color:var(--text2);margin-bottom:8px;}
+.proj-card-footer{display:flex;align-items:center;justify-content:space-between;}
+.proj-status{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;}
+.ps-active{background:var(--green-light);color:var(--green);}
+.ps-done{background:var(--bg2);color:var(--text2);}
+.ps-progress{background:#FEF3C7;color:#D97706;}
+.proj-date{font-size:10px;color:var(--text3);}
+/* Detail view */
+.proj-detail-header{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:1.25rem;margin-bottom:1rem;display:flex;gap:1rem;align-items:flex-start;}
+.proj-detail-thumb{width:64px;height:64px;border-radius:10px;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--brand);flex-shrink:0;}
+.proj-detail-name{font-size:18px;font-weight:600;}
+.proj-detail-meta{font-size:12px;color:var(--text2);margin-top:3px;}
+.proj-actions{display:flex;gap:8px;margin-top:10px;}
+.proj-act-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--bdr);color:var(--text2);background:var(--white);transition:all .12s;}
+.proj-act-btn:hover{border-color:var(--brand);color:var(--brand);}
+.proj-act-btn.primary{background:var(--brand);color:#fff;border-color:var(--brand);}
+.proj-act-btn.primary:hover{background:var(--brand-dark);}
+.proj-act-btn.green{background:var(--green);color:#fff;border-color:var(--green);}
+/* Lifecycle */
+.lifecycle-bar{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:6px;overflow-x:auto;}
+.lc-stage{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:500;color:var(--text3);border:1px solid var(--bdr);white-space:nowrap;}
+.lc-stage.done{color:var(--green);border-color:#9FE1CB;}
+.lc-stage.active{background:var(--green);color:#fff;border-color:var(--green);font-weight:600;}
+.lc-arrow{color:var(--bdr2);font-size:12px;}
+/* Edit modal fields */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
 .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--bdr);border-top-color:var(--brand);border-radius:50%;animation:sp .6s linear infinite;vertical-align:middle;}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style>
@@ -353,6 +398,80 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
   </div>
 </div>
 
+
+<!-- MODAL: EDIT / NEW PROJECT -->
+<div class="modal-overlay" id="modal-edit-project" onclick="if(event.target===this)closeModal('modal-edit-project')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Proyecto de dique</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-project')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ep-proj-id">
+      <input type="hidden" id="ep-asset-id">
+      <div class="two-col">
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Embarcación</label>
+          <select class="form-input" id="ep-proj-asset" onchange="document.getElementById('ep-asset-id').value=this.value"></select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Nombre del proyecto</label>
+          <input class="form-input" id="ep-proj-name" type="text" placeholder="Ej: Dique D04 — Treasure of Galapagos">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Código</label>
+          <input class="form-input" id="ep-proj-code" type="text" placeholder="Ej: TAERA-D04">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-input" id="ep-proj-type">
+            <option value="repair">Mantenimiento / Reparación</option>
+            <option value="construction">Construcción</option>
+            <option value="inspection">Inspección</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Etapa del ciclo de vida</label>
+          <select class="form-input" id="ep-proj-stage">
+            <option value="concept">Concepto</option>
+            <option value="design">Diseño</option>
+            <option value="quotation">Cotización</option>
+            <option value="construction">Construcción</option>
+            <option value="testing">Pruebas</option>
+            <option value="delivery">Entrega</option>
+            <option value="maintenance">Mantenimiento dique</option>
+            <option value="operation">Operación</option>
+            <option value="decommission">Chatarrización</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-input" id="ep-proj-status">
+            <option value="active">Activo — en dique</option>
+            <option value="completed">Completado</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de vare</label>
+          <input class="form-input" id="ep-proj-vare" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de desvare</label>
+          <input class="form-input" id="ep-proj-desv" type="date">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" style="width:auto;" onclick="closeModal('modal-edit-project')">Cancelar</button>
+      <button class="btn btn-primary" style="width:auto;" id="ep-proj-save"
+        onclick="document.getElementById('ep-proj-id').value ? saveProject() : createProject()">
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -510,17 +629,24 @@ function updateTopbar() {
   }
 }
 
+// Modules that have real code implemented
+var BUILT_MODULES = ['projects'];
+
 function buildSidebar() {
+  var isAdmin = currentProfile && currentProfile.global_role === 'admin';
   var nav = document.getElementById('nav-modules');
   nav.innerHTML = '<div class="sidebar-label">Módulos</div>';
   companyModules.forEach(function(m) {
+    var isBuilt = BUILT_MODULES.indexOf(m.module_key) >= 0;
+    if (!isBuilt && !isAdmin) return; // hide unbuilt from regular users
     var cfg = MODULE_CFG[m.module_key] || { icon:'◾', label: m.module_name };
     var el = document.createElement('div');
     el.className = 'nav-item';
     el.id = 'nav-' + m.module_key;
     el.setAttribute('data-page', m.module_key);
     el.onclick = function() { navigate(this.getAttribute('data-page')); };
-    el.innerHTML = '<span class="nav-icon">' + cfg.icon + '</span>' + cfg.label;
+    var badge = (!isBuilt && isAdmin) ? '<span style="font-size:9px;background:#FEF3C7;color:#D97706;padding:1px 6px;border-radius:8px;margin-left:auto;">Dev</span>' : '';
+    el.innerHTML = '<span class="nav-icon">' + cfg.icon + '</span>' + cfg.label + badge;
     nav.appendChild(el);
   });
   var sbComp = document.getElementById('sb-company');
@@ -544,9 +670,10 @@ function navigate(page) {
   }
 
   var mc = document.getElementById('main-content');
-  if (page === 'home')    { renderHome(mc); }
+  if (page === 'home')         { renderHome(mc); }
   else if (page === 'profile')  { renderProfile(mc); }
   else if (page === 'admin')    { renderAdmin(mc); }
+  else if (page === 'projects') { renderProjects(mc); }
   else { renderComingSoon(mc, label, (MODULE_CFG[page] && MODULE_CFG[page].icon) || '◾'); }
 }
 
@@ -799,6 +926,370 @@ async function toggleModule(id, currentState) {
   await loadCompanyModules();
   buildSidebar();
   toast('Módulo ' + (newState ? 'activado' : 'desactivado'));
+}
+
+
+// ── PROJECTS MODULE ──────────────────────────────────────
+var allProjects = [];
+var allAssets = {};
+var projFilter = 'all';
+
+async function renderProjects(mc) {
+  mc.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="spin"></div></div>';
+
+  // Load data
+  var r1 = await sb.from('project').select('*').eq('lead_company_id', CO_ID).order('created_at', {ascending: false});
+  var r2 = await sb.from('asset').select('*').eq('owner_company_id', CO_ID);
+
+  allProjects = r1.data || [];
+  allAssets = {};
+  (r2.data || []).forEach(function(a) { allAssets[a.id] = a; });
+
+  renderProjectList(mc);
+}
+
+function renderProjectList(mc) {
+  var filtered = allProjects.filter(function(p) {
+    if (projFilter === 'active')    return p.status === 'active';
+    if (projFilter === 'completed') return p.status === 'completed';
+    return true;
+  });
+
+  var activeCount = allProjects.filter(function(p){ return p.status === 'active'; }).length;
+
+  mc.innerHTML =
+    '<div class="page-header">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<div><div class="page-title">Proyectos de dique</div>' +
+        '<div class="page-sub">' + allProjects.length + ' proyectos · ' + activeCount + ' activos en dique</div></div>' +
+        '<button class="btn btn-primary" style="width:auto;" onclick="openNewProject()">+ Nuevo proyecto</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="filter-tabs">' +
+      makeFilterTab('all', 'Todos (' + allProjects.length + ')') +
+      makeFilterTab('active', 'En dique (' + activeCount + ')') +
+      makeFilterTab('completed', 'Completados (' + (allProjects.length - activeCount) + ')') +
+    '</div>' +
+    '<div class="proj-grid" id="proj-grid"></div>';
+
+  var grid = document.getElementById('proj-grid');
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text3);">No hay proyectos con este filtro.</div>';
+    return;
+  }
+
+  // Sort: active first
+  filtered.sort(function(a,b) {
+    if (a.status === 'active' && b.status !== 'active') return -1;
+    if (b.status === 'active' && a.status !== 'active') return 1;
+    return 0;
+  });
+
+  filtered.forEach(function(p) {
+    var a = allAssets[p.asset_id] || {};
+    var isActive = p.status === 'active';
+    var initials = (p.name || 'P').split(' ').map(function(w){ return w[0]; }).join('').substring(0,3).toUpperCase();
+    var vare = a.dock_in ? new Date(a.dock_in).toLocaleDateString('es-EC') : '—';
+    var desvare = a.dock_out ? new Date(a.dock_out).toLocaleDateString('es-EC') : '—';
+
+    var card = document.createElement('div');
+    card.className = 'proj-card' + (isActive ? ' active-proj' : '');
+    card.setAttribute('data-id', p.id);
+    card.onclick = function() { openProjectDetail(this.getAttribute('data-id')); };
+
+    card.innerHTML =
+      '<div class="proj-card-thumb">' + initials +
+        (isActive ? '<div class="active-banner">EN DIQUE</div>' : '') +
+      '</div>' +
+      '<div class="proj-card-body">' +
+        '<div class="proj-card-name">' + p.name + '</div>' +
+        '<div class="proj-card-meta">' +
+          (a.vessel_type || a.subtype || 'Embarcación') +
+          (a.registration_number ? ' · ' + a.registration_number : '') +
+        '</div>' +
+        '<div class="proj-card-footer">' +
+          '<span class="proj-status ' + (isActive ? 'ps-active' : 'ps-done') + '">' +
+            (isActive ? '⬤ Activo' : '✓ Completado') +
+          '</span>' +
+          '<span class="proj-date">' + vare + '</span>' +
+        '</div>' +
+      '</div>';
+
+    grid.appendChild(card);
+  });
+}
+
+function makeFilterTab(val, label) {
+  var on = projFilter === val ? ' on' : '';
+  return '<div class="filter-tab' + on + '" onclick="setProjFilter('' + val + '')">' + label + '</div>';
+}
+
+function setProjFilter(f) {
+  projFilter = f;
+  var mc = document.getElementById('main-content');
+  renderProjectList(mc);
+}
+
+// ── PROJECT DETAIL ────────────────────────────────────────
+function openProjectDetail(projId) {
+  var p = allProjects.find(function(x){ return x.id === projId; });
+  if (!p) return;
+  var a = allAssets[p.asset_id] || {};
+  var isActive = p.status === 'active';
+  var initials = (p.name||'P').split(' ').map(function(w){ return w[0]; }).join('').substring(0,3).toUpperCase();
+  var mc = document.getElementById('main-content');
+
+  // Breadcrumb
+  var bc = document.getElementById('breadcrumb');
+  bc.innerHTML =
+    '<span class="crumb" onclick="navigate(\'projects\')">Proyectos</span>' +
+    '<span class="crumb-sep">›</span>' +
+    '<span class="crumb active">' + p.name + '</span>';
+
+  var vare    = a.dock_in  ? new Date(a.dock_in).toLocaleDateString('es-EC')  : '—';
+  var desvare = a.dock_out ? new Date(a.dock_out).toLocaleDateString('es-EC') : '—';
+
+  mc.innerHTML =
+    '<div class="proj-detail-header">' +
+      '<div class="proj-detail-thumb">' + initials + '</div>' +
+      '<div style="flex:1;">' +
+        '<div class="proj-detail-name">' + p.name + '</div>' +
+        '<div class="proj-detail-meta">' +
+          (a.vessel_type||'Embarcación') + (a.registration_number ? ' · ' + a.registration_number : '') +
+          ' · Proyecto ' + (p.code||p.id.substring(0,8)) +
+        '</div>' +
+        '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<span class="proj-status ' + (isActive ? 'ps-active' : 'ps-done') + '">' + (isActive ? '⬤ Activo en dique' : '✓ Completado') + '</span>' +
+        '</div>' +
+        '<div class="proj-actions">' +
+          '<button class="proj-act-btn primary" onclick="openViewer3D('' + p.id + '')">🧊 Abrir visor 3D</button>' +
+          '<button class="proj-act-btn" onclick="openEditProject('' + p.id + '')">✏️ Editar proyecto</button>' +
+          (isActive ? '<button class="proj-act-btn" onclick="closeProject('' + p.id + '')">✓ Marcar completado</button>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Lifecycle
+    '<div class="lifecycle-bar">' +
+      '<span style="font-size:11px;color:var(--text2);margin-right:4px;">Etapa:</span>' +
+      makeLcStage('Diseño', p.stage, ['concept','design']) +
+      '<span class="lc-arrow">›</span>' +
+      makeLcStage('Cotización', p.stage, ['quotation']) +
+      '<span class="lc-arrow">›</span>' +
+      makeLcStage('Construcción', p.stage, ['construction']) +
+      '<span class="lc-arrow">›</span>' +
+      makeLcStage('Pruebas', p.stage, ['testing','delivery']) +
+      '<span class="lc-arrow">›</span>' +
+      makeLcStage('Mantenimiento dique', p.stage, ['maintenance']) +
+      '<span class="lc-arrow">›</span>' +
+      makeLcStage('Operación', p.stage, ['operation']) +
+      '<span class="lc-arrow">›</span>' +
+      makeLcStage('Chatarrización', p.stage, ['decommission']) +
+    '</div>' +
+
+    // Data grid
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+      // Vessel data
+      '<div class="card">' +
+        '<div class="card-header"><div class="card-title">Datos de la embarcación</div></div>' +
+        '<div class="card-body" style="display:grid;gap:0;">' +
+          projField('Matrícula', a.registration_number) +
+          projField('OMI', a.omi_number) +
+          projField('Tipo', (a.vessel_type||'') + (a.subtype ? ' · '+a.subtype : '')) +
+          projField('Eslora', a.length_m ? a.length_m + ' m' : null) +
+          projField('Manga', a.width_m ? a.width_m + ' m' : null) +
+          projField('Puntal', a.height_m ? a.height_m + ' m' : null) +
+          projField('TRB', a.trb) +
+          projField('Armador', a.owner_name) +
+          projField('Avalúo', a.appraisal_usd ? '$ ' + parseFloat(a.appraisal_usd).toLocaleString() : null) +
+        '</div>' +
+      '</div>' +
+      // Project data
+      '<div class="card">' +
+        '<div class="card-header"><div class="card-title">Datos del proyecto</div>' +
+          '<button class="edit-btn" onclick="openEditProject('' + p.id + '')">✏️ Editar</button>' +
+        '</div>' +
+        '<div class="card-body" style="display:grid;gap:0;">' +
+          projField('Código', p.code) +
+          projField('Tipo', p.project_type) +
+          projField('Estado', isActive ? 'Activo en dique' : 'Completado') +
+          projField('Fecha de vare', vare) +
+          projField('Fecha de desvare', desvare) +
+          projField('Etapa', p.stage) +
+          projField('Moneda', p.currency || 'USD') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+function makeLcStage(label, currentStage, stages) {
+  var isDone = false;
+  var isActive = stages.indexOf(currentStage) >= 0;
+  // Simple progression logic
+  var order = ['concept','design','quotation','construction','testing','delivery','maintenance','operation','decommission'];
+  var currentIdx = order.indexOf(currentStage);
+  stages.forEach(function(s) {
+    if (order.indexOf(s) < currentIdx) isDone = true;
+  });
+  var cls = isActive ? 'active' : (isDone ? 'done' : '');
+  return '<div class="lc-stage ' + cls + '">' + label + '</div>';
+}
+
+function projField(label, val) {
+  if (!val || val === '—') return '';
+  return '<div class="irow"><span class="ik">' + label + '</span><span class="iv">' + val + '</span></div>';
+}
+
+// ── EDIT PROJECT MODAL ────────────────────────────────────
+function openEditProject(projId) {
+  var p = allProjects.find(function(x){ return x.id === projId; });
+  if (!p) return;
+  var a = allAssets[p.asset_id] || {};
+
+  document.getElementById('ep-proj-id').value    = p.id;
+  document.getElementById('ep-proj-name').value  = p.name || '';
+  document.getElementById('ep-proj-code').value  = p.code || '';
+  document.getElementById('ep-proj-type').value  = p.project_type || 'repair';
+  document.getElementById('ep-proj-stage').value = p.stage || 'maintenance';
+  document.getElementById('ep-proj-status').value= p.status || 'active';
+  document.getElementById('ep-proj-vare').value  = a.dock_in ? a.dock_in.split('T')[0] : '';
+  document.getElementById('ep-proj-desv').value  = a.dock_out ? a.dock_out.split('T')[0] : '';
+  document.getElementById('ep-asset-id').value   = p.asset_id || '';
+  openModal('modal-edit-project');
+}
+
+async function saveProject() {
+  var btn = document.getElementById('ep-proj-save');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  var projId  = document.getElementById('ep-proj-id').value;
+  var assetId = document.getElementById('ep-asset-id').value;
+
+  var projUpdates = {
+    name:         document.getElementById('ep-proj-name').value.trim(),
+    code:         document.getElementById('ep-proj-code').value.trim(),
+    project_type: document.getElementById('ep-proj-type').value,
+    stage:        document.getElementById('ep-proj-stage').value,
+    status:       document.getElementById('ep-proj-status').value,
+  };
+  var vare = document.getElementById('ep-proj-vare').value;
+  var desv = document.getElementById('ep-proj-desv').value;
+
+  // Update project
+  var r1 = await sb.from('project').update(projUpdates).eq('id', projId);
+  // Update asset dock dates
+  if (assetId) {
+    var assetUpdates = {};
+    if (vare) assetUpdates.dock_in  = vare;
+    if (desv) assetUpdates.dock_out = desv;
+    if (Object.keys(assetUpdates).length) {
+      await sb.from('asset').update(assetUpdates).eq('id', assetId);
+    }
+  }
+
+  btn.disabled = false; btn.textContent = 'Guardar';
+
+  if (r1.error) { toast('Error: ' + r1.error.message); return; }
+
+  // Refresh data
+  var idx = allProjects.findIndex(function(x){ return x.id === projId; });
+  if (idx >= 0) Object.assign(allProjects[idx], projUpdates);
+  if (assetId && allAssets[assetId]) {
+    if (vare) allAssets[assetId].dock_in  = vare;
+    if (desv) allAssets[assetId].dock_out = desv;
+  }
+
+  closeModal('modal-edit-project');
+  toast('✓ Proyecto actualizado');
+  openProjectDetail(projId);
+}
+
+async function closeProject(projId) {
+  var r = await sb.from('project').update({status:'completed'}).eq('id', projId);
+  if (r.error) { toast('Error: ' + r.error.message); return; }
+  var idx = allProjects.findIndex(function(x){ return x.id === projId; });
+  if (idx >= 0) allProjects[idx].status = 'completed';
+  toast('✓ Proyecto marcado como completado');
+  openProjectDetail(projId);
+}
+
+// ── NEW PROJECT ───────────────────────────────────────────
+async function openNewProject() {
+  // Load assets for selector
+  var r = await sb.from('asset').select('id,name,registration_number').eq('owner_company_id', CO_ID);
+  var assets = r.data || [];
+  var sel = document.getElementById('ep-proj-asset');
+  sel.innerHTML = '<option value="">— Seleccionar embarcación —</option>';
+  assets.forEach(function(a) {
+    var opt = document.createElement('option');
+    opt.value = a.id;
+    opt.textContent = a.name + (a.registration_number ? ' · ' + a.registration_number : '');
+    sel.appendChild(opt);
+  });
+  document.getElementById('ep-proj-id').value = '';
+  document.getElementById('ep-proj-name').value = '';
+  document.getElementById('ep-proj-code').value = '';
+  document.getElementById('ep-proj-type').value = 'repair';
+  document.getElementById('ep-proj-stage').value = 'maintenance';
+  document.getElementById('ep-proj-status').value = 'active';
+  document.getElementById('ep-proj-vare').value = new Date().toISOString().split('T')[0];
+  document.getElementById('ep-proj-desv').value = '';
+  document.getElementById('ep-asset-id').value = '';
+  openModal('modal-edit-project');
+}
+
+async function createProject() {
+  var btn = document.getElementById('ep-proj-save');
+  var assetSel = document.getElementById('ep-proj-asset');
+  var assetId = assetSel ? assetSel.value : document.getElementById('ep-asset-id').value;
+  if (!assetId) { toast('Selecciona una embarcación'); return; }
+  var name = document.getElementById('ep-proj-name').value.trim();
+  if (!name) { toast('El nombre es obligatorio'); return; }
+
+  btn.disabled = true; btn.textContent = 'Creando...';
+
+  var newProj = {
+    name: name,
+    code: document.getElementById('ep-proj-code').value.trim() || null,
+    asset_id: assetId,
+    lead_company_id: CO_ID,
+    admin_user_id: currentProfile.id,
+    created_by: currentProfile.id,
+    project_type: document.getElementById('ep-proj-type').value,
+    stage: document.getElementById('ep-proj-stage').value,
+    status: document.getElementById('ep-proj-status').value,
+    currency: 'USD',
+    start_date: document.getElementById('ep-proj-vare').value || null,
+    end_date: document.getElementById('ep-proj-desv').value || null,
+  };
+
+  var r = await sb.from('project').insert(newProj).select().single();
+  btn.disabled = false; btn.textContent = 'Guardar';
+
+  if (r.error) { toast('Error: ' + r.error.message); return; }
+
+  // Update asset dock dates
+  var vare = document.getElementById('ep-proj-vare').value;
+  var desv = document.getElementById('ep-proj-desv').value;
+  if (assetId && (vare || desv)) {
+    var upd = {};
+    if (vare) upd.dock_in = vare;
+    if (desv) upd.dock_out = desv;
+    await sb.from('asset').update(upd).eq('id', assetId);
+  }
+
+  allProjects.unshift(r.data);
+  if (!allAssets[assetId]) {
+    var ar = await sb.from('asset').select('*').eq('id', assetId).single();
+    if (ar.data) allAssets[assetId] = ar.data;
+  }
+  closeModal('modal-edit-project');
+  toast('✓ Proyecto creado');
+  renderProjectList(document.getElementById('main-content'));
+}
+
+function openViewer3D(projId) {
+  toast('Visor 3D — próxima etapa');
 }
 
 // ── COMING SOON ──────────────────────────────────────────
