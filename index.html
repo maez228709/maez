@@ -712,7 +712,6 @@ table.data-table td.actions{text-align:right;white-space:nowrap;}
 <div id="toast"></div>
 
 <script>
-
 // ── SUPABASE CLIENT ─────────────────────────────────────
 const { createClient } = supabase;
 const sb = createClient('https://ukcfzijdegclgavjtrug.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrY2Z6aWpkZWdjbGdhdmp0cnVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTI2NTAsImV4cCI6MjA5MTMyODY1MH0.5pBebPqehEuiFRf0-VFkBVws6AT6oGf7OzimUzhbg1o');
@@ -783,6 +782,257 @@ async function doGoogleLogin() {
     options: { redirectTo: window.location.href }
   });
   if (r.error) { showAlert('login-error', r.error.message); }
+}
+
+
+
+
+
+
+// ── LOAD DATA ────────────────────────────────────────────
+async function loadCompanyModules() {
+  if (!CO_ID) return;
+  var result = await sb.from('company_modules').select('*').eq('company_id', CO_ID).eq('is_active', true);
+  companyModules = result.data || [];
+}
+
+async function loadCompanyData() {
+  if (!CO_ID) return;
+  var r = await sb.from('company').select('*').eq('id', CO_ID).single();
+  companyData = r.data || null;
+  if (companyData) {
+    var sbComp = document.getElementById('sb-company');
+    if (sbComp) sbComp.textContent = companyData.trade_name || companyData.name || 'Empresa';
+    var sbPlan = document.getElementById('sb-plan');
+    if (sbPlan) sbPlan.textContent = 'Plan ' + (companyData.plan || 'Starter');
+  }
+}
+
+async function loadProfile() {
+  var result = await sb.from('user_profile').select('*, company:company_id(*)').eq('auth_id', currentUser.id).single();
+  currentProfile = result.data;
+  if (!currentProfile) return;
+  if (currentProfile.company_id) CO_ID = currentProfile.company_id;
+}
+
+async function renderAdmin(mc) {
+  if (!currentProfile || currentProfile.global_role !== 'admin') {
+    mc.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--text3);">Acceso restringido</div>';
+    return;
+  }
+  navigate('company');
+}
+
+
+var BUILT_MODULES = ['company', 'projects'];
+var companyData = null;
+
+function buildSidebar() {
+  var nav = document.getElementById('nav-modules');
+  if (!nav) return;
+  nav.innerHTML = '<div class="sidebar-label">Módulos</div>';
+  BUILT_MODULES.forEach(function(key) {
+    var cfg = MODULE_CFG[key] || { icon:'◾', label: key };
+    var el = document.createElement('div');
+    el.className = 'nav-item';
+    el.id = 'nav-' + key;
+    el.setAttribute('data-page', key);
+    el.onclick = function() { navigate(this.getAttribute('data-page')); };
+    el.innerHTML = '<span class="nav-icon">' + cfg.icon + '</span>' + cfg.label;
+    nav.appendChild(el);
+  });
+  var np = document.getElementById('nav-profile-link');
+  if (np) np.onclick = function() { navigate('profile'); };
+  var nl = document.getElementById('nav-logout');
+  if (nl) nl.onclick = function() { doLogout(); };
+  if (companyData) {
+    var sbComp = document.getElementById('sb-company');
+    if (sbComp) sbComp.textContent = companyData.trade_name || companyData.name || 'Empresa';
+  }
+}
+
+function showApp() {
+  showScreen('sc-app');
+  updateTopbar();
+  buildSidebar();
+  navigate('home');
+}
+
+function updateTopbar() {
+  var p = currentProfile;
+  if (!p) return;
+  var role = getRole(p.global_role);
+  var ini = getInitials(p.full_name);
+  var topAv = document.getElementById('top-avatar');
+  if (topAv) {
+    if (p.avatar_url) {
+      topAv.innerHTML = '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    } else {
+      topAv.textContent = ini;
+    }
+  }
+  var tn = document.getElementById('top-name');
+  if (tn) tn.textContent = (p.full_name||'Usuario').split(' ')[0];
+  var tr = document.getElementById('top-role');
+  if (tr) tr.textContent = role.label;
+}
+
+
+// ── NAVIGATE ─────────────────────────────────────────────
+
+
+function navigate(page) {
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  var label = PAGE_LABELS[page] || page;
+  var bc = document.getElementById('breadcrumb');
+  if (bc) {
+    if (page === 'home') {
+      bc.innerHTML = '<span class="crumb active">Inicio</span>';
+    } else {
+      bc.innerHTML = '<span class="crumb" id="bc-home-link">Inicio</span><span class="crumb-sep">›</span><span class="crumb active">' + label + '</span>';
+      var bh = document.getElementById('bc-home-link');
+      if (bh) bh.onclick = function() { navigate('home'); };
+    }
+  }
+  var mc = document.getElementById('main-content');
+  if (!mc) return;
+  if (page === 'home')         renderHome(mc);
+  else if (page === 'profile') renderProfile(mc);
+  else if (page === 'company') renderCompany(mc);
+  else if (page === 'projects') renderProjects(mc);
+  else if (page === 'admin')   renderAdmin(mc);
+  else renderComingSoon(mc, label, (MODULE_CFG[page] && MODULE_CFG[page].icon) || '◾');
+}
+
+// ── HOME ─────────────────────────────────────────────────
+async function renderHome(mc) {
+  var p = currentProfile || {};
+  var role = getRole(p.global_role);
+  var d = new Date();
+  var days = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  var months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var firstName = p.full_name ? (p.full_name.split(' ')[1] || p.full_name.split(' ')[0]) : 'Usuario';
+
+  mc.innerHTML =
+    '<div class="page-header">' +
+      '<div class="page-title">Buenos días, ' + firstName + ' 👋</div>' +
+      '<div class="page-sub">' + days[d.getDay()] + ' ' + d.getDate() + ' de ' + months[d.getMonth()] + ' · ' + role.label + '</div>' +
+    '</div>' +
+    '<div class="stats-grid">' +
+      '<div class="stat-card"><div class="stat-icon" style="background:#E6F1FB;">📋</div><div class="stat-val" id="st-proj">—</div><div class="stat-label">Proyectos activos</div></div>' +
+      '<div class="stat-card"><div class="stat-icon" style="background:#E1F5EE;">🔧</div><div class="stat-val" id="st-ot">—</div><div class="stat-label">Órdenes de trabajo</div></div>' +
+      '<div class="stat-card"><div class="stat-icon" style="background:#FAEEDA;">⛵</div><div class="stat-val" id="st-asset">—</div><div class="stat-label">Embarcaciones</div></div>' +
+      '<div class="stat-card"><div class="stat-icon" style="background:#F1EFE8;">👥</div><div class="stat-val" id="st-users">—</div><div class="stat-label">Usuarios</div></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+      '<div class="card"><div class="card-header"><div class="card-title">Módulos activos</div></div>' +
+        '<div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="home-modules"></div>' +
+      '</div>' +
+      '<div class="card"><div class="card-header"><div class="card-title">Mi perfil</div>' +
+        '<button class="edit-btn" id="btn-goto-profile">Ver perfil</button></div>' +
+        '<div class="card-body">' +
+          '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">' +
+            '<div class="profile-avatar-big" style="width:48px;height:48px;font-size:18px;">' + getInitials(p.full_name) + '</div>' +
+            '<div><div style="font-weight:600;">' + (p.full_name||'—') + '</div>' +
+            '<div style="font-size:12px;color:var(--text2);">' + (p.title||role.label) + '</div></div>' +
+          '</div>' +
+          '<div style="font-size:11px;padding:5px 0;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;"><span style="color:var(--text2);">Rol</span><span style="font-weight:500;">' + role.label + '</span></div>' +
+          '<div style="font-size:11px;padding:5px 0;display:flex;justify-content:space-between;"><span style="color:var(--text2);">Email</span><span style="font-weight:500;">' + (p.email||'—') + '</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  setTimeout(function() {
+    var bp = document.getElementById('btn-goto-profile');
+    if (bp) bp.onclick = function() { navigate('profile'); };
+    var mEl = document.getElementById('home-modules');
+    if (mEl) {
+      mEl.innerHTML = '';
+      companyModules.forEach(function(m) {
+        var cfg = MODULE_CFG[m.module_key] || { icon:'◾', label: m.module_name };
+        var d2 = document.createElement('div');
+        d2.style.cssText = 'padding:10px;background:var(--bg);border-radius:8px;cursor:pointer;';
+        d2.setAttribute('data-mod', m.module_key);
+        d2.onmouseover = function(){ this.style.background='var(--brand-light)'; };
+        d2.onmouseout  = function(){ this.style.background='var(--bg)'; };
+        d2.onclick = function(){ navigate(this.getAttribute('data-mod')); };
+        d2.innerHTML = '<div style="font-size:20px;margin-bottom:4px;">' + cfg.icon + '</div><div style="font-size:11px;font-weight:500;">' + cfg.label + '</div>';
+        mEl.appendChild(d2);
+      });
+    }
+  }, 0);
+
+  if (CO_ID) {
+    var r1 = await sb.from('project').select('id',{count:'exact'}).eq('lead_company_id',CO_ID).eq('status','active');
+    var r2 = await sb.from('record').select('id',{count:'exact'});
+    var r3 = await sb.from('asset').select('id',{count:'exact'}).eq('owner_company_id',CO_ID);
+    var r4 = await sb.from('user_profile').select('id',{count:'exact'}).eq('company_id',CO_ID);
+    var e;
+    e=document.getElementById('st-proj');  if(e) e.textContent=r1.count||0;
+    e=document.getElementById('st-ot');    if(e) e.textContent=r2.count||0;
+    e=document.getElementById('st-asset'); if(e) e.textContent=r3.count||0;
+    e=document.getElementById('st-users'); if(e) e.textContent=r4.count||0;
+  }
+}
+
+// ── PROFILE ──────────────────────────────────────────────
+function renderProfile(mc) {
+  var p = currentProfile || {};
+  var role = getRole(p.global_role);
+  var ini = getInitials(p.full_name);
+
+  function fld(label, val) {
+    return val ? '<div class="irow"><span class="ik">' + label + '</span><span class="iv">' + val + '</span></div>' : '';
+  }
+
+  mc.innerHTML =
+    '<div class="page-header"><div class="page-title">Mi perfil</div><div class="page-sub">Datos personales y profesionales</div></div>' +
+    '<div class="profile-hero">' +
+      '<div class="avatar-upload" onclick="uploadAvatar()">' +
+        '<div class="profile-avatar-big" id="profile-avatar-display">' +
+          (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : ini) +
+        '</div>' +
+        '<div class="avatar-overlay">📷</div>' +
+      '</div>' +
+      '<div style="flex:1;">' +
+        '<div class="profile-name">' + (p.full_name||'—') + '</div>' +
+        '<div class="profile-title">' + (p.title||'—') + '</div>' +
+        '<div class="profile-tags">' +
+          '<span class="tag tag-blue">' + role.icon + ' ' + role.label + '</span>' +
+          '<span class="tag tag-green">' + role.lifecycle + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<button class="edit-btn" onclick="openEditProfile()">✏️ Editar perfil</button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+      '<div class="card"><div class="card-header"><div class="card-title">Información personal</div></div>' +
+        '<div class="card-body">' +
+          fld('Email', p.email) + fld('Teléfono', p.phone) +
+          fld('Cédula', p.cedula) + fld('Tipo de sangre', p.blood_type) +
+          fld('Talla camiseta', p.shirt_size) + fld('Talla zapatos', p.shoe_size) +
+          fld('Dirección', p.address) + fld('Emergencia', p.emergency_contact) +
+        '</div>' +
+      '</div>' +
+      '<div class="card"><div class="card-header"><div class="card-title">Información profesional</div></div>' +
+        '<div class="card-body">' +
+          fld('Cargo', p.title) + fld('Rol', role.label) + fld('Ciclo de vida', role.lifecycle) +
+          (p.bio ? '<div style="margin-top:10px;padding:10px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text2);">' + p.bio + '</div>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ── COMING SOON ──────────────────────────────────────────
+function renderComingSoon(mc, title, icon) {
+  mc.innerHTML =
+    '<div class="page-header"><div class="page-title">' + icon + ' ' + title + '</div><div class="page-sub">Módulo en desarrollo</div></div>' +
+    '<div class="card" style="text-align:center;padding:3rem;">' +
+      '<div style="font-size:48px;margin-bottom:1rem;opacity:.3;">' + icon + '</div>' +
+      '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">En construcción</div>' +
+      '<div style="font-size:13px;color:var(--text2);">Este módulo estará disponible próximamente.</div>' +
+    '</div>';
 }
 
 // ── LOGIN FLOW ────────────────────────────────────────────
@@ -1525,15 +1775,7 @@ function openViewer3D(projId) {
 }
 
 // ── COMING SOON ──────────────────────────────────────────
-function renderComingSoon(mc, title, icon) {
-  mc.innerHTML =
-    '<div class="page-header"><div class="page-title">' + icon + ' ' + title + '</div><div class="page-sub">Módulo en desarrollo</div></div>' +
-    '<div class="card" style="text-align:center;padding:3rem;">' +
-      '<div style="font-size:48px;margin-bottom:1rem;opacity:.3;">' + icon + '</div>' +
-      '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">En construcción</div>' +
-      '<div style="font-size:13px;color:var(--text2);">Este módulo estará disponible próximamente.</div>' +
-    '</div>';
-}
+
 
 // ── UTILS ────────────────────────────────────────────────
 function showScreen(id) {
@@ -1610,8 +1852,6 @@ document.addEventListener('keydown', function(e) {
     doLogin();
   }
 });
-
 </script>
-
 </body>
 </html>
