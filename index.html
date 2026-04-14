@@ -1067,9 +1067,9 @@ function openProjectDetail(projId) {
           '<span class="proj-status ' + (isActive ? 'ps-active' : 'ps-done') + '">' + (isActive ? '⬤ Activo en dique' : '✓ Completado') + '</span>' +
         '</div>' +
         '<div class="proj-actions">' +
-          '<button class="proj-act-btn primary" onclick="openViewer3D('' + p.id + '')">🧊 Abrir visor 3D</button>' +
-          '<button class="proj-act-btn" onclick="openEditProject('' + p.id + '')">✏️ Editar proyecto</button>' +
-          (isActive ? '<button class="proj-act-btn" onclick="closeProject('' + p.id + '')">✓ Marcar completado</button>' : '') +
+          '<button class="proj-act-btn primary" data-pid="' + p.id + '" id="btn-viewer-' + p.id + '">🧊 Abrir visor 3D</button>' +
+          '<button class="proj-act-btn" data-eid="' + p.id + '" id="btn-edit-' + p.id + '">✏️ Editar proyecto</button>' +
+          (isActive ? '<button class="proj-act-btn" data-cid="' + p.id + '" id="btn-close-' + p.id + '">✓ Marcar completado</button>' : '') +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -1112,7 +1112,7 @@ function openProjectDetail(projId) {
       // Project data
       '<div class="card">' +
         '<div class="card-header"><div class="card-title">Datos del proyecto</div>' +
-          '<button class="edit-btn" onclick="openEditProject('' + p.id + '')">✏️ Editar</button>' +
+          '<button class="edit-btn" id="btn-edit2-' + p.id + '" data-eid2="' + p.id + '">✏️ Editar</button>' +
         '</div>' +
         '<div class="card-body" style="display:grid;gap:0;">' +
           projField('Código', p.code) +
@@ -1125,6 +1125,18 @@ function openProjectDetail(projId) {
         '</div>' +
       '</div>' +
     '</div>';
+
+  // Bind buttons after DOM render
+  setTimeout(function() {
+    var bv = document.getElementById('btn-viewer-' + projId);
+    if (bv) bv.onclick = function() { openViewer3D(this.getAttribute('data-pid')); };
+    var be = document.getElementById('btn-edit-' + projId);
+    if (be) be.onclick = function() { openEditProject(this.getAttribute('data-eid')); };
+    var bc2 = document.getElementById('btn-close-' + projId);
+    if (bc2) bc2.onclick = function() { closeProject(this.getAttribute('data-cid')); };
+    var be2 = document.getElementById('btn-edit2-' + projId);
+    if (be2) be2.onclick = function() { openEditProject(this.getAttribute('data-eid2')); };
+  }, 0);
 }
 
 function makeLcStage(label, currentStage, stages) {
