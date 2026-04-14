@@ -160,6 +160,23 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
 .modal-footer{padding:1rem 1.25rem;border-top:1px solid var(--bdr);display:flex;gap:10px;justify-content:flex-end;}
 
 
+
+/* ── COMPANY MODULE ── */
+.company-hero{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:1.5rem;display:flex;gap:1.5rem;align-items:flex-start;margin-bottom:1rem;}
+.company-logo-wrap{width:80px;height:80px;border-radius:12px;background:var(--bg2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative;}
+.company-logo-wrap img{width:100%;height:100%;object-fit:contain;}
+.company-logo-wrap:hover::after{content:'📷';position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:24px;border-radius:12px;}
+.company-name-big{font-size:22px;font-weight:700;}
+.company-sub{font-size:13px;color:var(--text2);margin-top:4px;}
+.section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;margin-top:1.25rem;}
+.editable-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.edit-field{background:var(--bg);border-radius:8px;padding:10px 12px;cursor:pointer;transition:background .12s;border:1px solid transparent;}
+.edit-field:hover{background:var(--brand-light);border-color:#B5D4F4;}
+.edit-field-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.edit-field-val{font-size:13px;font-weight:500;color:var(--text);}
+.edit-field-val.empty{color:var(--text3);font-style:italic;}
+.edit-hint{font-size:9px;color:var(--brand);margin-top:3px;}
+
 /* ── PROJECTS MODULE ── */
 .proj-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;}
 .search-bar{display:flex;align-items:center;gap:8px;flex:1;max-width:320px;}
@@ -304,13 +321,13 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
       </div>
       <div class="sidebar-section">
         <div class="sidebar-label">Cuenta</div>
-        <div class="nav-item" onclick="navigate(`profile`)">
+        <div class="nav-item" id="nav-company" onclick="navigate('company')">
+          <span class="nav-icon">🏢</span>Empresa
+        </div>
+        <div class="nav-item" id="nav-profile-link">
           <span class="nav-icon">👤</span>Mi perfil
         </div>
-        <div class="nav-item" id="nav-admin" style="display:none;" onclick="navigate(`admin`)">
-          <span class="nav-icon">⚙️</span>Administración
-        </div>
-        <div class="nav-item" onclick="doLogout()">
+        <div class="nav-item" id="nav-logout">
           <span class="nav-icon">🚪</span>Salir
         </div>
       </div>
@@ -398,6 +415,77 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
   </div>
 </div>
 
+
+
+<!-- MODAL: EDIT COMPANY -->
+<div class="modal-overlay" id="modal-edit-company" onclick="if(event.target===this)closeModal('modal-edit-company')">
+  <div class="modal" style="width:540px;">
+    <div class="modal-header">
+      <div class="modal-title">Editar empresa</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-company')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="two-col">
+        <div class="form-group">
+          <label class="form-label">Nombre comercial</label>
+          <input class="form-input" id="ec-trade" type="text" placeholder="Ej: TAERA Astillero">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Razón social</label>
+          <input class="form-input" id="ec-name" type="text" placeholder="Ej: TAERA Cía. Ltda.">
+        </div>
+        <div class="form-group">
+          <label class="form-label">RUC / Tax ID</label>
+          <input class="form-input" id="ec-taxid" type="text" placeholder="0990000000001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de empresa</label>
+          <input class="form-input" id="ec-type" type="text" placeholder="Ej: Astillero, Naviera">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ciudad</label>
+          <input class="form-input" id="ec-city" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">País</label>
+          <input class="form-input" id="ec-country" type="text">
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Dirección</label>
+          <input class="form-input" id="ec-address" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="ec-phone" type="tel">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="ec-email" type="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sitio web</label>
+          <input class="form-input" id="ec-website" type="url" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Representante legal</label>
+          <input class="form-input" id="ec-legrep" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sector / Industria</label>
+          <input class="form-input" id="ec-industry" type="text" placeholder="Ej: Astillero naval">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Año de fundación</label>
+          <input class="form-input" id="ec-founded" type="text" placeholder="Ej: 2010">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" style="width:auto;" onclick="closeModal('modal-edit-company')">Cancelar</button>
+      <button class="btn btn-primary" style="width:auto;" id="ec-save" onclick="saveCompany()">Guardar</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: EDIT / NEW PROJECT -->
 <div class="modal-overlay" id="modal-edit-project" onclick="if(event.target===this)closeModal('modal-edit-project')">
@@ -500,6 +588,7 @@ const ROLES = {
 };
 
 const MODULE_CFG = {
+  company:    { icon:'🏢', label:'Empresa' },
   projects:   { icon:'📋', label:'Proyectos' },
   viewer3d:   { icon:'🧊', label:'Visor 3D' },
   workorders: { icon:'🔧', label:'Órdenes de trabajo' },
@@ -513,7 +602,7 @@ const MODULE_CFG = {
 };
 
 const PAGE_LABELS = {
-  home:'Inicio', profile:'Mi perfil', admin:'Administración',
+  home:'Inicio', profile:'Mi perfil', company:'Empresa',
   projects:'Proyectos', viewer3d:'Visor 3D', workorders:'Órdenes de trabajo',
   inventory:'Inventario', rrhh:'Recursos humanos', accounting:'Contabilidad',
   documents:'Documentos', reports:'Informes'
@@ -553,6 +642,7 @@ async function doLogin() {
   currentUser = result.data.user;
   await loadProfile();
   await loadCompanyModules();
+  await loadCompanyData();
   showApp();
 }
 
@@ -607,6 +697,17 @@ async function loadCompanyModules() {
   companyModules = result.data || [];
 }
 
+async function loadCompanyData() {
+  var r = await sb.from('company').select('*').eq('id', CO_ID).single();
+  companyData = r.data || null;
+  if (companyData) {
+    var sbComp = document.getElementById('sb-company');
+    if (sbComp) sbComp.textContent = companyData.trade_name || companyData.name || 'TAERA';
+    var sbPlan = document.getElementById('sb-plan');
+    if (sbPlan) sbPlan.textContent = 'Plan ' + (companyData.plan || 'Professional');
+  }
+}
+
 // ── SHOW APP ─────────────────────────────────────────────
 function showApp() {
   showScreen('sc-app');
@@ -624,33 +725,37 @@ function updateTopbar() {
   document.getElementById('top-avatar').textContent = ini;
   document.getElementById('top-name').textContent = firstName;
   document.getElementById('top-role').textContent = role.label;
-  if (p.global_role === 'admin') {
-    document.getElementById('nav-admin').style.display = 'flex';
-  }
+  // admin handled via company module
 }
 
 // Modules that have real code implemented
-var BUILT_MODULES = ['projects'];
+var BUILT_MODULES = ['company', 'projects'];
+var companyData = null;
 
 function buildSidebar() {
-  var isAdmin = currentProfile && currentProfile.global_role === 'admin';
   var nav = document.getElementById('nav-modules');
   nav.innerHTML = '<div class="sidebar-label">Módulos</div>';
-  companyModules.forEach(function(m) {
-    var isBuilt = BUILT_MODULES.indexOf(m.module_key) >= 0;
-    if (!isBuilt && !isAdmin) return; // hide unbuilt from regular users
-    var cfg = MODULE_CFG[m.module_key] || { icon:'◾', label: m.module_name };
+  // Only show BUILT modules
+  BUILT_MODULES.forEach(function(key) {
+    var cfg = MODULE_CFG[key] || { icon:'◾', label: key };
     var el = document.createElement('div');
     el.className = 'nav-item';
-    el.id = 'nav-' + m.module_key;
-    el.setAttribute('data-page', m.module_key);
+    el.id = 'nav-' + key;
+    el.setAttribute('data-page', key);
     el.onclick = function() { navigate(this.getAttribute('data-page')); };
-    var badge = (!isBuilt && isAdmin) ? '<span style="font-size:9px;background:#FEF3C7;color:#D97706;padding:1px 6px;border-radius:8px;margin-left:auto;">Dev</span>' : '';
-    el.innerHTML = '<span class="nav-icon">' + cfg.icon + '</span>' + cfg.label + badge;
+    el.innerHTML = '<span class="nav-icon">' + cfg.icon + '</span>' + cfg.label;
     nav.appendChild(el);
   });
+  // Bind static items
+  var np = document.getElementById('nav-profile-link');
+  if (np) np.onclick = function() { navigate('profile'); };
+  var nl = document.getElementById('nav-logout');
+  if (nl) nl.onclick = function() { doLogout(); };
+  // Company name
   var sbComp = document.getElementById('sb-company');
-  if (sbComp) sbComp.textContent = 'TAERA Cía. Ltda.';
+  if (sbComp && currentProfile) {
+    sbComp.textContent = companyData ? (companyData.trade_name || companyData.name || 'TAERA') : 'TAERA Cía. Ltda.';
+  }
 }
 
 // ── NAVIGATE ─────────────────────────────────────────────
@@ -674,6 +779,7 @@ function navigate(page) {
   else if (page === 'profile')  { renderProfile(mc); }
   else if (page === 'admin')    { renderAdmin(mc); }
   else if (page === 'projects') { renderProjects(mc); }
+  else if (page === 'company')   { renderCompany(mc); }
   else { renderComingSoon(mc, label, (MODULE_CFG[page] && MODULE_CFG[page].icon) || '◾'); }
 }
 
@@ -928,6 +1034,141 @@ async function toggleModule(id, currentState) {
   toast('Módulo ' + (newState ? 'activado' : 'desactivado'));
 }
 
+
+
+// ── COMPANY MODULE ──────────────────────────────────────
+async function renderCompany(mc) {
+  mc.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="spin"></div></div>';
+
+  var r = await sb.from('company').select('*').eq('id', CO_ID).single();
+  companyData = r.data || {};
+
+  var c = companyData;
+  var logoHtml = c.logo_url
+    ? '<img src="' + c.logo_url + '" alt="logo">'
+    : '<span style="font-size:28px;font-weight:800;color:var(--brand);">' + (c.trade_name||c.name||'T')[0] + '</span>';
+
+  mc.innerHTML =
+    '<div class="page-header">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+        '<div><div class="page-title">Empresa</div>' +
+        '<div class="page-sub">Datos de la organización</div></div>' +
+        '<button class="btn btn-primary" style="width:auto;" onclick="openEditCompany()">✏️ Editar empresa</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="company-hero">' +
+      '<div class="company-logo-wrap" onclick="uploadCompanyLogo()">' + logoHtml + '</div>' +
+      '<div style="flex:1;">' +
+        '<div class="company-name-big">' + (c.trade_name || c.name || '—') + '</div>' +
+        '<div class="company-sub">' + (c.company_type || 'Astillero') + ' · ' + (c.city || 'Guayaquil') + ', ' + (c.country || 'Ecuador') + '</div>' +
+        '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<span class="tag tag-blue">Plan ' + (c.plan || 'Professional') + '</span>' +
+          (c.tax_id ? '<span class="tag tag-gray">RUC: ' + c.tax_id + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+
+      '<div class="card">' +
+        '<div class="card-header"><div class="card-title">Información general</div></div>' +
+        '<div class="card-body">' +
+          '<div class="editable-grid" id="company-general">' +
+            companyField('Nombre comercial', c.trade_name, 'trade_name') +
+            companyField('Razón social', c.name, 'name') +
+            companyField('RUC / Tax ID', c.tax_id, 'tax_id') +
+            companyField('Tipo', c.company_type, 'company_type') +
+            companyField('Ciudad', c.city, 'city') +
+            companyField('País', c.country, 'country') +
+            companyField('Dirección', c.address, 'address') +
+            companyField('Teléfono', c.phone, 'phone') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="card-header"><div class="card-title">Datos de contacto y plan</div></div>' +
+        '<div class="card-body">' +
+          '<div class="editable-grid">' +
+            companyField('Email', c.email, 'email') +
+            companyField('Sitio web', c.website, 'website') +
+            companyField('Plan', c.plan, 'plan') +
+            companyField('Representante legal', c.legal_rep, 'legal_rep') +
+            companyField('Sector', c.industry, 'industry') +
+            companyField('Año fundación', c.founded_year, 'founded_year') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+    '</div>';
+}
+
+function companyField(label, val, key) {
+  var isEmpty = !val || val === '—';
+  return '<div class="edit-field" data-key="' + key + '">' +
+    '<div class="edit-field-label">' + label + '</div>' +
+    '<div class="edit-field-val' + (isEmpty ? ' empty' : '') + '">' + (val || 'Sin datos') + '</div>' +
+    '<div class="edit-hint">clic para editar</div>' +
+  '</div>';
+}
+
+function openEditCompany() {
+  var c = companyData || {};
+  document.getElementById('ec-name').value      = c.name || '';
+  document.getElementById('ec-trade').value     = c.trade_name || '';
+  document.getElementById('ec-taxid').value     = c.tax_id || '';
+  document.getElementById('ec-type').value      = c.company_type || '';
+  document.getElementById('ec-city').value      = c.city || '';
+  document.getElementById('ec-country').value   = c.country || 'Ecuador';
+  document.getElementById('ec-address').value   = c.address || '';
+  document.getElementById('ec-phone').value     = c.phone || '';
+  document.getElementById('ec-email').value     = c.email || '';
+  document.getElementById('ec-website').value   = c.website || '';
+  document.getElementById('ec-legrep').value    = c.legal_rep || '';
+  document.getElementById('ec-industry').value  = c.industry || '';
+  document.getElementById('ec-founded').value   = c.founded_year || '';
+  openModal('modal-edit-company');
+}
+
+async function saveCompany() {
+  var btn = document.getElementById('ec-save');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  var updates = {
+    name:          document.getElementById('ec-name').value.trim(),
+    trade_name:    document.getElementById('ec-trade').value.trim(),
+    tax_id:        document.getElementById('ec-taxid').value.trim(),
+    company_type:  document.getElementById('ec-type').value.trim(),
+    city:          document.getElementById('ec-city').value.trim(),
+    country:       document.getElementById('ec-country').value.trim(),
+    address:       document.getElementById('ec-address').value.trim(),
+    phone:         document.getElementById('ec-phone').value.trim(),
+    email:         document.getElementById('ec-email').value.trim(),
+    website:       document.getElementById('ec-website').value.trim(),
+    legal_rep:     document.getElementById('ec-legrep').value.trim(),
+    industry:      document.getElementById('ec-industry').value.trim(),
+    founded_year:  document.getElementById('ec-founded').value.trim(),
+  };
+
+  var r = await sb.from('company').update(updates).eq('id', CO_ID);
+  btn.disabled = false; btn.textContent = 'Guardar';
+
+  if (r.error) { toast('Error: ' + r.error.message); return; }
+
+  Object.assign(companyData, updates);
+  closeModal('modal-edit-company');
+  toast('✓ Empresa actualizada');
+
+  // Refresh sidebar and page
+  var sbComp = document.getElementById('sb-company');
+  if (sbComp) sbComp.textContent = updates.trade_name || updates.name || 'TAERA';
+  renderCompany(document.getElementById('main-content'));
+}
+
+function uploadCompanyLogo() {
+  toast('Subir logo — próximamente');
+}
 
 // ── PROJECTS MODULE ──────────────────────────────────────
 var allProjects = [];
