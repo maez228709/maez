@@ -161,6 +161,15 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
 
 
 
+
+/* ── PHOTO UPLOAD ── */
+.avatar-upload{position:relative;width:72px;height:72px;cursor:pointer;}
+.avatar-upload:hover .avatar-overlay{opacity:1;}
+.avatar-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;color:#fff;font-size:18px;}
+.avatar-upload input[type=file]{display:none;}
+.upload-progress{height:3px;background:var(--bdr);border-radius:2px;margin-top:6px;overflow:hidden;display:none;}
+.upload-progress-bar{height:100%;background:var(--brand);border-radius:2px;width:0%;transition:width .3s;}
+
 /* ── COMPANY MODULE ── */
 .company-hero{background:var(--white);border:1px solid var(--bdr);border-radius:10px;padding:1.5rem;display:flex;gap:1.5rem;align-items:flex-start;margin-bottom:1rem;}
 .company-logo-wrap{width:80px;height:80px;border-radius:12px;background:var(--bg2);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative;}
@@ -722,7 +731,12 @@ function updateTopbar() {
   var role = getRole(p.global_role);
   var ini = getInitials(p.full_name);
   var firstName = (p.full_name || 'Usuario').split(' ')[0];
-  document.getElementById('top-avatar').textContent = ini;
+  var topAv = document.getElementById('top-avatar');
+  if (p.avatar_url) {
+    topAv.innerHTML = '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+  } else {
+    topAv.textContent = ini;
+  }
   document.getElementById('top-name').textContent = firstName;
   document.getElementById('top-role').textContent = role.label;
   // admin handled via company module
@@ -877,7 +891,12 @@ function renderProfile(mc) {
   mc.innerHTML =
     '<div class="page-header"><div class="page-title">Mi perfil</div><div class="page-sub">Datos personales y profesionales</div></div>' +
     '<div class="profile-hero">' +
-      '<div class="profile-avatar-big">' + ini + '</div>' +
+      '<div class="avatar-upload" onclick="uploadAvatar()">' +
+        '<div class="profile-avatar-big" id="profile-avatar-display">' +
+          (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : ini) +
+        '</div>' +
+        '<div class="avatar-overlay">📷</div>' +
+      '</div>' +
       '<div style="flex:1;">' +
         '<div class="profile-name">' + (p.full_name||'—') + '</div>' +
         '<div class="profile-title">' + (p.title||'—') + '</div>' +
@@ -922,6 +941,34 @@ function openEditProfile() {
   document.getElementById('ep-emergency').value = p.emergency_contact || '';
   document.getElementById('ep-bio').value       = p.bio || '';
   openModal('modal-edit-profile');
+}
+
+
+async function uploadAvatar() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp';
+  input.onchange = async function() {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast('Imagen muy grande — máximo 5MB'); return; }
+    toast('Subiendo foto...');
+    var ext = file.name.split('.').pop();
+    var path = currentUser.id + '/avatar.' + ext;
+    var r = await sb.storage.from('avatars').upload(path, file, { upsert: true });
+    if (r.error) { toast('Error: ' + r.error.message); return; }
+    var url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?t=' + Date.now();
+    await sb.from('user_profile').update({ avatar_url: url }).eq('auth_id', currentUser.id);
+    currentProfile.avatar_url = url;
+    // Update topbar avatar
+    var topAvatar = document.getElementById('top-avatar');
+    if (topAvatar) {
+      topAvatar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    }
+    toast('✓ Foto actualizada');
+    renderProfile(document.getElementById('main-content'));
+  };
+  input.click();
 }
 
 async function saveProfile() {
@@ -1044,9 +1091,10 @@ async function renderCompany(mc) {
   companyData = r.data || {};
 
   var c = companyData;
+  var logoTs = c.logo_url ? (c.logo_url.includes('?') ? '&t=' : '?t=') + Date.now() : '';
   var logoHtml = c.logo_url
-    ? '<img src="' + c.logo_url + '" alt="logo">'
-    : '<span style="font-size:28px;font-weight:800;color:var(--brand);">' + (c.trade_name||c.name||'T')[0] + '</span>';
+    ? '<img src="' + c.logo_url + logoTs + '" alt="logo" style="width:100%;height:100%;object-fit:contain;padding:4px;">'
+    : '<span style="font-size:28px;font-weight:800;color:var(--brand);opacity:.4;">' + (c.trade_name||c.name||'T')[0] + '</span>';
 
   mc.innerHTML =
     '<div class="page-header">' +
@@ -1167,7 +1215,25 @@ async function saveCompany() {
 }
 
 function uploadCompanyLogo() {
-  toast('Subir logo — próximamente');
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp,image/svg+xml';
+  input.onchange = async function() {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast('Imagen muy grande — máximo 5MB'); return; }
+    toast('Subiendo logo...');
+    var ext = file.name.split('.').pop();
+    var path = CO_ID + '/logo.' + ext;
+    var r = await sb.storage.from('logos').upload(path, file, { upsert: true });
+    if (r.error) { toast('Error: ' + r.error.message); return; }
+    var url = sb.storage.from('logos').getPublicUrl(path).data.publicUrl;
+    await sb.from('company').update({ logo_url: url }).eq('id', CO_ID);
+    companyData.logo_url = url;
+    toast('✓ Logo actualizado');
+    renderCompany(document.getElementById('main-content'));
+  };
+  input.click();
 }
 
 // ── PROJECTS MODULE ──────────────────────────────────────
