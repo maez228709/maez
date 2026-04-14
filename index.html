@@ -261,48 +261,156 @@ table.data-table td.actions{text-align:right;white-space:nowrap;}
 
 <!-- ══ SCREEN: LOGIN ════════════════════════════════════════ -->
 <div class="screen active" id="sc-login">
-  <div class="login-wrap">
-    <div class="login-logo">
-      <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABQAPUDASIAAhEBAxEB/8QAHQAAAQQDAQEAAAAAAAAAAAAAAAEFBgcDBAgCCf/EAEsQAAEDAwIDAwcHCAgEBwAAAAECAwQABREGBxIhMQgTQRgiUVNhcdEUI4GRk6HhFRcyQleSsdIWMzQ2UnKjwUNVVqJiY4OElLLw/8QAGwEAAQUBAQAAAAAAAAAAAAAAAAECAwQFBgf/xAAvEQABAwQABQMCBQUAAAAAAAABAAIDBBESIQUTMUFRIlKhI3EUMkKBkQZDYbHh/9oADAMBAAIRAxEAPwDsqtG93WDZoLk64SEMMNjJUo/cK3a5w3j1NIvep3oKXFJhQlFCEZwCrxUat0VKamTAKjX1YpYsj1Vuad3K0zeZpiMyVx3M4QHhw8fuqZpUFAEdDXF1yQ+pgPRFqbfZPGgpPMYqX6F3uvFnQiHeG/lTKeXHnmB/GtKs4PhuI3VKh4oZR9RdR5o+mqvgbx2aayHI8F98Ecw2tJV+71FZfzyafSvgdhTWyP8AEms38DP7CtA10A6usrM5Un01XbO8Ok147wym/wD0ia2m919FrIzPeT72FU00U46sKBXU7ujwpzyJoPWtW1T4tzgNTobhcYdTxIVjGRW0rhHUge81W2DYhWgQ4XBS5FHjXK2pu1v+StS3C0xtJiSiJKXHS932OMpVw5rpjTU966WGBcZDAjPSWEOra4s8BIzippKeSIBzx1TWva42CchRRSZHpFQp6Wik4k+kfXRkekUIS0UAg9CKKEIopMj0ijiT6R9dCEtFA50UIRRScSfSPro4k+kfXQhLRSZHpFLQhFFJkekUcQ9I+uhCWikyPSKUEHpQhFFFFCF5qNXrQulrs8t+Xa2++WcqcRyUTUmArRvE5NviKeIyrolPpNIag04zvZNdC2b0uF1A5uz2l3M9y9Mj5/8AMzUQv/Z6ZkqU9bb6Wln9VxnI+vNTSVcJkl4uOyFpJ54BwBUi0xdy60qLLcwtAylRPUVVpv6nfI/llxt/lOk4HFE3Nrf4XMGsNqtXaPYTPeWwuOV8IdjOnIPhnpTdCvOomEJalxmrgyP1XgCr66v/AHbuBuOn7gylY7hoeaB4kHrVFp8M8gOpFdhwavHEInPOyDZczxaN1HKGACxCzsT7XKPDJt823rP6zfziK9S48dtrjZmNvA+BGD9VZZrVoTEQuKqc3IPVDycJVWgeVbEYO1jTFosLLqLaz+4Np8AGf9zXGXaSue4sndbUU2Cm+xbPFc7pDjRWlrgTy4genOuyNo8nby0FZJPdeP8AmNQbtjX02XY66NNr4Hp60RkEdeZyfuFcpBJy6si17my7KMZU7fsuAIjEu4zkMRWnZMt9fmISCpa1k9ffXTPZCtGvnt0vlOpF3tmBCiKUlEoqDaldAOfvqC9jKx/lfe+A+pALVvYXIJ6gEDzfvr6CEZq5xOsxJitfSKeK/qJXlZKUKPPkkmvnRqn87s/U91mR4+qUNOy3ChKAvAHEcYr6G3u4R7RaJd0lq4Y8RlTzp9CUjJr5/a23n3S1vqaZNss+6RYTbiksxbelWG0Z5Z4epPtqpwwOu6wH7qSotpMPyTeP1Wq/9Sl+R7ycsM6sz4fp1l/pfvT4XPVn7rlbVm1TvLIvMCOu56r4XJTSFcaXMYKxnPsxmtlwda9h/KrWubbTzsRuHrrSu71ptV1n3FxqbKRFlwpaycBZwDg9CM5qddqXfvUI1ZN0Vo6au3RoLncypTRw4854pSfAfxqH2178qdreRLkrLyLbMcdcWo5yGEk5+6q+0zFXrDeiGw4Ss3K9laueSQXCofcKhMEbpeY4DQSh5DcR5W6mPvC6A6lGq1BY4gr5zzgfGhyPu+22pxxGqkISCVKJcwB6amO7+tN1nNzb+mzStSRrazLUzGbjocDYQnkCMcqiTmqN5pbK4y52rHUOjgUjgcPED4VLG4uGVmhIeu7qX9mfdrWVq3KtVknXiXcbXcXu4ejyF8fCT0Un0HNdrbmyJsPb2/ybch1yW3AdLKWhlZXw8se2uW+ydsbqBvVUXW+rYK4EWGS5EiujDjqyP0iPADNdjnPUVi8RdHzgY/3VqEHHa+aYj7wHJ7vVXnE+s5Zpfkm8fqtV/U4K7o7Qe4Sdudt515ZLZuLo7iAhfRTp6H6Bk1wmzuVutdpjqoup77KfUeNaI6lK4c9cJHQVp0sz525BgAUErQ06K9qjbwpSpakaqSlIJJJcwAPGre7Je5Gq5A1Tpu4zplybatbkqIHFFS23QCMJPXn/ABqpnNVbzvIUwqfqxaXElKkcLnnA+FXl2btJz9ptC6i3U1hEVGkLikRIrowsjqM+gqPKlqseUQ4C56W8pIwcuulRjsfeJ1910M6rCVrUoYDniSeVeDE3jz/Var/1KcLxuvu9q66ybvEut6DS1nhagoV3bSfBPm8uVan9L96f+Zat+lLlTAOA2G3TSRfV1hMTeL1Wq/8AUqzuyJuFq+Lu4zpK73GbLiTw4hxiUoqLLiQTkZ6HlUb2w1Fu7cdwrLDn3TVCYjkn58uhwI4Akk5J5Y5U79ltQvfaOuuonOaY6ZMoK9pymop7GN7XAdOyc3ThZd2UVjir7yM04efEgH6xRXLm91oLJ1FR3WzazEZcGShK/OxUirw+0h5BQ4kKSeRBqGph58RZ5T434OBVZnl/+8KMhKSrOAOZOfCpXcNMNK4lRHShXUJVzFRObGkNOvRXlYXwlJGOmRyIrjpaKSneOZ08rbbUtkaceqrzVuqYdyjrtsRDjaFr4XHVdMA+io05aJjaA6gJdaB/rGjxAe3FaT6Sh9xJBBStQI8etLHkPx1hbLq21DxBxXtHDeHxUVOI4Ro7XlFZXPqpi+bqFu3iW8423HXcRMbSM82uBSfZTb1Htp3RMhTwG7k2GXScCS2On+YVo3SC9CVhwpWhQyh1BylQ99X2EAWKqyDL1A3XTW1yeDQVpTjHzH+5qrO2tpS/6p20iqsMRyYu3zBIfYbGVlHCRkDxxVw6NjmNpO2MkYKYyM/SM1EN/tyHdsNGtX9q2IuCnJIZ7paykcweeRXGxvcKnJgubruo2AQNB8L5/aXvus9E3F6TYXbnaZTie7dUhggkejpUm/PPvF/1TevcGT/LVtL7XAWriVt/blE9SXM/7UnlbJ/Z7bPb5/4VtudM43MI+FAA0dHLd2Ac3P3N0drRd/v1wkxF212FEYkJ4At9aevQeFc+WC9a928nTYNrXcrRJKu7koEYkkp5DqDV+MdsGQwgoZ0LDaT1wh8gfcKxu9rovK43dAW9aj1Kncn+FRRtqGPJ5ej20nOwI6qoPzwbtHl/SC6f/EH8tKN4N2yf7wXXJ5cog/lq3PK2R+zy2/v/AIUDtbIHP83lt+hf4VL9Xf0R8Jvp9y1ey9tRqW/q1DrK9svRVzYEiNCdkApW886kguEejn1qjp1k1nt1qxPeQp9uutuey0+lknmOQUDgjnXQiO2LMSAlOioyUjoBIIA+6sb/AGvnX8F/QkF0/wDjeJ/iKjZ+La8uLBY9tJSI7WuqeO8O7SiSdQ3RRz1+Sjn/ANtCd4d2kkFOobok+kRRn/61bnlbI/Z5bf3/AMKPK2R+zy2/v/hTyZT/AGh8JPT7lUyt6d4up1Re+nL5g/y1cOttUbpaO7Plnu9y1JdF6jvkwOpUEcSo7IGQnkPEc/prX8rZP7PbZn/P+FZXu1868gIf0JBcSn9FKniQPuqF7JXkYxDX2TgW2/MqigNbqb0aht9nmybndOFwBLslspZjA9VE4HhTddLdrvaTXM2LE+XwJ8dSmkyWmCoPN+ChyIwRzq7mO1+8xkMaFgtZ/wADxH8BSP8Aa9cfIL2g4LpA5FbxV/EVKH1N7CMY+E0iM/qVPDeHdrP94Lp6f7KOv7tXVof84G6HZm1iLvcJ1zuJkJVFQ+nhUUtjiKEjA61peVsj9nts/f8AwrMx2wX2EcDGhobSM5wl8pGfcBTJWTvthGAR9k5hYD+ZULpfWG4Gi4jtrssu5WxsuFbrQjc+PxPNJp3/ADwbtf8AUFzH/tB/LVvL7XHGorXt/blKJ5kuZJ+6k8rZH7PLb+/+FS5TEbi/0mgN9yqBe7W7MlCoxv12UHUlBSmLgkHljITVp7L6ZuG2m3Fw1rqFpUG4X6RHgW6M55rikKcSVKI9vOtwdrdIOU7e20EdPnPwqvNS7o6m3e3T0w3PYRHhM3FkR4DBJQj5wZUT4nFRvbNI2xZiO6VpYDor6DxBiK0PQ2kfdRXtKQlISByAwKK5px2rw6L1QaAOVBpUJvut0iwEjvlZWeiE9TUGvcz5bJXLUOAnkkCnbVsR9FwVJ4VKbUORA6VHxFlTpKWGGycnAOK5TiVTPNLyraWxSxxsZmDtVFuLa7haJv5XaYL1ukrIOOqF+NR+JMjyk/NuDP8AgV1FXxvZbmrft3DYGOJuUjKvSSDmqDlW2O+rvAO6c8FJr1bgUkslEzmbcNLznjEcTKtwAsDtbg59fp91OFhQ7NuUO04U4iQ+lAb9HPmR7hUeRFuSVBDMzvM8gFJ5n0VfOx23L9oUnUl+WXJy04jNEf1KT1PvNW62qZTxknr2VehonTyADoFbUVoMRmmB+i0gIH0DFRbdTb+ybj6eRY7+qQmKh4PAsq4VcQGKlo5cvrqG713iTZds7xKgO93NdbEaMrxDjqghOPpVXGxl2YLTtdqQA3arPyTds/X3f7dPwpfJN209fdvtk/Co5dN19RPWTSlqbZfZudgktOaqBBHcobPCOL/NjP01auuNyLzbtRSrNpmwR7o5b7WbnPXIkd0ENYyAjAPESBV50lU0gZfKhDYj2UN8k3bT193+2T8KPJN209fd/tk/Cpfcty7r+Q9HSLPYGJM/U6SW2XpBQhk8HFzUAcjnTHqvcfVU/ZW83602xmBe7dPMKUgSCUtqS4kFSFY84HIH000SVRI9XynYx+E2eSbtp6+7/bJ+FHkm7aevu/2yfhUi3A3YuGlXrJZWbRHlXqXbhNkh1xYabAGCAUpJJznHLFbdw3SnOab0hcbLYEvzNTP9w1HkvFsMrwepx05Gjm1dgcijGPwokeydtmBkv3YD2vp+FHkm7aevu32yfhT/ADtdKvu195mX2z/J5lsuYgy40WUQnjS4BlLmM48elb2t9w79ZL41YdP6ei3F1FnNycVIlFsBtA85IwDlWOlIJqn3FGEfhRLyTdtPX3b7ZPwpB2TtszzEi7H3Pp+FTDbvcu86h1NbrbddPx7fGu1r/KUB1uSXF8GccLgIGD7qZLTuTbtL7PvakYtb+V3h2ExHdkKd4nlOqSCVYyE8s8hyo59Te2RSYR+E1+Sbtp6+7fbJ+FHkm7aevu/2yfhUksW7kuXobUl8m2JLU6w8JcZaWrunwenApQB+sVvaP3B1HdL89Y7vp6HBmP2lNzt/cyi4lxCuiVnA4T9dKZasX9SMIvChvkm7aevu/wBsn4UeSbtp6+7/AGyfhTlozcrUFs2kkai1NCE25ruy4MJlt7PeqK8JSpR/RA9NTTb/AFndLxqC6aY1HZ2bZe7c2h9aI73esrbX+iQogHPsxSOmqW3u7olEcfhVz5Ju2g/492+3T8KPJO2z9fdvt0/CpR2j5Goo9o023pa5GBdH700204T5hyFHhV6UnGPppismvZuod4dJ2G5R5NpvcBEpF0gEkNrIaOHE/wCJBPMGlbNUubkHlJgwG1lqeSbtp6+7/bD4UeSbtp6+7/bJ+FPk7d6+olPT4el472nW7wm0iUuVwvKdzgq4MY4R76d9Wbnvaf1NM029Zu8ua3GBaWkuHE1CyApWccuAnn7qQy1Q/UUuEfhQw9k3bMf8e7/bD4VINuez/t5oXUrN6gokyri1kxzLdCu79JSBis+td0L9arveolj01FuDGn4rb90ddlFsgq/VbGPOx7cV6uF0cuu6G39wCVMpmW955TQUcDKc49tIZKhzbPcbf8S4sB0FatFeqKoYqVFHKikxSoXlaErSUqSFJ9BFeGo7DWe7aSj3DFZsUhHI+NJiCbkJblVn2iEqVouOQMgTEE/UaoP288dMV1PuFp86m0zItaFht1WFtKUOQUOlQXQG0xgTk3DUS2JDjZy2w2eJOfST4+6uh4dXxU9OQ478Lm+JcOlqKkOaNFamzm3ystagvbODnMZhQ/7jVypA6YFCUJSAEjAAwAKUCsiqqX1Ly9y2aSlZTR4tScqadT6dtmpIjES6sqdZYkIkJSFY89Bykn6aeMUmOfOq4JGwrR2ovP0Hpeab939tQVX9CUXFQOC6AABz8OlN+qdr9LajfYkTUzWnmovyNTkeSptTrOMcC8HmPfU4Kc0Ypwkd5SYhRpnRNgYbsLbcZQTYARbxxn5sFPD9PKsatCadVYbpY/kq/kVzlGVKRxnznCoKJB8OaRUpx7aOEdPCkzce6MQojrLb7T+qXYcmeJTEqG2WWZEV9TTgbPVBI6itn+hOnw1YWkxVhFhd72AOMkoVgjJPj1NSXFGPbS5uta6MQoqrQWnVWu5235KsR7nM+WShxnzneLiyPRzFbM3SFjl3c3Z6OoyzAVbysKP9SeoqQ49tGPbRm7yiwUbtGi7Da7lbJ8OMtD1sg/IYpKyeFnOcH6a017caWXpB3Sxhufk9ySqUAHCFodUoq40q6g5JqYYox7aM3eUYhQ+27c6chaZuOnwmXIi3L+1rfkKW45jp5x505RNJ2WLfI95ZYUJkeCmA2riPJlPQfjT9ijFBe490WCirmgdMu6Tf0u7B47c86p9SCo8SXCc8ST1BB6Vl0TomyaSMpy3JkvSpZBkSZLynXXMdAVHngeipLj20cPoNBe4i10WCaNR6dtl/VANyaU58gkplR8KI4XE5wfvpJmnLNL1JB1E9BbN0hJWhmQBhQSoYIJ8RTxijHopMiBpFlX83aLR0u+OXVyPMSpyWJqo6JKks9+P1+DOM1Kbjpyz3C/W++y4aHbhbgoRXj1QFDBp3xRw+2lzce6LBQfV+1uldUXd+53FqW29JaDMpMeQptL6QcgLAPnYp7b0pZk3C0zksK760sliIeM4QkjBHt5U+4GaMUcx50SjEJaKKKalX/9k=" alt="TAERA">
-    </div>
-    <div class="login-card">
-      <div class="login-title">Bienvenido</div>
-      <div class="login-sub">Plataforma de gestión naval · ENGRAVIS</div>
-      <div class="alert alert-error" id="login-error"></div>
-      <div class="alert alert-success" id="login-success"></div>
-      
-      <!-- LOGIN FORM -->
-      <div id="form-login">
-        <div class="form-group">
-          <label class="form-label">Correo electrónico</label>
-          <input class="form-input" id="login-email" type="email" placeholder="usuario@empresa.com" value="maez_sdc@sdcecuador.com">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);">
+    <div style="width:400px;">
+
+      <!-- Logo area -->
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <img id="login-logo" src='data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNjAiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiZyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGYyOTQyIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzFhM2Q1YyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBCYWNrZ3JvdW5kIHBpbGwgLS0+CiAgPHJlY3QgeD0iMCIgeT0iOCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9InVybCgjYmcpIi8+CiAgPCEtLSBBbmNob3IgaWNvbiAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCwgMTgpIj4KICAgIDxjaXJjbGUgY3g9IjEyIiBjeT0iOCIgcj0iMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44Ii8+CiAgICA8bGluZSB4MT0iMTIiIHkxPSIxMS41IiB4Mj0iMTIiIHkyPSIyNCIgc3Ryb2tlPSIjMUQ5RTc1IiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNNSwxNiBRMTIsMjQgMTksMTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFEOUU3NSIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9IjgiIHkxPSIxMS41IiB4Mj0iMTYiIHkyPSIxMS41IiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8L2c+CiAgPCEtLSBFTkdSQSBpbiB3aGl0ZSAtLT4KICA8dGV4dCB4PSI0NCIgeT0iMzYiIGZvbnQtZmFtaWx5PSJJbnRlcixBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMSI+RU5HUkE8L3RleHQ+CiAgPCEtLSBWSVMgaW4gbGlnaHRlciBjb2xvciAtLT4KICA8dGV4dCB4PSIxMzAiIHk9IjM2IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFEOUU3NSIgbGV0dGVyLXNwYWNpbmc9IjEiPlZJUzwvdGV4dD4KICA8IS0tIFRhZ2xpbmUgLS0+CiAgPHRleHQgeD0iNDQiIHk9IjQ3IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI3IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjNGE3ZmE1IiBsZXR0ZXItc3BhY2luZz0iMiI+TkFWQUwgUExBVEZPUk08L3RleHQ+Cjwvc3ZnPgo=' alt="ENGRAVIS" style="height:48px;object-fit:contain;">
+        <div id="company-badge" style="display:none;margin-top:10px;">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--bdr);border-radius:20px;padding:6px 14px 6px 8px;cursor:pointer;" onclick="resetLogin()">
+            <img id="badge-logo" src="" style="width:24px;height:24px;border-radius:50%;object-fit:contain;background:var(--bg);">
+            <span id="badge-name" style="font-size:12px;font-weight:600;color:var(--text);"></span>
+            <span style="font-size:10px;color:var(--text3);">cambiar →</span>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Contraseña</label>
-          <input class="form-input" id="login-password" type="password" placeholder="••••••••">
-          <div class="forgot-link"><a onclick="showForgot()">¿Olvidaste tu contraseña?</a></div>
-        </div>
-        <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Ingresar</button>
-        <div class="login-divider">o continuar con</div>
-        <button class="btn btn-outline" onclick="toast('Google OAuth — próximamente')">
-          <span style="margin-right:8px;">🔵</span>Google
-        </button>
       </div>
 
-      <!-- FORGOT PASSWORD FORM -->
-      <div id="form-forgot" style="display:none;">
-        <p style="font-size:12px;color:var(--text2);margin-bottom:1rem;">Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
-        <div class="form-group">
-          <label class="form-label">Correo electrónico</label>
-          <input class="form-input" id="forgot-email" type="email" placeholder="usuario@empresa.com">
+      <div class="login-card" style="border-radius:14px;">
+        <div class="alert alert-error" id="login-error"></div>
+        <div class="alert alert-success" id="login-success"></div>
+
+        <!-- STEP 1: EMAIL -->
+        <div id="lstep-email">
+          <div class="login-title">Bienvenido</div>
+          <div class="login-sub">Ingresa tu email para continuar</div>
+          <div class="form-group">
+            <label class="form-label">Correo electrónico</label>
+            <input class="form-input" id="ls-email" type="email" placeholder="correo@empresa.com" autocomplete="email">
+          </div>
+          <button class="btn btn-primary" id="btn-ls1">Continuar →</button>
+          <div class="login-divider">o</div>
+          <button class="btn btn-outline" id="btn-goto-reg">Crear cuenta nueva</button>
         </div>
-        <button class="btn btn-primary" onclick="doForgot()">Enviar enlace</button>
-        <div style="text-align:center;margin-top:10px;">
-          <a style="font-size:12px;color:var(--brand);cursor:pointer;" onclick="showLogin()">← Volver al login</a>
+
+        <!-- STEP 2: PASSWORD -->
+        <div id="lstep-password" style="display:none;">
+          <div id="company-found-card" style="background:var(--green-light);border:1px solid #9FE1CB;border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+            <img id="found-logo" src='data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNjAiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiZyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGYyOTQyIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzFhM2Q1YyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBCYWNrZ3JvdW5kIHBpbGwgLS0+CiAgPHJlY3QgeD0iMCIgeT0iOCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9InVybCgjYmcpIi8+CiAgPCEtLSBBbmNob3IgaWNvbiAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCwgMTgpIj4KICAgIDxjaXJjbGUgY3g9IjEyIiBjeT0iOCIgcj0iMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44Ii8+CiAgICA8bGluZSB4MT0iMTIiIHkxPSIxMS41IiB4Mj0iMTIiIHkyPSIyNCIgc3Ryb2tlPSIjMUQ5RTc1IiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNNSwxNiBRMTIsMjQgMTksMTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFEOUU3NSIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9IjgiIHkxPSIxMS41IiB4Mj0iMTYiIHkyPSIxMS41IiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8L2c+CiAgPCEtLSBFTkdSQSBpbiB3aGl0ZSAtLT4KICA8dGV4dCB4PSI0NCIgeT0iMzYiIGZvbnQtZmFtaWx5PSJJbnRlcixBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMSI+RU5HUkE8L3RleHQ+CiAgPCEtLSBWSVMgaW4gbGlnaHRlciBjb2xvciAtLT4KICA8dGV4dCB4PSIxMzAiIHk9IjM2IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFEOUU3NSIgbGV0dGVyLXNwYWNpbmc9IjEiPlZJUzwvdGV4dD4KICA8IS0tIFRhZ2xpbmUgLS0+CiAgPHRleHQgeD0iNDQiIHk9IjQ3IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI3IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjNGE3ZmE1IiBsZXR0ZXItc3BhY2luZz0iMiI+TkFWQUwgUExBVEZPUk08L3RleHQ+Cjwvc3ZnPgo=' style="width:40px;height:40px;border-radius:8px;object-fit:contain;background:#fff;border:1px solid var(--bdr);padding:4px;flex-shrink:0;">
+            <div>
+              <div id="found-company" style="font-size:14px;font-weight:600;color:var(--text);">—</div>
+              <div id="found-user" style="font-size:11px;color:var(--text2);">—</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contraseña</label>
+            <input class="form-input" id="ls-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div style="text-align:right;margin-top:-8px;margin-bottom:12px;">
+            <a style="font-size:11px;color:var(--brand);cursor:pointer;" onclick="showLoginStep('forgot')">¿Olvidaste tu contraseña?</a>
+          </div>
+          <button class="btn btn-primary" id="btn-ls2">Ingresar</button>
+          <div style="text-align:center;margin-top:10px;">
+            <a style="font-size:12px;color:var(--brand);cursor:pointer;" onclick="resetLogin()">← No soy yo</a>
+          </div>
         </div>
+
+        <!-- STEP 3: REGISTER -->
+        <div id="lstep-register" style="display:none;">
+          <div class="login-title">Crear cuenta</div>
+          <div class="login-sub">Ingresa tus datos para comenzar</div>
+          <div class="form-group">
+            <label class="form-label">Nombre completo *</label>
+            <input class="form-input" id="reg-name" type="text" placeholder="Tu nombre completo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Correo electrónico *</label>
+            <input class="form-input" id="reg-email" type="email" placeholder="correo@empresa.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre de tu empresa *</label>
+            <input class="form-input" id="reg-company" type="text" placeholder="Ej: TAERA Astillero">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="form-group">
+              <label class="form-label">Contraseña *</label>
+              <input class="form-input" id="reg-pass" type="password" placeholder="Mín. 8 caracteres">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmar *</label>
+              <input class="form-input" id="reg-pass2" type="password" placeholder="Repetir">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-reg-create" style="background:var(--green);border-color:var(--green);">Crear empresa y acceder →</button>
+          <div style="text-align:center;margin-top:10px;">
+            <a style="font-size:12px;color:var(--brand);cursor:pointer;" onclick="showLoginStep('email')">← Volver al login</a>
+          </div>
+        </div>
+
+        <!-- STEP 4: FORGOT -->
+        <div id="lstep-forgot" style="display:none;">
+          <div class="login-title" style="font-size:16px;">Recuperar contraseña</div>
+          <div class="login-sub">Te enviaremos un enlace a tu correo.</div>
+          <div class="form-group" style="margin-top:1rem;">
+            <label class="form-label">Correo electrónico</label>
+            <input class="form-input" id="forgot-email" type="email">
+          </div>
+          <button class="btn btn-primary" id="btn-forgot">Enviar enlace</button>
+          <div style="text-align:center;margin-top:10px;">
+            <a style="font-size:12px;color:var(--brand);cursor:pointer;" onclick="showLoginStep('password')">← Volver</a>
+          </div>
+        </div>
+
+      </div><!-- end card -->
+      <div class="login-footer">Soportado por <a href="#">ENGRAVIS</a> · <a href="#">SDC Ecuador</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: ONBOARDING ════════════════════════════════ -->
+<div class="screen" id="sc-onboarding">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);">
+    <div style="width:460px;">
+      <div style="text-align:center;margin-bottom:2rem;">
+        <img src='data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNjAiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiZyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGYyOTQyIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzFhM2Q1YyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBCYWNrZ3JvdW5kIHBpbGwgLS0+CiAgPHJlY3QgeD0iMCIgeT0iOCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9InVybCgjYmcpIi8+CiAgPCEtLSBBbmNob3IgaWNvbiAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCwgMTgpIj4KICAgIDxjaXJjbGUgY3g9IjEyIiBjeT0iOCIgcj0iMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44Ii8+CiAgICA8bGluZSB4MT0iMTIiIHkxPSIxMS41IiB4Mj0iMTIiIHkyPSIyNCIgc3Ryb2tlPSIjMUQ5RTc1IiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNNSwxNiBRMTIsMjQgMTksMTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFEOUU3NSIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9IjgiIHkxPSIxMS41IiB4Mj0iMTYiIHkyPSIxMS41IiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8L2c+CiAgPCEtLSBFTkdSQSBpbiB3aGl0ZSAtLT4KICA8dGV4dCB4PSI0NCIgeT0iMzYiIGZvbnQtZmFtaWx5PSJJbnRlcixBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMSI+RU5HUkE8L3RleHQ+CiAgPCEtLSBWSVMgaW4gbGlnaHRlciBjb2xvciAtLT4KICA8dGV4dCB4PSIxMzAiIHk9IjM2IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFEOUU3NSIgbGV0dGVyLXNwYWNpbmc9IjEiPlZJUzwvdGV4dD4KICA8IS0tIFRhZ2xpbmUgLS0+CiAgPHRleHQgeD0iNDQiIHk9IjQ3IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI3IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjNGE3ZmE1IiBsZXR0ZXItc3BhY2luZz0iMiI+TkFWQUwgUExBVEZPUk08L3RleHQ+Cjwvc3ZnPgo=' alt="ENGRAVIS" style="height:48px;object-fit:contain;margin-bottom:1rem;">
+        <div style="font-size:20px;font-weight:700;color:var(--text);">Configura tu empresa</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:6px;">Ingresa los datos de tu organización para comenzar.</div>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--bdr);border-radius:12px;padding:2rem;box-shadow:0 2px 20px rgba(0,0,0,.06);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group" style="grid-column:span 2">
+            <label class="form-label">Nombre comercial de la empresa *</label>
+            <input class="form-input" id="ob-trade" type="text" placeholder="Ej: TAERA Astillero">
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label class="form-label">Razón social</label>
+            <input class="form-input" id="ob-name" type="text" placeholder="Ej: TAERA Cía. Ltda.">
+          </div>
+          <div class="form-group">
+            <label class="form-label">RUC / Tax ID</label>
+            <input class="form-input" id="ob-taxid" type="text" placeholder="0990000000001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo de empresa</label>
+            <input class="form-input" id="ob-type" type="text" placeholder="Ej: Astillero naval">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ciudad</label>
+            <input class="form-input" id="ob-city" type="text" placeholder="Guayaquil">
+          </div>
+          <div class="form-group">
+            <label class="form-label">País</label>
+            <input class="form-input" id="ob-country" type="text" value="Ecuador">
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label class="form-label">Tu cargo en la empresa</label>
+            <input class="form-input" id="ob-title" type="text" placeholder="Ej: Gerente General, Director de Operaciones">
+          </div>
+        </div>
+        <div class="alert alert-error" id="ob-error"></div>
+        <button class="btn btn-primary" id="btn-ob-create" style="margin-top:.5rem;">Crear empresa y continuar →</button>
       </div>
     </div>
-    <div class="login-footer">Powered by <a href="#">ENGRAVIS</a> · <a href="#">SDC Ecuador</a></div>
   </div>
 </div>
 
@@ -599,7 +707,8 @@ table.data-table td.actions{text-align:right;white-space:nowrap;}
 // ── SUPABASE CLIENT ─────────────────────────────────────
 const { createClient } = supabase;
 const sb = createClient('https://ukcfzijdegclgavjtrug.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrY2Z6aWpkZWdjbGdhdmp0cnVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTI2NTAsImV4cCI6MjA5MTMyODY1MH0.5pBebPqehEuiFRf0-VFkBVws6AT6oGf7OzimUzhbg1o');
-const CO_ID = 'a1b2c3d4-0000-0000-0000-000000000001';
+var CO_ID = null; // set after login from user's company_id
+var ENGRAVIS_LOGO = 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNjAiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiZyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGYyOTQyIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzFhM2Q1YyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBCYWNrZ3JvdW5kIHBpbGwgLS0+CiAgPHJlY3QgeD0iMCIgeT0iOCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9InVybCgjYmcpIi8+CiAgPCEtLSBBbmNob3IgaWNvbiAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCwgMTgpIj4KICAgIDxjaXJjbGUgY3g9IjEyIiBjeT0iOCIgcj0iMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44Ii8+CiAgICA8bGluZSB4MT0iMTIiIHkxPSIxMS41IiB4Mj0iMTIiIHkyPSIyNCIgc3Ryb2tlPSIjMUQ5RTc1IiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNNSwxNiBRMTIsMjQgMTksMTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFEOUU3NSIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9IjgiIHkxPSIxMS41IiB4Mj0iMTYiIHkyPSIxMS41IiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8L2c+CiAgPCEtLSBFTkdSQSBpbiB3aGl0ZSAtLT4KICA8dGV4dCB4PSI0NCIgeT0iMzYiIGZvbnQtZmFtaWx5PSJJbnRlcixBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMSI+RU5HUkE8L3RleHQ+CiAgPCEtLSBWSVMgaW4gbGlnaHRlciBjb2xvciAtLT4KICA8dGV4dCB4PSIxMzAiIHk9IjM2IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFEOUU3NSIgbGV0dGVyLXNwYWNpbmc9IjEiPlZJUzwvdGV4dD4KICA8IS0tIFRhZ2xpbmUgLS0+CiAgPHRleHQgeD0iNDQiIHk9IjQ3IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI3IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjNGE3ZmE1IiBsZXR0ZXItc3BhY2luZz0iMiI+TkFWQUwgUExBVEZPUk08L3RleHQ+Cjwvc3ZnPgo=';
 
 let currentUser = null;
 let currentProfile = null;
@@ -648,31 +757,91 @@ function getInitials(name) {
   return (name||'U').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
 }
 
-// ── AUTH ─────────────────────────────────────────────────
-async function doLogin() {
-  var email = document.getElementById('login-email').value.trim();
-  var pass  = document.getElementById('login-password').value;
-  if (!email || !pass) { showAlert('login-error','Completa todos los campos'); return; }
 
-  var btn = document.getElementById('btn-login');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spin"></div> Ingresando...';
+
+// ── LOGIN FLOW ────────────────────────────────────────────
+var loginEmail = '';
+var loginFoundProfile = null;
+var loginFoundCompany = null;
+var ENGRAVIS_LOGO = 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNjAiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiZyIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMGYyOTQyIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6IzFhM2Q1YyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBCYWNrZ3JvdW5kIHBpbGwgLS0+CiAgPHJlY3QgeD0iMCIgeT0iOCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9InVybCgjYmcpIi8+CiAgPCEtLSBBbmNob3IgaWNvbiAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNCwgMTgpIj4KICAgIDxjaXJjbGUgY3g9IjEyIiBjeT0iOCIgcj0iMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44Ii8+CiAgICA8bGluZSB4MT0iMTIiIHkxPSIxMS41IiB4Mj0iMTIiIHkyPSIyNCIgc3Ryb2tlPSIjMUQ5RTc1IiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNNSwxNiBRMTIsMjQgMTksMTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFEOUU3NSIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGxpbmUgeDE9IjgiIHkxPSIxMS41IiB4Mj0iMTYiIHkyPSIxMS41IiBzdHJva2U9IiMxRDlFNzUiIHN0cm9rZS13aWR0aD0iMS44IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8L2c+CiAgPCEtLSBFTkdSQSBpbiB3aGl0ZSAtLT4KICA8dGV4dCB4PSI0NCIgeT0iMzYiIGZvbnQtZmFtaWx5PSJJbnRlcixBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMSI+RU5HUkE8L3RleHQ+CiAgPCEtLSBWSVMgaW4gbGlnaHRlciBjb2xvciAtLT4KICA8dGV4dCB4PSIxMzAiIHk9IjM2IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyMiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzFEOUU3NSIgbGV0dGVyLXNwYWNpbmc9IjEiPlZJUzwvdGV4dD4KICA8IS0tIFRhZ2xpbmUgLS0+CiAgPHRleHQgeD0iNDQiIHk9IjQ3IiBmb250LWZhbWlseT0iSW50ZXIsQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI3IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjNGE3ZmE1IiBsZXR0ZXItc3BhY2luZz0iMiI+TkFWQUwgUExBVEZPUk08L3RleHQ+Cjwvc3ZnPgo=';
+
+function showLoginStep(step) {
+  ['email','password','register','forgot'].forEach(function(s) {
+    document.getElementById('lstep-' + s).style.display = 'none';
+  });
+  document.getElementById('lstep-' + step).style.display = 'block';
+  hideAlert('login-error'); hideAlert('login-success');
+}
+
+function resetLogin() {
+  loginEmail = ''; loginFoundProfile = null; loginFoundCompany = null;
+  document.getElementById('ls-email').value = '';
+  document.getElementById('company-badge').style.display = 'none';
+  document.getElementById('login-logo').src = ENGRAVIS_LOGO;
+  showLoginStep('email');
+  setTimeout(function(){ document.getElementById('ls-email').focus(); }, 50);
+}
+
+async function checkEmail() {
+  loginEmail = document.getElementById('ls-email').value.trim();
+  if (!loginEmail) { showAlert('login-error','Ingresa tu correo'); return; }
+
+  var btn = document.getElementById('btn-ls1');
+  btn.disabled = true; btn.textContent = 'Buscando...';
   hideAlert('login-error');
 
-  var result = await sb.auth.signInWithPassword({ email: email, password: pass });
+  var r = await sb.from('user_profile')
+    .select('*, company:company_id(*)')
+    .eq('email', loginEmail)
+    .single();
+
+  btn.disabled = false; btn.textContent = 'Continuar →';
+
+  if (r.error || !r.data) {
+    showAlert('login-error', 'No encontramos esta cuenta. ¿Quieres crear una nueva?');
+    return;
+  }
+
+  loginFoundProfile = r.data;
+  loginFoundCompany = r.data.company;
+
+  // Update UI with company info
+  if (loginFoundCompany) {
+    var logo = loginFoundCompany.logo_url || ENGRAVIS_LOGO;
+    document.getElementById('login-logo').src = logo;
+    document.getElementById('badge-logo').src = logo;
+    document.getElementById('badge-name').textContent = loginFoundCompany.trade_name || loginFoundCompany.name || 'Empresa';
+    document.getElementById('company-badge').style.display = 'block';
+    document.getElementById('found-logo').src = logo;
+    document.getElementById('found-company').textContent = loginFoundCompany.trade_name || loginFoundCompany.name;
+    document.getElementById('found-user').textContent = (loginFoundProfile.full_name||'') + (loginFoundProfile.title ? ' · ' + loginFoundProfile.title : '');
+  }
+
+  showLoginStep('password');
+  setTimeout(function(){ document.getElementById('ls-pass').focus(); }, 50);
+}
+
+async function doLogin() {
+  var pass = document.getElementById('ls-pass').value;
+  if (!pass) { showAlert('login-error','Ingresa tu contraseña'); return; }
+
+  var btn = document.getElementById('btn-ls2');
+  btn.disabled = true; btn.innerHTML = '<div class="spin" style="border-top-color:#fff;border-color:rgba(255,255,255,.3);"></div> Ingresando...';
+  hideAlert('login-error');
+
+  var result = await sb.auth.signInWithPassword({ email: loginEmail, password: pass });
+
+  btn.disabled = false; btn.textContent = 'Ingresar';
 
   if (result.error) {
-    var msg = result.error.message === 'Invalid login credentials'
-      ? 'Email o contraseña incorrectos'
-      : result.error.message;
-    showAlert('login-error', msg);
-    btn.disabled = false;
-    btn.textContent = 'Ingresar';
+    showAlert('login-error', result.error.message === 'Invalid login credentials'
+      ? 'Contraseña incorrecta' : result.error.message);
     return;
   }
 
   currentUser = result.data.user;
   await loadProfile();
+  if (!currentProfile) { showOnboarding(); return; }
   await loadCompanyModules();
   await loadCompanyData();
   showApp();
@@ -680,601 +849,102 @@ async function doLogin() {
 
 async function doLogout() {
   await sb.auth.signOut();
-  currentUser = null; currentProfile = null;
+  currentUser = null; currentProfile = null; CO_ID = null;
+  loginFoundCompany = null; loginFoundProfile = null;
+  resetLogin();
   showScreen('sc-login');
-  document.getElementById('login-password').value = '';
   toast('Sesión cerrada');
+}
+
+async function doRegister() {
+  var name    = document.getElementById('reg-name').value.trim();
+  var email   = document.getElementById('reg-email').value.trim();
+  var company = document.getElementById('reg-company').value.trim();
+  var pass    = document.getElementById('reg-pass').value;
+  var pass2   = document.getElementById('reg-pass2').value;
+
+  hideAlert('login-error');
+  if (!name)    { showAlert('login-error','Ingresa tu nombre'); return; }
+  if (!email)   { showAlert('login-error','Ingresa tu email'); return; }
+  if (!company) { showAlert('login-error','Ingresa el nombre de tu empresa'); return; }
+  if (pass.length < 8) { showAlert('login-error','Contraseña mínimo 8 caracteres'); return; }
+  if (pass !== pass2)  { showAlert('login-error','Las contraseñas no coinciden'); return; }
+
+  var btn = document.getElementById('btn-reg-create');
+  btn.disabled = true; btn.innerHTML = '<div class="spin" style="border-top-color:#fff;border-color:rgba(255,255,255,.3);"></div> Creando...';
+
+  // 1. Create auth user
+  var ra = await sb.auth.signUp({ email: email, password: pass, options: { data: { full_name: name } } });
+  if (ra.error) {
+    btn.disabled = false; btn.textContent = 'Crear empresa y acceder →';
+    showAlert('login-error', ra.error.message); return;
+  }
+  var authUser = ra.data.user;
+  if (!authUser) {
+    btn.disabled = false; btn.textContent = 'Crear empresa y acceder →';
+    showAlert('login-success', 'Cuenta creada. Confirma tu email e inicia sesión.');
+    return;
+  }
+
+  // 2. Create company
+  var rc = await sb.from('company').insert({
+    name: company, trade_name: company,
+    country: 'Ecuador', plan: 'starter', status: 'active'
+  }).select().single();
+
+  if (rc.error) {
+    btn.disabled = false; btn.textContent = 'Crear empresa y acceder →';
+    showAlert('login-error', 'Error creando empresa: ' + rc.error.message); return;
+  }
+
+  var companyId = rc.data.id;
+  CO_ID = companyId;
+
+  // 3. Create profile
+  var rp = await sb.from('user_profile').insert({
+    auth_id: authUser.id, email: email, full_name: name,
+    global_role: 'admin', company_id: companyId,
+    status: 'active', is_active: true
+  }).select().single();
+
+  currentProfile = rp.data;
+  companyData = rc.data;
+
+  // 4. Create default modules
+  var mods = [
+    {company_id:companyId,module_key:'company',   module_name:'Empresa',           is_active:true},
+    {company_id:companyId,module_key:'projects',  module_name:'Proyectos y dique', is_active:true},
+    {company_id:companyId,module_key:'workorders',module_name:'Órdenes de trabajo',is_active:false},
+    {company_id:companyId,module_key:'viewer3d',  module_name:'Visor 3D',          is_active:false},
+    {company_id:companyId,module_key:'inventory', module_name:'Inventario',        is_active:false},
+    {company_id:companyId,module_key:'rrhh',      module_name:'RRHH y nómina',     is_active:false},
+    {company_id:companyId,module_key:'accounting',module_name:'Contabilidad',      is_active:false},
+    {company_id:companyId,module_key:'hdgmind',   module_name:'HDG Mind',          is_active:false},
+    {company_id:companyId,module_key:'documents', module_name:'Documentos',        is_active:false},
+    {company_id:companyId,module_key:'reports',   module_name:'Informes',          is_active:false},
+  ];
+  await sb.from('company_modules').insert(mods);
+  await loadCompanyModules();
+
+  btn.disabled = false; btn.textContent = 'Crear empresa y acceder →';
+  currentUser = authUser;
+  showApp();
 }
 
 async function doForgot() {
   var email = document.getElementById('forgot-email').value.trim();
   if (!email) { showAlert('login-error','Ingresa tu email'); return; }
-  var result = await sb.auth.resetPasswordForEmail(email);
-  if (result.error) { showAlert('login-error', result.error.message); return; }
-  showAlert('login-success','Enlace enviado. Revisa tu correo.');
+  var btn = document.getElementById('btn-forgot');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  var r = await sb.auth.resetPasswordForEmail(email);
+  btn.disabled = false; btn.textContent = 'Enviar enlace';
+  if (r.error) { showAlert('login-error', r.error.message); return; }
+  showAlert('login-success','✓ Enlace enviado. Revisa tu correo.');
 }
 
-function showForgot() {
-  document.getElementById('form-login').style.display = 'none';
-  document.getElementById('form-forgot').style.display = 'block';
-  hideAlert('login-error');
+function showOnboarding() {
+  showScreen('sc-onboarding');
 }
-function showLogin() {
-  document.getElementById('form-login').style.display = 'block';
-  document.getElementById('form-forgot').style.display = 'none';
-  hideAlert('login-error'); hideAlert('login-success');
-}
-
-// ── LOAD DATA ────────────────────────────────────────────
-async function loadProfile() {
-  var result = await sb.from('user_profile').select('*').eq('auth_id', currentUser.id).single();
-  currentProfile = result.data;
-
-  if (!currentProfile) {
-    var ins = await sb.from('user_profile').insert({
-      auth_id: currentUser.id,
-      email: currentUser.email,
-      full_name: currentUser.email.split('@')[0],
-      global_role: 'shipyard',
-      company_id: CO_ID,
-      status: 'active',
-      is_active: true
-    }).select().single();
-    currentProfile = ins.data;
-  }
-}
-
-async function loadCompanyModules() {
-  var result = await sb.from('company_modules').select('*').eq('company_id', CO_ID).eq('is_active', true);
-  companyModules = result.data || [];
-}
-
-async function loadCompanyData() {
-  var r = await sb.from('company').select('*').eq('id', CO_ID).single();
-  companyData = r.data || null;
-  if (companyData) {
-    var sbComp = document.getElementById('sb-company');
-    if (sbComp) sbComp.textContent = companyData.trade_name || companyData.name || 'TAERA';
-    var sbPlan = document.getElementById('sb-plan');
-    if (sbPlan) sbPlan.textContent = 'Plan ' + (companyData.plan || 'Professional');
-  }
-}
-
-// ── SHOW APP ─────────────────────────────────────────────
-function showApp() {
-  showScreen('sc-app');
-  updateTopbar();
-  buildSidebar();
-  navigate('home');
-}
-
-function updateTopbar() {
-  var p = currentProfile;
-  if (!p) return;
-  var role = getRole(p.global_role);
-  var ini = getInitials(p.full_name);
-  var firstName = (p.full_name || 'Usuario').split(' ')[0];
-  var topAv = document.getElementById('top-avatar');
-  if (p.avatar_url) {
-    topAv.innerHTML = '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-  } else {
-    topAv.textContent = ini;
-  }
-  document.getElementById('top-name').textContent = firstName;
-  document.getElementById('top-role').textContent = role.label;
-  // admin handled via company module
-}
-
-// Modules that have real code implemented
-var BUILT_MODULES = ['company', 'projects'];
-var companyData = null;
-
-function buildSidebar() {
-  var nav = document.getElementById('nav-modules');
-  nav.innerHTML = '<div class="sidebar-label">Módulos</div>';
-  // Only show BUILT modules
-  BUILT_MODULES.forEach(function(key) {
-    var cfg = MODULE_CFG[key] || { icon:'◾', label: key };
-    var el = document.createElement('div');
-    el.className = 'nav-item';
-    el.id = 'nav-' + key;
-    el.setAttribute('data-page', key);
-    el.onclick = function() { navigate(this.getAttribute('data-page')); };
-    el.innerHTML = '<span class="nav-icon">' + cfg.icon + '</span>' + cfg.label;
-    nav.appendChild(el);
-  });
-  // Bind static items
-  var np = document.getElementById('nav-profile-link');
-  if (np) np.onclick = function() { navigate('profile'); };
-  var nl = document.getElementById('nav-logout');
-  if (nl) nl.onclick = function() { doLogout(); };
-  // Company name
-  var sbComp = document.getElementById('sb-company');
-  if (sbComp && currentProfile) {
-    sbComp.textContent = companyData ? (companyData.trade_name || companyData.name || 'TAERA') : 'TAERA Cía. Ltda.';
-  }
-}
-
-// ── NAVIGATE ─────────────────────────────────────────────
-function navigate(page) {
-  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
-  var navEl = document.getElementById('nav-' + page);
-  if (navEl) navEl.classList.add('active');
-
-  var label = PAGE_LABELS[page] || page;
-  var bc = document.getElementById('breadcrumb');
-  if (page === 'home') {
-    bc.innerHTML = '<span class="crumb active">Inicio</span>';
-  } else {
-    bc.innerHTML = '<span class="crumb" id="bc-home">Inicio</span>' +
-      '<span class="crumb-sep">›</span>' +
-      '<span class="crumb active">' + label + '</span>';
-  }
-
-  var mc = document.getElementById('main-content');
-  if (page === 'home')         { renderHome(mc); }
-  else if (page === 'profile')  { renderProfile(mc); }
-  else if (page === 'admin')    { renderAdmin(mc); }
-  else if (page === 'projects') { renderProjects(mc); }
-  else if (page === 'company')   { renderCompany(mc); }
-  else { renderComingSoon(mc, label, (MODULE_CFG[page] && MODULE_CFG[page].icon) || '◾'); }
-}
-
-// ── HOME ─────────────────────────────────────────────────
-async function renderHome(mc) {
-  var p = currentProfile;
-  var role = getRole(p && p.global_role);
-  var d = new Date();
-  var days = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-  var months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  var firstName = p && p.full_name ? p.full_name.split(' ')[1] || p.full_name.split(' ')[0] : 'Usuario';
-
-  mc.innerHTML =
-    '<div class="page-header">' +
-      '<div class="page-title">Buenos días, ' + firstName + ' 👋</div>' +
-      '<div class="page-sub">' + days[d.getDay()] + ' ' + d.getDate() + ' de ' + months[d.getMonth()] + ' de ' + d.getFullYear() + ' · ' + role.label + '</div>' +
-    '</div>' +
-    '<div class="stats-grid">' +
-      '<div class="stat-card"><div class="stat-icon" style="background:#E6F1FB;">📋</div><div class="stat-val" id="st-proj">—</div><div class="stat-label">Proyectos activos</div></div>' +
-      '<div class="stat-card"><div class="stat-icon" style="background:#E1F5EE;">🔧</div><div class="stat-val" id="st-ot">—</div><div class="stat-label">Órdenes de trabajo</div></div>' +
-      '<div class="stat-card"><div class="stat-icon" style="background:#FAEEDA;">⛵</div><div class="stat-val" id="st-asset">—</div><div class="stat-label">Embarcaciones</div></div>' +
-      '<div class="stat-card"><div class="stat-icon" style="background:#F1EFE8;">👥</div><div class="stat-val" id="st-users">—</div><div class="stat-label">Usuarios activos</div></div>' +
-    '</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
-      '<div class="card">' +
-        '<div class="card-header"><div class="card-title">Módulos activos</div>' +
-        (p && p.global_role === 'admin' ? '<button class="edit-btn" id="btn-goto-admin">Gestionar</button>' : '') +
-        '</div>' +
-        '<div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="home-modules"></div>' +
-      '</div>' +
-      '<div class="card">' +
-        '<div class="card-header"><div class="card-title">Mi perfil</div>' +
-        '<button class="edit-btn" id="btn-goto-profile">Ver perfil</button></div>' +
-        '<div class="card-body">' +
-          '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">' +
-            '<div class="profile-avatar-big" style="width:48px;height:48px;font-size:18px;">' + getInitials(p && p.full_name) + '</div>' +
-            '<div><div style="font-weight:600;">' + (p && p.full_name || '—') + '</div>' +
-            '<div style="font-size:12px;color:var(--text2);">' + (p && p.title || role.label) + '</div></div>' +
-          '</div>' +
-          '<div style="display:grid;gap:0;">' +
-            '<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--bdr);"><span style="color:var(--text2);">Email</span><span style="font-weight:500;">' + (p && p.email || '—') + '</span></div>' +
-            '<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--bdr);"><span style="color:var(--text2);">Rol</span><span style="font-weight:500;">' + role.label + '</span></div>' +
-            '<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;"><span style="color:var(--text2);">Ciclo de vida</span><span style="font-weight:500;color:var(--brand)">' + role.lifecycle + '</span></div>' +
-          '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-
-  // Load stats async
-  var r1 = await sb.from('project').select('id', {count:'exact'}).eq('lead_company_id', CO_ID).eq('status','active');
-  var r2 = await sb.from('record').select('id', {count:'exact'});
-  var r3 = await sb.from('asset').select('id', {count:'exact'}).eq('owner_company_id', CO_ID);
-  var r4 = await sb.from('user_profile').select('id', {count:'exact'}).eq('company_id', CO_ID);
-  var el;
-  el = document.getElementById('st-proj');  if(el) el.textContent = r1.count || 0;
-  el = document.getElementById('st-ot');    if(el) el.textContent = r2.count || 0;
-  el = document.getElementById('st-asset'); if(el) el.textContent = r3.count || 0;
-  el = document.getElementById('st-users'); if(el) el.textContent = r4.count || 0;
-  var btnA = document.getElementById('btn-goto-admin');
-  if (btnA) btnA.onclick = function() { navigate('admin'); };
-  var btnP = document.getElementById('btn-goto-profile');
-  if (btnP) btnP.onclick = function() { navigate('profile'); };
-  var bcH = document.getElementById('bc-home');
-  if (bcH) bcH.onclick = function() { navigate('home'); };
-
-  // Modules
-  var mEl = document.getElementById('home-modules');
-  if (mEl) {
-    mEl.innerHTML = '';
-    companyModules.forEach(function(m) {
-      var cfg = MODULE_CFG[m.module_key] || { icon:'◾', label: m.module_name };
-      var d = document.createElement('div');
-      d.style.cssText = 'padding:10px;background:var(--bg);border-radius:8px;cursor:pointer;';
-      d.setAttribute('data-mod', m.module_key);
-      d.onmouseover = function(){ this.style.background='var(--brand-light)'; };
-      d.onmouseout  = function(){ this.style.background='var(--bg)'; };
-      d.onclick = function(){ navigate(this.getAttribute('data-mod')); };
-      d.innerHTML = '<div style="font-size:20px;margin-bottom:4px;">' + cfg.icon + '</div><div style="font-size:11px;font-weight:500;">' + cfg.label + '</div>';
-      mEl.appendChild(d);
-    });
-  }
-}
-
-// ── PROFILE ──────────────────────────────────────────────
-function renderProfile(mc) {
-  var p = currentProfile;
-  if (!p) return;
-  var role = getRole(p.global_role);
-  var ini = getInitials(p.full_name);
-
-  function fld(label, val) {
-    return '<div class="profile-field"><div class="profile-field-label">' + label + '</div><div class="profile-field-val">' + (val||'—') + '</div></div>';
-  }
-
-  mc.innerHTML =
-    '<div class="page-header"><div class="page-title">Mi perfil</div><div class="page-sub">Datos personales y profesionales</div></div>' +
-    '<div class="profile-hero">' +
-      '<div class="avatar-upload" onclick="uploadAvatar()">' +
-        '<div class="profile-avatar-big" id="profile-avatar-display">' +
-          (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : ini) +
-        '</div>' +
-        '<div class="avatar-overlay">📷</div>' +
-      '</div>' +
-      '<div style="flex:1;">' +
-        '<div class="profile-name">' + (p.full_name||'—') + '</div>' +
-        '<div class="profile-title">' + (p.title||'—') + '</div>' +
-        '<div class="profile-tags">' +
-          '<span class="tag tag-blue">' + role.icon + ' ' + role.label + '</span>' +
-          '<span class="tag tag-green">' + role.lifecycle + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<button class="edit-btn" onclick="openEditProfile()">✏️ Editar perfil</button>' +
-    '</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
-      '<div class="card"><div class="card-header"><div class="card-title">Información personal</div></div>' +
-      '<div class="card-body"><div class="profile-grid">' +
-        fld('Email', p.email) + fld('Teléfono', p.phone) +
-        fld('Cédula', p.cedula) + fld('Tipo de sangre', p.blood_type) +
-        fld('Talla camiseta', p.shirt_size) + fld('Talla zapatos', p.shoe_size) +
-        fld('Fecha ingreso', p.hire_date ? new Date(p.hire_date).toLocaleDateString('es-EC') : null) +
-        fld('Tipo contrato', p.contract_type) +
-        '<div class="profile-field" style="grid-column:span 2"><div class="profile-field-label">Dirección</div><div class="profile-field-val">' + (p.address||'—') + '</div></div>' +
-        '<div class="profile-field" style="grid-column:span 2"><div class="profile-field-label">Contacto de emergencia</div><div class="profile-field-val">' + (p.emergency_contact||'—') + '</div></div>' +
-      '</div></div></div>' +
-      '<div class="card"><div class="card-header"><div class="card-title">Información profesional</div></div>' +
-      '<div class="card-body"><div class="profile-grid">' +
-        fld('Cargo', p.title) + fld('Rol', role.label) +
-        fld('Ciclo de vida', role.lifecycle) + fld('Idioma', p.language === 'es' ? 'Español' : 'English') +
-      '</div>' +
-      (p.bio ? '<div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text2);">' + p.bio + '</div>' : '') +
-      '</div></div>' +
-    '</div>';
-}
-
-function openEditProfile() {
-  var p = currentProfile;
-  document.getElementById('ep-name').value      = p.full_name || '';
-  document.getElementById('ep-title').value     = p.title || '';
-  document.getElementById('ep-phone').value     = p.phone || '';
-  document.getElementById('ep-cedula').value    = p.cedula || '';
-  document.getElementById('ep-blood').value     = p.blood_type || '';
-  document.getElementById('ep-shirt').value     = p.shirt_size || '';
-  document.getElementById('ep-shoe').value      = p.shoe_size || '';
-  document.getElementById('ep-address').value   = p.address || '';
-  document.getElementById('ep-emergency').value = p.emergency_contact || '';
-  document.getElementById('ep-bio').value       = p.bio || '';
-  openModal('modal-edit-profile');
-}
-
-
-async function uploadAvatar() {
-  var input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/jpeg,image/png,image/webp';
-  input.onchange = async function() {
-    var file = input.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast('Imagen muy grande — máximo 5MB'); return; }
-    toast('Subiendo foto...');
-    var ext = file.name.split('.').pop();
-    var path = currentUser.id + '/avatar.' + ext;
-    var r = await sb.storage.from('avatars').upload(path, file, { upsert: true });
-    if (r.error) { toast('Error: ' + r.error.message); return; }
-    var url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?t=' + Date.now();
-    await sb.from('user_profile').update({ avatar_url: url }).eq('auth_id', currentUser.id);
-    currentProfile.avatar_url = url;
-    // Update topbar avatar
-    var topAvatar = document.getElementById('top-avatar');
-    if (topAvatar) {
-      topAvatar.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-    }
-    toast('✓ Foto actualizada');
-    renderProfile(document.getElementById('main-content'));
-  };
-  input.click();
-}
-
-async function saveProfile() {
-  var btn = document.getElementById('ep-save');
-  btn.disabled = true; btn.textContent = 'Guardando...';
-  var updates = {
-    full_name:         document.getElementById('ep-name').value.trim(),
-    title:             document.getElementById('ep-title').value.trim(),
-    phone:             document.getElementById('ep-phone').value.trim(),
-    cedula:            document.getElementById('ep-cedula').value.trim(),
-    blood_type:        document.getElementById('ep-blood').value,
-    shirt_size:        document.getElementById('ep-shirt').value,
-    shoe_size:         document.getElementById('ep-shoe').value.trim(),
-    address:           document.getElementById('ep-address').value.trim(),
-    emergency_contact: document.getElementById('ep-emergency').value.trim(),
-    bio:               document.getElementById('ep-bio').value.trim()
-  };
-  var result = await sb.from('user_profile').update(updates).eq('auth_id', currentUser.id);
-  btn.disabled = false; btn.textContent = 'Guardar cambios';
-  if (result.error) { toast('Error: ' + result.error.message); return; }
-  Object.assign(currentProfile, updates);
-  closeModal('modal-edit-profile');
-  updateTopbar();
-  navigate('profile');
-  toast('✓ Perfil actualizado');
-}
-
-// ── ADMIN ────────────────────────────────────────────────
-async function renderAdmin(mc) {
-  if (!currentProfile || currentProfile.global_role !== 'admin') {
-    mc.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--text3);">Acceso restringido</div>';
-    return;
-  }
-
-  mc.innerHTML =
-    '<div class="page-header">' +
-      '<div class="page-title">Panel de administración</div>' +
-      '<div class="page-sub">Gestión de datos de la plataforma</div>' +
-    '</div>' +
-    '<div class="admin-nav">' +
-      '<div class="admin-nav-btn' + (adminView==='users'?' on':'') + '" data-av="users">👥 Usuarios</div>' +
-      '<div class="admin-nav-btn' + (adminView==='company'?' on':'') + '" data-av="company">🏢 Empresa</div>' +
-      '<div class="admin-nav-btn' + (adminView==='assets'?' on':'') + '" data-av="assets">⛵ Embarcaciones</div>' +
-      '<div class="admin-nav-btn' + (adminView==='systems'?' on':'') + '" data-av="systems">⚙️ Sistemas</div>' +
-      '<div class="admin-nav-btn' + (adminView==='modules'?' on':'') + '" data-av="modules">🧩 Módulos</div>' +
-    '</div>' +
-    '<div id="admin-table-area"><div style="text-align:center;padding:2rem;"><div class="spin"></div></div></div>';
-
-  document.querySelectorAll('[data-av]').forEach(function(el) {
-    el.onclick = function() {
-      adminView = this.getAttribute('data-av');
-      document.querySelectorAll('[data-av]').forEach(function(b){ b.classList.remove('on'); });
-      this.classList.add('on');
-      loadAdminTable(adminView);
-    };
-  });
-  loadAdminTable(adminView);
-}
-
-var adminView = 'users';
-
-async function loadAdminTable(view) {
-  var area = document.getElementById('admin-table-area');
-  if (!area) return;
-  area.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spin"></div></div>';
-  switch(view) {
-    case 'users':   await renderUsersTable(area);   break;
-    case 'company': await renderCompanyTable(area); break;
-    case 'assets':  await renderAssetsTable(area);  break;
-    case 'systems': await renderSystemsTable(area); break;
-    case 'modules': await renderModulesTable(area); break;
-  }
-}
-
-async function renderUsersTable(area) {
-  var r = await sb.from('user_profile').select('*').eq('company_id', CO_ID).order('full_name');
-  var rows = r.data || [];
-  var tbody = rows.map(function(u) {
-    var ri = getRole(u.global_role);
-    var sc = u.is_active ? 'var(--green-light)' : 'var(--bg2)';
-    var tc = u.is_active ? 'var(--green)' : 'var(--text3)';
-    var av = u.avatar_url
-      ? '<img src="' + u.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
-      : getInitials(u.full_name);
-    var row = document.createElement('tr');
-    row.setAttribute('data-id', u.id);
-    row.innerHTML =
-      '<td><div style="display:flex;align-items:center;gap:8px;">' +
-        '<div style="width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">' + av + '</div>' +
-        '<div><div style="font-weight:500;">' + (u.full_name||'—') + '</div>' +
-        '<div style="font-size:10px;color:var(--text3);">' + (u.title||'') + '</div></div>' +
-      '</div></td>' +
-      '<td>' + (u.email||'—') + '</td>' +
-      '<td><span class="col-chip" style="background:var(--brand-light);color:var(--brand);">' + ri.label + '</span></td>' +
-      '<td>' + (u.cedula||'—') + '</td>' +
-      '<td><span class="col-chip" style="background:' + sc + ';color:' + tc + ';">' + (u.is_active?'Activo':'Inactivo') + '</span></td>' +
-      '<td class="actions"></td>';
-    // Bind action buttons via JS (no inline onclick)
-    var actCell = row.querySelector('td.actions');
-    var editBtn = document.createElement('button');
-    editBtn.className = 'dt-btn';
-    editBtn.textContent = 'Editar';
-    editBtn.onclick = function() { toast('Editar usuario — próximamente'); };
-    var togBtn = document.createElement('button');
-    togBtn.className = 'dt-btn danger';
-    togBtn.textContent = u.is_active ? 'Desactivar' : 'Activar';
-    togBtn.style.marginLeft = '4px';
-    togBtn.onclick = (function(uid, state){ return function(){ toggleUserActive(uid, state); }; })(u.id, u.is_active);
-    actCell.appendChild(editBtn);
-    actCell.appendChild(togBtn);
-    return row;
-  });
-
-  area.innerHTML =
-    '<div class="data-table-wrap">' +
-      '<div class="data-table-toolbar">' +
-        '<input id="dt-src-users" placeholder="Buscar usuario...">' +
-        '<button class="dt-btn primary" id="btn-invite-user">+ Nuevo usuario</button>' +
-        '<span class="dt-count">' + rows.length + ' usuarios</span>' +
-      '</div>' +
-      '<div style="overflow-x:auto;">' +
-        '<table class="data-table" id="dt-users">' +
-          '<thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Cédula</th><th>Estado</th><th>Acciones</th></tr></thead>' +
-          '<tbody id="dt-users-body"></tbody>' +
-        '</table>' +
-      '</div>' +
-    '</div>';
-
-  var tbody2 = document.getElementById('dt-users-body');
-  tbody.forEach(function(row) { tbody2.appendChild(row); });
-
-  var src = document.getElementById('dt-src-users');
-  if (src) src.oninput = function() { filterTable(this, 'dt-users'); };
-  var bi = document.getElementById('btn-invite-user');
-  if (bi) bi.onclick = function() { toast('Invitar usuario — próximamente'); };
-}
-
-async function toggleUserActive(userId, currentState) {
-  var r = await sb.from('user_profile').update({is_active: !currentState}).eq('id', userId);
-  if (r.error) { toast('Error: ' + r.error.message); return; }
-  toast(!currentState ? '✓ Usuario activado' : '✓ Usuario desactivado');
-  loadAdminTable('users');
-}
-
-async function renderCompanyTable(area) {
-  var r = await sb.from('company').select('*').eq('id', CO_ID).single();
-  var c = r.data || {};
-  var fields = [
-    ['Nombre comercial','trade_name',c.trade_name],['Razón social','name',c.name],
-    ['RUC / Tax ID','tax_id',c.tax_id],['Tipo','company_type',c.company_type],
-    ['Ciudad','city',c.city],['País','country',c.country],
-    ['Dirección','address',c.address],['Teléfono','phone',c.phone],
-    ['Email','email',c.email],['Sitio web','website',c.website],
-    ['Representante legal','legal_rep',c.legal_rep],
-    ['Sector','industry',c.industry],['Año fundación','founded_year',c.founded_year],
-    ['Plan','plan',c.plan]
-  ];
-  var trs = fields.map(function(f) {
-    var empty = !f[2];
-    return '<tr><td style="font-weight:500;color:var(--text2);width:200px;">' + f[0] + '</td>' +
-      '<td style="' + (empty?'color:var(--text3);font-style:italic;':'') + '">' + (f[2]||'Sin datos') + '</td>' +
-      '<td class="actions"><button class="dt-btn" onclick="openEditCompany()">Editar</button></td></tr>';
-  }).join('');
-  area.innerHTML =
-    '<div class="data-table-wrap">' +
-      '<div class="data-table-toolbar"><span style="font-size:12px;font-weight:600;">Datos de la empresa</span>' +
-        '<button class="dt-btn primary" style="margin-left:auto;" onclick="openEditCompany()">✏️ Editar empresa</button>' +
-      '</div>' +
-      '<table class="data-table"><thead><tr><th>Campo</th><th>Valor</th><th>Acción</th></tr></thead><tbody>' + trs + '</tbody></table>' +
-    '</div>';
-}
-
-async function renderAssetsTable(area) {
-  var r = await sb.from('asset').select('*').eq('owner_company_id', CO_ID).order('name');
-  var rows = r.data || [];
-  var trs = rows.map(function(a) {
-    return '<tr><td style="font-weight:500;">' + (a.name||'—') + '</td>' +
-      '<td style="font-family:monospace;font-size:11px;">' + (a.registration_number||'—') + '</td>' +
-      '<td style="font-family:monospace;font-size:11px;">' + (a.omi_number||'—') + '</td>' +
-      '<td>' + (a.vessel_type||'—') + '</td>' +
-      '<td>' + (a.length_m ? a.length_m+'m' : '—') + '</td>' +
-      '<td style="font-size:11px;">' + (a.owner_name||'—') + '</td>' +
-      '<td class="actions"><button class="dt-btn">Editar</button></td></tr>';
-  }).join('');
-  area.innerHTML =
-    '<div class="data-table-wrap">' +
-      '<div class="data-table-toolbar">' +
-        '<input id="dt-src-assets" placeholder="Buscar embarcación...">' +
-        '<button class="dt-btn primary" id="btn-new-asset">+ Nueva embarcación</button>' +
-        '<span class="dt-count">' + rows.length + ' embarcaciones</span>' +
-      '</div>' +
-      '<div style="overflow-x:auto;">' +
-        '<table class="data-table" id="dt-assets">' +
-          '<thead><tr><th>Nombre</th><th>Matrícula</th><th>OMI</th><th>Tipo</th><th>Eslora</th><th>Armador</th><th>Acción</th></tr></thead>' +
-          '<tbody>' + trs + '</tbody>' +
-        '</table>' +
-      '</div>' +
-    '</div>';
-  var src = document.getElementById('dt-src-assets');
-  if (src) src.oninput = function() { filterTable(this, 'dt-assets'); };
-  var ba = document.getElementById('btn-new-asset');
-  if (ba) ba.onclick = function() { toast('Nueva embarcación — próximamente'); };
-}
-
-async function renderSystemsTable(area) {
-  var r = await sb.from('system').select('*').eq('company_id', CO_ID).order('code');
-  var rows = r.data || [];
-  var trs = rows.length ? rows.map(function(s) {
-    return '<tr><td><span class="col-chip" style="background:var(--brand-light);color:var(--brand);font-family:monospace;">' + (s.code||'—') + '</span></td>' +
-      '<td style="font-weight:500;">' + (s.name||'—') + '</td>' +
-      '<td style="font-size:11px;color:var(--text2);">' + (s.description||'—') + '</td>' +
-      '<td style="font-size:11px;">' + (s.standard||'—') + '</td>' +
-      '<td class="actions"><button class="dt-btn">Editar</button></td></tr>';
-  }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:2rem;">Sin sistemas registrados</td></tr>';
-  area.innerHTML =
-    '<div class="data-table-wrap">' +
-      '<div class="data-table-toolbar">' +
-        '<input placeholder="Buscar sistema...">' +
-        '<button class="dt-btn primary" id="btn-new-system">+ Nuevo sistema</button>' +
-        '<span class="dt-count">' + rows.length + ' sistemas</span>' +
-      '</div>' +
-      '<table class="data-table" id="dt-systems">' +
-        '<thead><tr><th>Código</th><th>Nombre</th><th>Descripción</th><th>Norma</th><th>Acción</th></tr></thead>' +
-        '<tbody>' + trs + '</tbody>' +
-      '</table>' +
-    '</div>';
-}
-
-async function renderModulesTable(area) {
-  var r = await sb.from('company_modules').select('*').eq('company_id', CO_ID);
-  var rows = r.data || [];
-  var tbody = document.createElement('tbody');
-  rows.forEach(function(m) {
-    var cfg = MODULE_CFG[m.module_key] || {icon:'◾'};
-    var tr = document.createElement('tr');
-    var tog = document.createElement('div');
-    tog.style.cssText = 'width:34px;height:18px;border-radius:9px;background:' + (m.is_active?'var(--green)':'var(--bdr2)') + ';position:relative;cursor:pointer;display:inline-block;';
-    tog.setAttribute('data-mid', m.id);
-    tog.setAttribute('data-mstate', m.is_active ? '1' : '0');
-    tog.onclick = function() { toggleModuleAdmin(this.getAttribute('data-mid'), this.getAttribute('data-mstate')==='1'); };
-    var dot = document.createElement('div');
-    dot.style.cssText = 'width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:2px;left:' + (m.is_active?'18px':'2px') + ';box-shadow:0 1px 3px rgba(0,0,0,.2);';
-    tog.appendChild(dot);
-    tr.innerHTML =
-      '<td><span style="margin-right:8px;">' + cfg.icon + '</span><strong>' + m.module_name + '</strong></td>' +
-      '<td style="font-family:monospace;font-size:11px;color:var(--text3);">' + m.module_key + '</td>' +
-      '<td><span class="col-chip" style="background:' + (m.is_active?'var(--green-light)':'var(--bg2)') + ';color:' + (m.is_active?'var(--green)':'var(--text3)') + ';">' + (m.is_active?'Activo':'Inactivo') + '</span></td>' +
-      '<td></td>';
-    tr.querySelector('td:last-child').appendChild(tog);
-    tbody.appendChild(tr);
-  });
-  area.innerHTML =
-    '<div class="data-table-wrap">' +
-      '<div class="data-table-toolbar"><span style="font-size:12px;font-weight:600;">Módulos</span>' +
-        '<span class="dt-count" style="margin-left:auto;">' + rows.filter(function(m){return m.is_active;}).length + ' activos de ' + rows.length + '</span>' +
-      '</div>' +
-      '<table class="data-table"><thead><tr><th>Módulo</th><th>Clave</th><th>Estado</th><th>Toggle</th></tr></thead></table>' +
-    '</div>';
-  area.querySelector('table').appendChild(tbody);
-}
-
-async function toggleModuleAdmin(id, currentState) {
-  var newState = !currentState;
-  var r = await sb.from('company_modules').update({is_active: newState}).eq('id', id);
-  if (r.error) { toast('Error: ' + r.error.message); return; }
-  await loadCompanyModules();
-  buildSidebar();
-  toast('Módulo ' + (newState ? 'activado' : 'desactivado'));
-  loadAdminTable('modules');
-}
-
-function filterTable(input, tableId) {
-  var filter = input.value.toLowerCase();
-  var table = document.getElementById(tableId);
-  if (!table) return;
-  table.querySelectorAll('tbody tr').forEach(function(row) {
-    row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
-  });
-}
-
-
-
-
 
 // ── COMPANY MODULE ──────────────────────────────────────
 async function renderCompany(mc) {
@@ -1844,10 +1514,30 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Login flow bindings
+  var bl1 = document.getElementById('btn-ls1');
+  if (bl1) bl1.onclick = checkEmail;
+  var bl2 = document.getElementById('btn-ls2');
+  if (bl2) bl2.onclick = doLogin;
+  var bgr = document.getElementById('btn-goto-reg');
+  if (bgr) bgr.onclick = function() { showLoginStep('register'); };
+  var brc = document.getElementById('btn-reg-create');
+  if (brc) brc.onclick = doRegister;
+  var bft = document.getElementById('btn-forgot');
+  if (bft) bft.onclick = doForgot;
+  // Onboarding
+  var boc = document.getElementById('btn-ob-create');
+  if (boc) boc.onclick = createCompanyOnboard;
+  // App dropdown
   var ddp = document.getElementById('dd-profile');
   if (ddp) ddp.onclick = function() { navigate('profile'); closeDropdown(); };
   var dds = document.getElementById('dd-settings');
   if (dds) dds.onclick = function() { toast('Configuración — próximamente'); closeDropdown(); };
+  // Enter keys
+  var el = document.getElementById('ls-email');
+  if (el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') checkEmail(); });
+  var pl = document.getElementById('ls-pass');
+  if (pl) pl.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
 });
 
 function toast(msg) {
@@ -1860,12 +1550,9 @@ function toast(msg) {
 window.addEventListener('load', async function() {
   var result = await sb.auth.getSession();
   if (result.data && result.data.session) {
-    // Pre-fill email but always show login screen
-    var emailEl = document.getElementById('login-email');
-    if (emailEl) emailEl.value = result.data.session.user.email;
-    document.getElementById('login-password').focus();
-    // Store session user for quick login
-    window._cachedSession = result.data.session;
+    var email = result.data.session.user.email;
+    var el = document.getElementById('ls-email');
+    if (el) { el.value = email; checkEmail(); }
   }
 });
 
