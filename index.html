@@ -162,6 +162,29 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:13px;color:var(--
 
 
 
+
+/* ── ADMIN DATA PANEL ── */
+.data-table-wrap{background:var(--white);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;}
+.data-table-toolbar{padding:.75rem 1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px;}
+.data-table-toolbar input{flex:1;max-width:260px;padding:6px 10px;border:1px solid var(--bdr2);border-radius:7px;font-size:12px;font-family:Inter,sans-serif;outline:none;}
+.data-table-toolbar input:focus{border-color:var(--brand);}
+.dt-count{font-size:11px;color:var(--text3);margin-left:auto;}
+table.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+table.data-table th{padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr);background:var(--bg);white-space:nowrap;}
+table.data-table td{padding:9px 12px;border-bottom:1px solid var(--bdr);color:var(--text);vertical-align:middle;}
+table.data-table tr:last-child td{border-bottom:none;}
+table.data-table tr:hover td{background:var(--bg);}
+table.data-table td.actions{text-align:right;white-space:nowrap;}
+.dt-btn{padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid var(--bdr);color:var(--text2);background:var(--white);font-family:Inter,sans-serif;transition:all .12s;}
+.dt-btn:hover{border-color:var(--brand);color:var(--brand);}
+.dt-btn.danger:hover{border-color:var(--red);color:var(--red);}
+.dt-btn.primary{background:var(--brand);color:#fff;border-color:var(--brand);}
+.admin-nav{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;}
+.admin-nav-btn{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--bdr);color:var(--text2);cursor:pointer;transition:all .12s;background:var(--white);}
+.admin-nav-btn:hover{border-color:var(--brand);color:var(--brand);}
+.admin-nav-btn.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+.col-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;}
+
 /* ── PHOTO UPLOAD ── */
 .avatar-upload{position:relative;width:72px;height:72px;cursor:pointer;}
 .avatar-upload:hover .avatar-overlay{opacity:1;}
@@ -999,87 +1022,257 @@ async function saveProfile() {
 // ── ADMIN ────────────────────────────────────────────────
 async function renderAdmin(mc) {
   if (!currentProfile || currentProfile.global_role !== 'admin') {
-    mc.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--text3);">Acceso restringido — solo administradores</div>';
+    mc.innerHTML = '<div style="padding:3rem;text-align:center;color:var(--text3);">Acceso restringido</div>';
     return;
   }
+
   mc.innerHTML =
-    '<div class="page-header"><div class="page-title">Administración</div><div class="page-sub">Gestión de empresa, usuarios y módulos</div></div>' +
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem;">' +
-      '<div class="stat-card" style="cursor:pointer;" id="btn-adm-users">' +
-        '<div class="stat-icon" style="background:#E1F5EE;">👥</div>' +
-        '<div class="stat-val" id="adm-users">—</div>' +
-        '<div class="stat-label">Usuarios registrados</div>' +
-        '<div class="stat-change">Gestionar →</div>' +
-      '</div>' +
-      '<div class="stat-card" style="cursor:pointer;" id="btn-adm-mods">' +
-        '<div class="stat-icon" style="background:#E6F1FB;">🧩</div>' +
-        '<div class="stat-val" id="adm-mods">—</div>' +
-        '<div class="stat-label">Módulos activos</div>' +
-        '<div class="stat-change">Configurar →</div>' +
-      '</div>' +
-      '<div class="stat-card">' +
-        '<div class="stat-icon" style="background:#FAEEDA;">🏢</div>' +
-        '<div class="stat-val">1</div>' +
-        '<div class="stat-label">Empresa</div>' +
-      '</div>' +
+    '<div class="page-header">' +
+      '<div class="page-title">Panel de administración</div>' +
+      '<div class="page-sub">Gestión de datos de la plataforma</div>' +
     '</div>' +
-    '<div class="card">' +
-      '<div class="card-header"><div class="card-title">Módulos de la plataforma</div>' +
-      '<span style="font-size:11px;color:var(--text3);">Activa o desactiva módulos para tu empresa</span></div>' +
-      '<div class="card-body" id="admin-modules-list"><div style="text-align:center;padding:1rem;"><div class="spin"></div></div></div>' +
-    '</div>';
+    '<div class="admin-nav">' +
+      '<div class="admin-nav-btn' + (adminView==='users'?' on':'') + '" data-av="users">👥 Usuarios</div>' +
+      '<div class="admin-nav-btn' + (adminView==='company'?' on':'') + '" data-av="company">🏢 Empresa</div>' +
+      '<div class="admin-nav-btn' + (adminView==='assets'?' on':'') + '" data-av="assets">⛵ Embarcaciones</div>' +
+      '<div class="admin-nav-btn' + (adminView==='systems'?' on':'') + '" data-av="systems">⚙️ Sistemas</div>' +
+      '<div class="admin-nav-btn' + (adminView==='modules'?' on':'') + '" data-av="modules">🧩 Módulos</div>' +
+    '</div>' +
+    '<div id="admin-table-area"><div style="text-align:center;padding:2rem;"><div class="spin"></div></div></div>';
 
-  var r1 = await sb.from('user_profile').select('id', {count:'exact'}).eq('company_id', CO_ID);
-  var el = document.getElementById('adm-users');
-  if (el) el.textContent = r1.count || 0;
-
-  var r2 = await sb.from('company_modules').select('*').eq('company_id', CO_ID);
-  var allMods = r2.data || [];
-  var el2 = document.getElementById('adm-mods');
-  if (el2) el2.textContent = allMods.filter(function(m){ return m.is_active; }).length;
-  var bu = document.getElementById('btn-adm-users');
-  if (bu) bu.onclick = function() { toast('Gestión de usuarios — próximamente'); };
-  var bm = document.getElementById('btn-adm-mods');
-  if (bm) bm.onclick = function() { toast('Módulos — próximamente'); };
-
-  var mEl = document.getElementById('admin-modules-list');
-  if (!mEl) return;
-  mEl.innerHTML = '';
-  allMods.forEach(function(m) {
-    var cfg = MODULE_CFG[m.module_key] || { icon:'◾' };
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr);';
-    var info = document.createElement('div');
-    info.style.cssText = 'display:flex;align-items:center;gap:12px;';
-    info.innerHTML = '<span style="font-size:20px;">' + cfg.icon + '</span><div><div style="font-size:13px;font-weight:500;">' + m.module_name + '</div><div style="font-size:11px;color:var(--text3);">' + m.module_key + '</div></div>';
-    var tog = document.createElement('div');
-    tog.id = 'tog-' + m.id;
-    tog.style.cssText = 'width:36px;height:20px;border-radius:10px;background:' + (m.is_active ? 'var(--green)' : 'var(--bdr2)') + ';position:relative;cursor:pointer;transition:background .2s;';
-    tog.setAttribute('data-id', m.id);
-    tog.setAttribute('data-state', m.is_active ? '1' : '0');
-    tog.onclick = function() { toggleModule(this.getAttribute('data-id'), this.getAttribute('data-state') === '1'); };
-    var dot = document.createElement('div');
-    dot.id = 'tog-dot-' + m.id;
-    dot.style.cssText = 'width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:' + (m.is_active ? '18px' : '2px') + ';transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);';
-    tog.appendChild(dot);
-    row.appendChild(info);
-    row.appendChild(tog);
-    mEl.appendChild(row);
+  document.querySelectorAll('[data-av]').forEach(function(el) {
+    el.onclick = function() {
+      adminView = this.getAttribute('data-av');
+      document.querySelectorAll('[data-av]').forEach(function(b){ b.classList.remove('on'); });
+      this.classList.add('on');
+      loadAdminTable(adminView);
+    };
   });
+  loadAdminTable(adminView);
 }
 
-async function toggleModule(id, currentState) {
+var adminView = 'users';
+
+async function loadAdminTable(view) {
+  var area = document.getElementById('admin-table-area');
+  if (!area) return;
+  area.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spin"></div></div>';
+  switch(view) {
+    case 'users':   await renderUsersTable(area);   break;
+    case 'company': await renderCompanyTable(area); break;
+    case 'assets':  await renderAssetsTable(area);  break;
+    case 'systems': await renderSystemsTable(area); break;
+    case 'modules': await renderModulesTable(area); break;
+  }
+}
+
+async function renderUsersTable(area) {
+  var r = await sb.from('user_profile').select('*').eq('company_id', CO_ID).order('full_name');
+  var rows = r.data || [];
+  var tbody = rows.map(function(u) {
+    var ri = getRole(u.global_role);
+    var sc = u.is_active ? 'var(--green-light)' : 'var(--bg2)';
+    var tc = u.is_active ? 'var(--green)' : 'var(--text3)';
+    var av = u.avatar_url
+      ? '<img src="' + u.avatar_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+      : getInitials(u.full_name);
+    var row = document.createElement('tr');
+    row.setAttribute('data-id', u.id);
+    row.innerHTML =
+      '<td><div style="display:flex;align-items:center;gap:8px;">' +
+        '<div style="width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">' + av + '</div>' +
+        '<div><div style="font-weight:500;">' + (u.full_name||'—') + '</div>' +
+        '<div style="font-size:10px;color:var(--text3);">' + (u.title||'') + '</div></div>' +
+      '</div></td>' +
+      '<td>' + (u.email||'—') + '</td>' +
+      '<td><span class="col-chip" style="background:var(--brand-light);color:var(--brand);">' + ri.label + '</span></td>' +
+      '<td>' + (u.cedula||'—') + '</td>' +
+      '<td><span class="col-chip" style="background:' + sc + ';color:' + tc + ';">' + (u.is_active?'Activo':'Inactivo') + '</span></td>' +
+      '<td class="actions"></td>';
+    // Bind action buttons via JS (no inline onclick)
+    var actCell = row.querySelector('td.actions');
+    var editBtn = document.createElement('button');
+    editBtn.className = 'dt-btn';
+    editBtn.textContent = 'Editar';
+    editBtn.onclick = function() { toast('Editar usuario — próximamente'); };
+    var togBtn = document.createElement('button');
+    togBtn.className = 'dt-btn danger';
+    togBtn.textContent = u.is_active ? 'Desactivar' : 'Activar';
+    togBtn.style.marginLeft = '4px';
+    togBtn.onclick = (function(uid, state){ return function(){ toggleUserActive(uid, state); }; })(u.id, u.is_active);
+    actCell.appendChild(editBtn);
+    actCell.appendChild(togBtn);
+    return row;
+  });
+
+  area.innerHTML =
+    '<div class="data-table-wrap">' +
+      '<div class="data-table-toolbar">' +
+        '<input id="dt-src-users" placeholder="Buscar usuario...">' +
+        '<button class="dt-btn primary" id="btn-invite-user">+ Nuevo usuario</button>' +
+        '<span class="dt-count">' + rows.length + ' usuarios</span>' +
+      '</div>' +
+      '<div style="overflow-x:auto;">' +
+        '<table class="data-table" id="dt-users">' +
+          '<thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Cédula</th><th>Estado</th><th>Acciones</th></tr></thead>' +
+          '<tbody id="dt-users-body"></tbody>' +
+        '</table>' +
+      '</div>' +
+    '</div>';
+
+  var tbody2 = document.getElementById('dt-users-body');
+  tbody.forEach(function(row) { tbody2.appendChild(row); });
+
+  var src = document.getElementById('dt-src-users');
+  if (src) src.oninput = function() { filterTable(this, 'dt-users'); };
+  var bi = document.getElementById('btn-invite-user');
+  if (bi) bi.onclick = function() { toast('Invitar usuario — próximamente'); };
+}
+
+async function toggleUserActive(userId, currentState) {
+  var r = await sb.from('user_profile').update({is_active: !currentState}).eq('id', userId);
+  if (r.error) { toast('Error: ' + r.error.message); return; }
+  toast(!currentState ? '✓ Usuario activado' : '✓ Usuario desactivado');
+  loadAdminTable('users');
+}
+
+async function renderCompanyTable(area) {
+  var r = await sb.from('company').select('*').eq('id', CO_ID).single();
+  var c = r.data || {};
+  var fields = [
+    ['Nombre comercial','trade_name',c.trade_name],['Razón social','name',c.name],
+    ['RUC / Tax ID','tax_id',c.tax_id],['Tipo','company_type',c.company_type],
+    ['Ciudad','city',c.city],['País','country',c.country],
+    ['Dirección','address',c.address],['Teléfono','phone',c.phone],
+    ['Email','email',c.email],['Sitio web','website',c.website],
+    ['Representante legal','legal_rep',c.legal_rep],
+    ['Sector','industry',c.industry],['Año fundación','founded_year',c.founded_year],
+    ['Plan','plan',c.plan]
+  ];
+  var trs = fields.map(function(f) {
+    var empty = !f[2];
+    return '<tr><td style="font-weight:500;color:var(--text2);width:200px;">' + f[0] + '</td>' +
+      '<td style="' + (empty?'color:var(--text3);font-style:italic;':'') + '">' + (f[2]||'Sin datos') + '</td>' +
+      '<td class="actions"><button class="dt-btn" onclick="openEditCompany()">Editar</button></td></tr>';
+  }).join('');
+  area.innerHTML =
+    '<div class="data-table-wrap">' +
+      '<div class="data-table-toolbar"><span style="font-size:12px;font-weight:600;">Datos de la empresa</span>' +
+        '<button class="dt-btn primary" style="margin-left:auto;" onclick="openEditCompany()">✏️ Editar empresa</button>' +
+      '</div>' +
+      '<table class="data-table"><thead><tr><th>Campo</th><th>Valor</th><th>Acción</th></tr></thead><tbody>' + trs + '</tbody></table>' +
+    '</div>';
+}
+
+async function renderAssetsTable(area) {
+  var r = await sb.from('asset').select('*').eq('owner_company_id', CO_ID).order('name');
+  var rows = r.data || [];
+  var trs = rows.map(function(a) {
+    return '<tr><td style="font-weight:500;">' + (a.name||'—') + '</td>' +
+      '<td style="font-family:monospace;font-size:11px;">' + (a.registration_number||'—') + '</td>' +
+      '<td style="font-family:monospace;font-size:11px;">' + (a.omi_number||'—') + '</td>' +
+      '<td>' + (a.vessel_type||'—') + '</td>' +
+      '<td>' + (a.length_m ? a.length_m+'m' : '—') + '</td>' +
+      '<td style="font-size:11px;">' + (a.owner_name||'—') + '</td>' +
+      '<td class="actions"><button class="dt-btn">Editar</button></td></tr>';
+  }).join('');
+  area.innerHTML =
+    '<div class="data-table-wrap">' +
+      '<div class="data-table-toolbar">' +
+        '<input id="dt-src-assets" placeholder="Buscar embarcación...">' +
+        '<button class="dt-btn primary" id="btn-new-asset">+ Nueva embarcación</button>' +
+        '<span class="dt-count">' + rows.length + ' embarcaciones</span>' +
+      '</div>' +
+      '<div style="overflow-x:auto;">' +
+        '<table class="data-table" id="dt-assets">' +
+          '<thead><tr><th>Nombre</th><th>Matrícula</th><th>OMI</th><th>Tipo</th><th>Eslora</th><th>Armador</th><th>Acción</th></tr></thead>' +
+          '<tbody>' + trs + '</tbody>' +
+        '</table>' +
+      '</div>' +
+    '</div>';
+  var src = document.getElementById('dt-src-assets');
+  if (src) src.oninput = function() { filterTable(this, 'dt-assets'); };
+  var ba = document.getElementById('btn-new-asset');
+  if (ba) ba.onclick = function() { toast('Nueva embarcación — próximamente'); };
+}
+
+async function renderSystemsTable(area) {
+  var r = await sb.from('system').select('*').eq('company_id', CO_ID).order('code');
+  var rows = r.data || [];
+  var trs = rows.length ? rows.map(function(s) {
+    return '<tr><td><span class="col-chip" style="background:var(--brand-light);color:var(--brand);font-family:monospace;">' + (s.code||'—') + '</span></td>' +
+      '<td style="font-weight:500;">' + (s.name||'—') + '</td>' +
+      '<td style="font-size:11px;color:var(--text2);">' + (s.description||'—') + '</td>' +
+      '<td style="font-size:11px;">' + (s.standard||'—') + '</td>' +
+      '<td class="actions"><button class="dt-btn">Editar</button></td></tr>';
+  }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:2rem;">Sin sistemas registrados</td></tr>';
+  area.innerHTML =
+    '<div class="data-table-wrap">' +
+      '<div class="data-table-toolbar">' +
+        '<input placeholder="Buscar sistema...">' +
+        '<button class="dt-btn primary" id="btn-new-system">+ Nuevo sistema</button>' +
+        '<span class="dt-count">' + rows.length + ' sistemas</span>' +
+      '</div>' +
+      '<table class="data-table" id="dt-systems">' +
+        '<thead><tr><th>Código</th><th>Nombre</th><th>Descripción</th><th>Norma</th><th>Acción</th></tr></thead>' +
+        '<tbody>' + trs + '</tbody>' +
+      '</table>' +
+    '</div>';
+}
+
+async function renderModulesTable(area) {
+  var r = await sb.from('company_modules').select('*').eq('company_id', CO_ID);
+  var rows = r.data || [];
+  var tbody = document.createElement('tbody');
+  rows.forEach(function(m) {
+    var cfg = MODULE_CFG[m.module_key] || {icon:'◾'};
+    var tr = document.createElement('tr');
+    var tog = document.createElement('div');
+    tog.style.cssText = 'width:34px;height:18px;border-radius:9px;background:' + (m.is_active?'var(--green)':'var(--bdr2)') + ';position:relative;cursor:pointer;display:inline-block;';
+    tog.setAttribute('data-mid', m.id);
+    tog.setAttribute('data-mstate', m.is_active ? '1' : '0');
+    tog.onclick = function() { toggleModuleAdmin(this.getAttribute('data-mid'), this.getAttribute('data-mstate')==='1'); };
+    var dot = document.createElement('div');
+    dot.style.cssText = 'width:14px;height:14px;background:#fff;border-radius:50%;position:absolute;top:2px;left:' + (m.is_active?'18px':'2px') + ';box-shadow:0 1px 3px rgba(0,0,0,.2);';
+    tog.appendChild(dot);
+    tr.innerHTML =
+      '<td><span style="margin-right:8px;">' + cfg.icon + '</span><strong>' + m.module_name + '</strong></td>' +
+      '<td style="font-family:monospace;font-size:11px;color:var(--text3);">' + m.module_key + '</td>' +
+      '<td><span class="col-chip" style="background:' + (m.is_active?'var(--green-light)':'var(--bg2)') + ';color:' + (m.is_active?'var(--green)':'var(--text3)') + ';">' + (m.is_active?'Activo':'Inactivo') + '</span></td>' +
+      '<td></td>';
+    tr.querySelector('td:last-child').appendChild(tog);
+    tbody.appendChild(tr);
+  });
+  area.innerHTML =
+    '<div class="data-table-wrap">' +
+      '<div class="data-table-toolbar"><span style="font-size:12px;font-weight:600;">Módulos</span>' +
+        '<span class="dt-count" style="margin-left:auto;">' + rows.filter(function(m){return m.is_active;}).length + ' activos de ' + rows.length + '</span>' +
+      '</div>' +
+      '<table class="data-table"><thead><tr><th>Módulo</th><th>Clave</th><th>Estado</th><th>Toggle</th></tr></thead></table>' +
+    '</div>';
+  area.querySelector('table').appendChild(tbody);
+}
+
+async function toggleModuleAdmin(id, currentState) {
   var newState = !currentState;
-  var result = await sb.from('company_modules').update({is_active: newState}).eq('id', id);
-  if (result.error) { toast('Error: ' + result.error.message); return; }
-  var tog = document.getElementById('tog-' + id);
-  var dot = document.getElementById('tog-dot-' + id);
-  if (tog) tog.style.background = newState ? 'var(--green)' : 'var(--bdr2)';
-  if (dot) dot.style.left = newState ? '18px' : '2px';
+  var r = await sb.from('company_modules').update({is_active: newState}).eq('id', id);
+  if (r.error) { toast('Error: ' + r.error.message); return; }
   await loadCompanyModules();
   buildSidebar();
   toast('Módulo ' + (newState ? 'activado' : 'desactivado'));
+  loadAdminTable('modules');
 }
+
+function filterTable(input, tableId) {
+  var filter = input.value.toLowerCase();
+  var table = document.getElementById(tableId);
+  if (!table) return;
+  table.querySelectorAll('tbody tr').forEach(function(row) {
+    row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
+  });
+}
+
+
 
 
 
@@ -1667,10 +1860,12 @@ function toast(msg) {
 window.addEventListener('load', async function() {
   var result = await sb.auth.getSession();
   if (result.data && result.data.session) {
-    currentUser = result.data.session.user;
-    await loadProfile();
-    await loadCompanyModules();
-    showApp();
+    // Pre-fill email but always show login screen
+    var emailEl = document.getElementById('login-email');
+    if (emailEl) emailEl.value = result.data.session.user.email;
+    document.getElementById('login-password').focus();
+    // Store session user for quick login
+    window._cachedSession = result.data.session;
   }
 });
 
