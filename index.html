@@ -8,28 +8,72 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
-/* ... (mantengo todo tu CSS original sin cambios) ... */
-/* NUEVO: Overlay de iluminación de ARIA */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Inter,sans-serif;font-size:13px;background:#F0F2F5;color:#111827;min-height:100vh;}
+.screen{display:none;}
+.screen.on{display:block;}
+
+/* ── AUTH ── */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+.auth-box{width:100%;max-width:420px;}
+.auth-logo{text-align:center;margin-bottom:1.5rem;}
+.auth-logo img{height:44px;object-fit:contain;}
+.auth-company-badge{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #E5E7EB;border-radius:20px;padding:5px 12px 5px 6px;margin-top:8px;cursor:pointer;font-size:12px;color:#111827;font-weight:500;}
+.auth-card{background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:2rem;box-shadow:0 4px 20px rgba(0,0,0,.06);}
+.auth-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+.auth-sub{font-size:12px;color:#6B7280;margin-bottom:1.5rem;}
+.auth-step{display:none;}
+.auth-step.on{display:block;}
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:10px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;}
+.fi{width:100%;padding:10px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;font-family:Inter,sans-serif;color:#111827;outline:none;transition:border-color .15s;}
+.fi:focus{border-color:#1D5FA5;box-shadow:0 0 0 3px rgba(29,95,165,.1);}
+.btn{width:100%;padding:11px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:Inter,sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-blue{background:#1D5FA5;color:#fff;}
+.btn-green{background:#1D9E75;color:#fff;}
+.btn-outline{background:#fff;color:#6B7280;border:1px solid #E5E7EB;}
+.topbar{height:52px;background:#fff;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;padding:0 1.5rem;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-logo{height:28px;object-fit:contain;cursor:pointer;}
+.user-pill{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border:1px solid #E5E7EB;border-radius:20px;cursor:pointer;transition:background .12s;}
+.main{max-width:860px;margin:0 auto;padding:1.5rem;}
+.card{background:#fff;border:1px solid #E5E7EB;border-radius:12px;margin-bottom:1rem;}
+.card-head{padding:1rem 1.25rem;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;}
+.card-body{padding:1.25rem;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.field{background:#F9FAFB;border-radius:8px;padding:10px 12px;}
+.field-label{font-size:10px;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+.field-val{font-size:13px;font-weight:500;color:#111827;}
+.edit-btn{padding:6px 14px;background:#E6F1FB;color:#1D5FA5;border:1px solid #B5D4F4;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;}
+
+/* ARIA Glow Overlay */
 #aria-glow-overlay {
   position: fixed;
   pointer-events: none;
   z-index: 9998;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,200,255,0.25) 0%, rgba(0,150,220,0) 70%);
-  width: 280px;
-  height: 280px;
+  background: radial-gradient(circle, rgba(0,200,255,0.28) 0%, rgba(0,150,220,0) 70%);
+  width: 290px;
+  height: 290px;
   opacity: 0;
   transition: opacity 0.4s ease;
-  box-shadow: 0 0 80px 40px rgba(0,200,255,0.15);
+  box-shadow: 0 0 90px 50px rgba(0,200,255,0.18);
 }
 </style>
 </head>
 <body>
-<!-- ... (todo tu HTML original hasta el final del body) ... -->
 
-<!-- NUEVO: Overlay de luz de ARIA -->
-<div id="aria-glow-overlay"></div>
+<!-- AUTH SCREEN -->
+<div class="screen on" id="sc-auth"> ... (tu código de auth completo sin cambios) ... </div>
 
+<!-- APP SCREEN -->
+<div class="screen" id="sc-app">
+  <div class="topbar"> ... (tu topbar) ... </div>
+  <div class="main" id="app-main"></div>
+</div>
+
+<!-- NAVIS / ARIA -->
 <div id="navis-wrap" style="left:calc(100vw - 190px);top:calc(100vh - 240px);z-index:9999;">
   <canvas id="navis-canvas" width="170" height="170"></canvas>
   <div id="navis-msg-wrap"></div>
@@ -38,81 +82,34 @@
   </div>
 </div>
 
+<!-- Aro de luz que ilumina la página -->
+<div id="aria-glow-overlay"></div>
+
 <script>
-// ... (todo tu código anterior hasta la función nInit) ...
+const { createClient } = supabase;
+const sb = createClient('https://ukcfzijdegclgavjtrug.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrY2Z6aWpkZWdjbGdhdmp0cnVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTI2NTAsImV4cCI6MjA5MTMyODY1MH0.5pBebPqehEuiFRf0-VFkBVws6AT6oGf7OzimUzhbg1o');
 
-let isPinned = false;           // ← Nueva variable para fijar ARIA
-let currentSafeZone = {x: window.innerWidth-190, y: window.innerHeight-240}; // zona inicial
+let user = null, profile = null, company = null;
+let scene, camera, renderer, glowRing = null;
+let isPinned = false;
+let currentSafeZone = {x: window.innerWidth - 190, y: window.innerHeight - 240};
+let nSpeaking = false;
+let nHistory = [];
+let nDrag = false;
+let nPX = window.innerWidth - 190, nPY = window.innerHeight - 240;
+let nVX = 0.6, nVY = 0.4;
 
-// Actualizamos la función de movimiento
-function moveNavis(){
-  const wrap = document.getElementById('navis-wrap');
-  if(isPinned){
-    wrap.style.left = currentSafeZone.x + 'px';
-    wrap.style.top  = currentSafeZone.y + 'px';
-    requestAnimationFrame(moveNavis);
-    return;
-  }
+// Utilidades básicas
+function $(id){ return document.getElementById(id); }
 
-  // Movimiento conversacional
-  const speaking = nSpeaking;
-  const idleDrift = speaking ? 0.8 : 2.5; // más calmado cuando habla
-
-  nPX += nVX * idleDrift;
-  nPY += nVY * idleDrift;
-
-  // Pequeños movimientos aleatorios cortos (sin patrón)
-  if(Math.random() < 0.03){
-    nVX = (Math.random()-0.5) * (speaking ? 0.6 : 1.8);
-    nVY = (Math.random()-0.5) * (speaking ? 0.6 : 1.8);
-  }
-
-  // Rebote suave en bordes pero respetando zonas vacías
-  const pad = 120;
-  if(nPX < pad) { nPX = pad; nVX = Math.abs(nVX)*1.2; }
-  if(nPX > window.innerWidth-pad) { nPX = window.innerWidth-pad; nVX = -Math.abs(nVX)*1.2; }
-  if(nPY < pad) { nPY = pad; nVY = Math.abs(nVY)*1.2; }
-  if(nPY > window.innerHeight-pad) { nPY = window.innerHeight-pad; nVY = -Math.abs(nVY)*1.2; }
-
-  // Sincronización con habla: pequeño "bob" vertical
-  if(speaking){
-    nPY += Math.sin(Date.now()/120) * 3;
-  }
-
-  wrap.style.left = nPX + 'px';
-  wrap.style.top  = nPY + 'px';
-
-  // Actualizar overlay de luz
-  const glow = document.getElementById('aria-glow-overlay');
-  glow.style.left = (nPX - 55) + 'px';
-  glow.style.top  = (nPY - 55) + 'px';
-  glow.style.opacity = speaking ? 0.35 : 0.12;
-
-  requestAnimationFrame(moveNavis);
-}
-
-// Click para fijar / liberar ARIA
-const canvas = document.getElementById('navis-canvas');
-canvas.addEventListener('click', function(e){
-  if(nDrag) return;
-  isPinned = !isPinned;
-  currentSafeZone = {x: nPX, y: nPY};
-  
-  const msg = isPinned 
-    ? 'ARIA fijada en esta posición ✓' 
-    : 'ARIA liberada y lista para moverse';
-  nSpeak(msg);
-  toast(msg);
-});
-
-// NUEVO: Aro de luz en Three.js (ring pulsante)
-let glowRing;
-function createGlowRing(){
-  const ringGeo = new THREE.RingGeometry(1.05, 1.25, 64);
+// ==================== ARIA - MOVIMIENTO Y LUZ ====================
+function createGlowRing() {
+  if (!scene) return;
+  const ringGeo = new THREE.RingGeometry(1.05, 1.28, 64);
   const ringMat = new THREE.MeshBasicMaterial({
     color: 0x00ccff,
     transparent: true,
-    opacity: 0.4,
+    opacity: 0.35,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending
   });
@@ -120,27 +117,117 @@ function createGlowRing(){
   scene.add(glowRing);
 }
 
-// En la función animate() agregamos:
-function animate(){
-  requestAnimationFrame(animate);
-  tt += 0.016;
+function moveNavis() {
+  const wrap = $('navis-wrap');
+  if (!wrap) return;
 
-  // ... (tu código de streams anterior) ...
-
-  if(glowRing){
-    glowRing.rotation.z = tt * 1.8;
-    glowRing.scale.setScalar(nSpeaking ? 1 + Math.sin(tt*12)*0.12 : 1);
-    glowRing.material.opacity = nSpeaking ? 0.65 : 0.25;
+  if (isPinned) {
+    wrap.style.left = currentSafeZone.x + 'px';
+    wrap.style.top = currentSafeZone.y + 'px';
+    requestAnimationFrame(moveNavis);
+    return;
   }
 
+  nPX += nVX;
+  nPY += nVY;
+
+  if (Math.random() < 0.035) {
+    nVX = (Math.random() - 0.5) * (nSpeaking ? 0.8 : 1.6);
+    nVY = (Math.random() - 0.5) * (nSpeaking ? 0.8 : 1.6);
+  }
+
+  const pad = 110;
+  if (nPX < pad) { nPX = pad; nVX = Math.abs(nVX) * 1.3; }
+  if (nPX > window.innerWidth - pad) { nPX = window.innerWidth - pad; nVX = -Math.abs(nVX) * 1.3; }
+  if (nPY < pad) { nPY = pad; nVY = Math.abs(nVY) * 1.3; }
+  if (nPY > window.innerHeight - pad) { nPY = window.innerHeight - pad; nVY = -Math.abs(nVY) * 1.3; }
+
+  if (nSpeaking) nPY += Math.sin(Date.now() / 140) * 2.5;
+
+  wrap.style.left = nPX + 'px';
+  wrap.style.top = nPY + 'px';
+
+  const glow = $('aria-glow-overlay');
+  if (glow) {
+    glow.style.left = (nPX - 60) + 'px';
+    glow.style.top = (nPY - 60) + 'px';
+    glow.style.opacity = nSpeaking ? 0.38 : 0.14;
+  }
+
+  requestAnimationFrame(moveNavis);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (!renderer || !scene || !camera) return;
+
+  const tt = Date.now() * 0.001;
+  if (glowRing) {
+    glowRing.rotation.z = tt * 2.2;
+    const scale = nSpeaking ? 1 + Math.sin(tt * 14) * 0.15 : 1;
+    glowRing.scale.setScalar(scale);
+    glowRing.material.opacity = nSpeaking ? 0.68 : 0.28;
+  }
   renderer.render(scene, camera);
 }
 
-// Dentro de nInit() después de crear la escena:
-createGlowRing();
-moveNavis();   // ← ahora usa la nueva lógica conversacional
+// Click para fijar / liberar ARIA
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = $('navis-canvas');
+  if (canvas) {
+    canvas.addEventListener('click', () => {
+      if (nDrag) return;
+      isPinned = !isPinned;
+      currentSafeZone = { x: nPX, y: nPY };
+      nSpeak(isPinned ? 'ARIA fijada aquí ✓' : 'ARIA liberada y lista para moverse');
+    });
+  }
+});
 
-// ... resto de tu código sin cambios ...
+// ==================== INICIALIZACIÓN ARIA ====================
+function nInit() {
+  const wrap = $('navis-wrap');
+  let canvas = $('navis-canvas');
+  if (!wrap || !canvas || typeof THREE === 'undefined') return;
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(170, 170);
+  renderer.setClearColor(0x000000, 0);
+  canvas.parentNode.replaceChild(renderer.domElement, canvas);
+  renderer.domElement.id = 'navis-canvas';
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(60, 1, 0.1, 200);
+  camera.position.z = 2.8;
+
+  createGlowRing();
+  moveNavis();
+  animate();
+}
+
+window.addEventListener('load', () => {
+  setTimeout(nInit, 800);
+});
+
+// ==================== FUNCIONES AUXILIARES (mantengo las tuyas) ====================
+function nSpeak(txt) {
+  nSpeaking = true;
+  const wrap = $('navis-msg-wrap');
+  if (wrap) {
+    wrap.innerHTML = `<div class="navis-msg">${txt}</div>`;
+  }
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = 'es-US';
+    u.rate = 1.05;
+    speechSynthesis.speak(u);
+    u.onend = () => nSpeaking = false;
+  }
+  setTimeout(() => nSpeaking = false, txt.length * 65);
+}
+
+// ... (aquí puedes pegar el resto de tu código original de auth, login, company page, etc.) ...
 
 </script>
 </body>
