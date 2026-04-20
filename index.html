@@ -1766,6 +1766,29 @@ function buildSidebar(){
   if(tc&&company) tc.textContent=company.trade_name||company.name||'Empresa';
 }
 
+
+function updateTopbar(){
+  if(!profile) return;
+  var role = getRoleLabel(profile.global_role);
+  var initials = (profile.full_name||'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
+  var av = document.getElementById('u-av');
+  if(av){
+    if(profile.avatar_url){
+      av.innerHTML='<img src="'+profile.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    } else {
+      av.textContent=initials;
+    }
+  }
+  var uname = document.getElementById('u-name');
+  if(uname) uname.textContent=(profile.full_name||'Usuario').split(' ')[0];
+  var urole = document.getElementById('u-role');
+  if(urole) urole.textContent=role;
+  var coname = document.getElementById('app-coname');
+  if(coname&&company) coname.textContent=company.trade_name||company.name||'Empresa';
+  var logo = document.getElementById('app-logo');
+  if(logo&&company&&company.logo_url) logo.src=company.logo_url;
+}
+
 function navigate(page){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   var el=document.getElementById('nav-'+page);
