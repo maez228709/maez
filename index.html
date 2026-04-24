@@ -622,17 +622,18 @@ function ariaEntryInit(){
     if(e.key==='Enter') ariaEntrySubmit();
   });
 
-  // Company autocomplete on register form
-  document.addEventListener('input', function(e){
-    if(e.target.id !== 'aria-reg-company') return;
-    var val = e.target.value.trim();
+  // Company autocomplete on register form — show all on focus, filter on type
+  function loadCompanySuggestions(val){
     var sug = document.getElementById('aria-company-suggestions');
     if(!sug) return;
-    if(val.length < 2){ sug.style.display='none'; return; }
-    sb.from('company').select('id,name,trade_name')
-      .ilike('name','%'+val+'%').limit(6).then(function(r){
+    var query = sb.from('company').select('id,name,trade_name').limit(8);
+    if(val&&val.length>=2) query=query.ilike('name','%'+val+'%');
+    query.then(function(r){
         var items = r.data||[];
-        if(items.length===0){ sug.style.display='none'; return; }
+        if(items.length===0){
+          sug.innerHTML='<div style="padding:8px 12px;font-size:12px;color:rgba(0,200,255,0.5);">No se encontraron empresas</div>';
+          sug.style.display='block'; return;
+        }
         sug.innerHTML='';
         items.forEach(function(co){
           var label = co.trade_name||co.name;
@@ -650,7 +651,6 @@ function ariaEntryInit(){
         });
         sug.style.display='block';
       });
-  });
 
   // Check existing session
   sb.auth.getSession().then(function(r){
@@ -662,6 +662,7 @@ function ariaEntryInit(){
       ariaEntryStartIdleTalk();
     }
   });
+}
 }
 
 var ariaIdleMsgs = [
