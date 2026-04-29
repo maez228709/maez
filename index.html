@@ -2265,6 +2265,7 @@ async function openProject(p){
     ['resumen','📋 Resumen',false],
     ['bitacora','📝 Bitácora',false],
     ['ordenes','🔧 Órdenes',false],
+    ['bloques','🧩 Bloques',false],
     ['bodega','📦 Bodega',true],
     ['informes','📄 Informes',true],
     ['visor3d','🧊 Visor 3D',false],
@@ -2310,6 +2311,7 @@ async function loadProjectTab(p, tab){
   if(tab==='resumen')  await loadProjectResumen(p, content);
   else if(tab==='bitacora') await loadProjectBitacora(p, content);
   else if(tab==='ordenes')  await loadProjectOrdenes(p, content);
+  else if(tab==='bloques')  await loadProjectBloques(p, content);
   else if(tab==='visor3d')  await loadProjectVisor3D(p, content);
   else content.innerHTML='<div style="color:var(--color-text-tertiary);padding:2rem;text-align:center;">Próximamente</div>';
 }
@@ -2764,6 +2766,423 @@ async function loadProjectVisor3D(p, content){
   '</div>';
 }
 
+// ============================================================
+// MÓDULO DE BLOQUES — Sistema B-DIS / B-CON / B-DIQ / B-PRU / B-OPE / B-MAN
+// ============================================================
+
+// Catálogo local de bloques (espejo de block_template en Supabase)
+var BLOCK_CATALOG = {
+  'B-PRU': {
+    label: '🧪 Pruebas y Entrega',
+    lifecycle: ['pruebas_entrega','dique','construccion'],
+    bloques: [
+      {type:'B-PRU-01', name:'Pruebas en dique (antes de desvare)',   tipo:'Datos'},
+      {type:'B-PRU-02', name:'Prueba de mar (sea trial)',              tipo:'Datos'},
+      {type:'B-PRU-03', name:'Inspección final post-desvare',         tipo:'Datos+Fotos'},
+      {type:'B-PRU-04', name:'Punch list',                            tipo:'Datos+3D'},
+      {type:'B-PRU-05', name:'Certificación DIRNEA / Clasificadora',  tipo:'Datos'},
+      {type:'B-PRU-06', name:'Cierre financiero del proyecto',        tipo:'Cálculo'},
+    ]
+  },
+  'B-DIQ': {
+    label: '⚓ Mantenimiento en Dique',
+    lifecycle: ['dique'],
+    bloques: [
+      {type:'B-DIQ-01', name:'Inspección subaqua',       tipo:'Datos+Fotos'},
+      {type:'B-DIQ-02', name:'Maniobra de varado',       tipo:'Datos'},
+      {type:'B-DIQ-03', name:'Cama de varado',           tipo:'Datos'},
+      {type:'B-DIQ-04', name:'Apéndices',                tipo:'Datos+3D'},
+      {type:'B-DIQ-05', name:'Propulsión',               tipo:'Datos+Cálculo'},
+      {type:'B-DIQ-06', name:'Gobierno',                 tipo:'Datos'},
+      {type:'B-DIQ-07', name:'Fondeo',                   tipo:'Datos'},
+      {type:'B-DIQ-08', name:'Válvulas y tuberías',      tipo:'Datos'},
+      {type:'B-DIQ-09', name:'Carenado / Pintura',       tipo:'Cálculo'},
+      {type:'B-DIQ-10', name:'Estructura / Soldadura',   tipo:'Datos+Cálculo'},
+      {type:'B-DIQ-11', name:'Consumibles dique',        tipo:'Cálculo'},
+      {type:'B-DIQ-12', name:'Resumen económico',        tipo:'Cálculo'},
+    ]
+  },
+  'B-DIS': {
+    label: '📐 Diseño',
+    lifecycle: ['diseno'],
+    bloques: [
+      {type:'B-DIS-01', name:'Dimensiones principales',    tipo:'Datos'},
+      {type:'B-DIS-02', name:'Coeficientes del casco',     tipo:'Cálculo'},
+      {type:'B-DIS-03', name:'Hidrostáticas',              tipo:'Cálculo'},
+      {type:'B-DIS-04', name:'Estabilidad',                tipo:'Cálculo'},
+      {type:'B-DIS-05', name:'Resistencia y velocidad',    tipo:'Cálculo'},
+      {type:'B-DIS-06', name:'Propulsión',                 tipo:'Cálculo'},
+      {type:'B-DIS-07', name:'Estructural — escantillones',tipo:'Cálculo'},
+      {type:'B-DIS-08', name:'Pesos y centros',            tipo:'Cálculo'},
+      {type:'B-DIS-09', name:'Disposición general',        tipo:'Datos'},
+      {type:'B-DIS-10', name:'Sistema de gobierno',        tipo:'Datos'},
+      {type:'B-DIS-11', name:'Sistema de fondeo',          tipo:'Datos'},
+      {type:'B-DIS-12', name:'Sistema eléctrico',          tipo:'Datos'},
+      {type:'B-DIS-13', name:'Normativa aplicable',        tipo:'Datos'},
+    ]
+  },
+  'B-CON': {
+    label: '🏗️ Construcción',
+    lifecycle: ['construccion'],
+    bloques: [
+      {type:'B-CON-01', name:'Avance por componente',     tipo:'Datos+3D'},
+      {type:'B-CON-02', name:'Plan de fabricación',        tipo:'Datos'},
+      {type:'B-CON-03', name:'Lista de materiales',        tipo:'Datos'},
+      {type:'B-CON-04', name:'Planchaje',                  tipo:'Cálculo'},
+      {type:'B-CON-05', name:'Calidad — soldadura',        tipo:'Datos'},
+      {type:'B-CON-06', name:'Plan de pintura',            tipo:'Cálculo'},
+      {type:'B-CON-07', name:'Horas-hombre',               tipo:'Cálculo'},
+      {type:'B-CON-08', name:'Pruebas de estanqueidad',   tipo:'Datos'},
+      {type:'B-CON-09', name:'Fotografías de avance',      tipo:'Documentos'},
+    ]
+  },
+  'B-OPE': {
+    label: '🚢 Operación',
+    lifecycle: ['operacion'],
+    bloques: [
+      {type:'B-OPE-01', name:'Datos de navegación',       tipo:'Datos'},
+      {type:'B-OPE-02', name:'Consumos',                   tipo:'Datos'},
+      {type:'B-OPE-03', name:'Tripulación',                tipo:'Datos'},
+      {type:'B-OPE-04', name:'Mantenimiento preventivo',  tipo:'Datos'},
+      {type:'B-OPE-05', name:'Certificados habilitantes', tipo:'Datos'},
+      {type:'B-OPE-06', name:'Incidentes y averías',      tipo:'Datos'},
+    ]
+  },
+  'B-MAN': {
+    label: '🔩 Mantenimiento interno',
+    lifecycle: ['mantenimiento_interno'],
+    bloques: [
+      {type:'B-MAN-01', name:'Orden de mantenimiento',    tipo:'Datos'},
+      {type:'B-MAN-02', name:'Horómetro',                 tipo:'Datos'},
+      {type:'B-MAN-03', name:'Repuestos utilizados',      tipo:'Datos'},
+      {type:'B-MAN-04', name:'Historial del equipo',      tipo:'Datos'},
+    ]
+  }
+};
+
+// Colores por categoría
+var BLOCK_COLORS = {
+  'B-PRU': '#6366F1', 'B-DIQ': '#0F6E56', 'B-DIS': '#1D5FA5',
+  'B-CON': '#B45309', 'B-OPE': '#15803D', 'B-MAN': '#7C3AED'
+};
+
+async function loadProjectBloques(p, content) {
+  content.innerHTML = '<div style="color:var(--color-text-tertiary);padding:2rem;text-align:center;">Cargando bloques...</div>';
+  var blocks = [];
+  try {
+    var {data, error} = await supabase
+      .from('project_block')
+      .select('*')
+      .eq('project_id', p.id)
+      .eq('is_active', true)
+      .order('position');
+    if (!error) blocks = data || [];
+  } catch(e) { blocks = []; }
+
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">' +
+    '<div>' +
+      '<div style="font-weight:600;font-size:15px;color:var(--color-text-primary);">Bloques del proyecto</div>' +
+      '<div style="font-size:12px;color:var(--color-text-tertiary);margin-top:2px;">Formularios técnicos vinculados a este proyecto</div>' +
+    '</div>' +
+    '<button class="edit-btn" onclick="openAddBlockModal(\'' + p.id + '\')">+ Agregar bloque</button>' +
+  '</div>';
+
+  if (blocks.length === 0) {
+    html += '<div style="background:var(--color-background-secondary);border:1.5px dashed var(--color-border-secondary);border-radius:10px;padding:3rem;text-align:center;">' +
+      '<div style="font-size:2rem;margin-bottom:.75rem;">🧩</div>' +
+      '<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:.5rem;">Sin bloques activos</div>' +
+      '<div style="font-size:13px;color:var(--color-text-tertiary);margin-bottom:1.25rem;">Agrega los formularios técnicos que necesitas para este proyecto.</div>' +
+      '<button class="edit-btn" onclick="openAddBlockModal(\'' + p.id + '\')">+ Agregar primer bloque</button>' +
+    '</div>';
+  } else {
+    html += '<div style="display:flex;flex-direction:column;gap:.75rem;">';
+    blocks.forEach(function(b) {
+      var cat = b.block_type ? b.block_type.substring(0,5) : 'B-PRU';
+      var color = BLOCK_COLORS[cat] || '#6B7280';
+      var dataCount = b.data ? Object.keys(b.data).filter(function(k){ return b.data[k] !== null && b.data[k] !== ''; }).length : 0;
+      html += '<div style="background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:border .15s;" ' +
+        'onmouseover="this.style.borderColor=\'' + color + '\'" onmouseout="this.style.borderColor=\'var(--color-border-tertiary)\'" ' +
+        'onclick="openBlockDetail(\'' + b.id + '\',\'' + p.id + '\')">' +
+        '<div style="width:36px;height:36px;border-radius:8px;background:' + color + '22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<span style="font-size:10px;font-weight:700;color:' + color + ';">' + b.block_type + '</span>' +
+        '</div>' +
+        '<div style="flex:1;">' +
+          '<div style="font-weight:500;font-size:13px;color:var(--color-text-primary);">' + (b.block_name || b.block_type) + '</div>' +
+          '<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px;">' +
+            (dataCount > 0 ? dataCount + ' campo(s) completado(s)' : 'Sin datos aún') +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--color-text-tertiary);">▶</div>' +
+      '</div>';
+    });
+    html += '</div>';
+  }
+
+  content.innerHTML = html;
+}
+
+function openAddBlockModal(projectId) {
+  var overlay = document.getElementById('modal-co');
+  overlay.querySelector('.modal-title').textContent = 'Agregar bloque';
+  var body = overlay.querySelector('.modal-body');
+
+  var catHtml = '<div style="margin-bottom:1rem;">' +
+    '<label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:.4rem;">Categoría</label>' +
+    '<select id="blk-cat-sel" onchange="renderBlockTypeOptions()" style="width:100%;padding:.5rem .75rem;border:1px solid var(--color-border-secondary);border-radius:8px;font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);">' +
+    '<option value="">— Selecciona una categoría —</option>';
+  Object.keys(BLOCK_CATALOG).forEach(function(cat) {
+    catHtml += '<option value="' + cat + '">' + BLOCK_CATALOG[cat].label + '</option>';
+  });
+  catHtml += '</select></div>' +
+    '<div id="blk-type-wrap" style="margin-bottom:1rem;display:none;">' +
+      '<label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:.4rem;">Bloque</label>' +
+      '<select id="blk-type-sel" style="width:100%;padding:.5rem .75rem;border:1px solid var(--color-border-secondary);border-radius:8px;font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);"><option value="">— Selecciona un bloque —</option></select>' +
+    '</div>' +
+    '<div id="blk-name-wrap" style="margin-bottom:1rem;display:none;">' +
+      '<label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:.4rem;">Nombre personalizado (opcional)</label>' +
+      '<input id="blk-name-inp" type="text" placeholder="Dejar vacío para usar nombre estándar" style="width:100%;padding:.5rem .75rem;border:1px solid var(--color-border-secondary);border-radius:8px;font-size:13px;box-sizing:border-box;background:var(--color-background-primary);color:var(--color-text-primary);">' +
+    '</div>';
+
+  body.innerHTML = catHtml;
+  overlay.querySelector('.modal-footer').innerHTML =
+    '<button class="btn-sec" onclick="document.getElementById(\'modal-co\').style.display=\'none\'">Cancelar</button>' +
+    '<button class="btn-pri" onclick="saveAddBlock(\'' + projectId + '\')">Agregar bloque</button>';
+  overlay.style.display = 'flex';
+}
+
+function renderBlockTypeOptions() {
+  var cat = document.getElementById('blk-cat-sel').value;
+  var wrap = document.getElementById('blk-type-wrap');
+  var nameWrap = document.getElementById('blk-name-wrap');
+  var sel = document.getElementById('blk-type-sel');
+  if (!cat) { wrap.style.display = 'none'; nameWrap.style.display = 'none'; return; }
+  sel.innerHTML = '<option value="">— Selecciona un bloque —</option>';
+  BLOCK_CATALOG[cat].bloques.forEach(function(b) {
+    sel.innerHTML += '<option value="' + b.type + '">' + b.type + ' — ' + b.name + '</option>';
+  });
+  wrap.style.display = 'block';
+  nameWrap.style.display = 'block';
+}
+
+async function saveAddBlock(projectId) {
+  var cat  = document.getElementById('blk-cat-sel').value;
+  var type = document.getElementById('blk-type-sel').value;
+  var name = document.getElementById('blk-name-inp') ? document.getElementById('blk-name-inp').value.trim() : '';
+  if (!type) { toast('Selecciona un bloque'); return; }
+
+  // Buscar posición máxima actual
+  var pos = 0;
+  try {
+    var {data} = await supabase.from('project_block').select('position').eq('project_id', projectId).order('position',{ascending:false}).limit(1);
+    if (data && data.length) pos = (data[0].position || 0) + 1;
+  } catch(e) {}
+
+  // Nombre por defecto
+  if (!name) {
+    var catDef = BLOCK_CATALOG[cat];
+    if (catDef) {
+      var found = catDef.bloques.find(function(b){ return b.type === type; });
+      if (found) name = found.name;
+    }
+    if (!name) name = type;
+  }
+
+  var {error} = await supabase.from('project_block').insert({
+    project_id:  projectId,
+    company_id:  activeCompany ? activeCompany.id : null,
+    block_type:  type,
+    block_name:  name,
+    position:    pos,
+    is_active:   true,
+    data:        {}
+  });
+
+  if (error) { toast('Error: ' + error.message); return; }
+  document.getElementById('modal-co').style.display = 'none';
+  toast('Bloque agregado');
+  // Recargar tab bloques
+  if (activeProject) loadProjectBloques(activeProject, document.getElementById('proj-tab-content'));
+}
+
+async function openBlockDetail(blockId, projectId) {
+  var overlay = document.getElementById('modal-co');
+  overlay.querySelector('.modal-title').textContent = 'Cargando bloque...';
+  overlay.querySelector('.modal-body').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--color-text-tertiary);">Cargando...</div>';
+  overlay.querySelector('.modal-footer').innerHTML = '';
+  overlay.style.display = 'flex';
+
+  var {data: b, error} = await supabase.from('project_block').select('*').eq('id', blockId).single();
+  if (error || !b) { toast('Error cargando bloque'); return; }
+
+  var cat = b.block_type ? b.block_type.substring(0,5) : '';
+  var color = BLOCK_COLORS[cat] || '#6B7280';
+  overlay.querySelector('.modal-title').textContent = b.block_name || b.block_type;
+
+  var bData = b.data || {};
+  var formHtml = renderBlockForm(b.block_type, bData, color);
+  overlay.querySelector('.modal-body').innerHTML = formHtml;
+
+  overlay.querySelector('.modal-footer').innerHTML =
+    '<button class="btn-sec" onclick="confirmDeleteBlock(\'' + blockId + '\',\'' + projectId + '\')">Eliminar bloque</button>' +
+    '<button class="btn-sec" onclick="document.getElementById(\'modal-co\').style.display=\'none\'">Cancelar</button>' +
+    '<button class="btn-pri" onclick="saveBlockData(\'' + blockId + '\',\'' + projectId + '\')">Guardar</button>';
+}
+
+function renderBlockForm(blockType, data, color) {
+  var fields = BLOCK_FIELDS[blockType];
+  if (!fields) {
+    return '<div style="padding:1rem;color:var(--color-text-tertiary);font-size:13px;">Formulario en desarrollo para ' + blockType + '</div>';
+  }
+  var html = '<div style="display:flex;flex-direction:column;gap:.85rem;">';
+  fields.forEach(function(f) {
+    var val = data[f.key] !== undefined ? data[f.key] : '';
+    html += '<div>';
+    html += '<label style="font-size:12px;font-weight:500;color:var(--color-text-secondary);display:block;margin-bottom:.3rem;">' + f.label;
+    if (f.norma) html += ' <span style="font-size:10px;color:' + color + ';font-weight:600;">' + f.norma + '</span>';
+    if (f.limite) html += ' <span style="font-size:10px;color:var(--color-text-tertiary);">(' + f.limite + ')</span>';
+    html += '</label>';
+    if (f.type === 'select') {
+      html += '<select data-key="' + f.key + '" style="width:100%;padding:.45rem .7rem;border:1px solid var(--color-border-secondary);border-radius:8px;font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);">' +
+        '<option value="">—</option>';
+      (f.options || []).forEach(function(o) {
+        html += '<option value="' + o + '"' + (val === o ? ' selected' : '') + '>' + o + '</option>';
+      });
+      html += '</select>';
+    } else if (f.type === 'textarea') {
+      html += '<textarea data-key="' + f.key + '" rows="3" style="width:100%;padding:.45rem .7rem;border:1px solid var(--color-border-secondary);border-radius:8px;font-size:13px;resize:vertical;box-sizing:border-box;background:var(--color-background-primary);color:var(--color-text-primary);">' + (val || '') + '</textarea>';
+    } else if (f.type === 'number') {
+      html += '<div style="display:flex;align-items:center;gap:.5rem;">' +
+        '<input data-key="' + f.key + '" type="number" value="' + (val || '') + '" style="flex:1;padding:.45rem .7rem;border:1px solid var(--color-border-secondary);border-radius:8px;font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);">' +
+        (f.unit ? '<span style="font-size:12px;color:var(--color-text-tertiary);">' + f.unit + '</span>' : '') +
+      '</div>';
+    } else if (f.type === 'date') {
+      html += '<input data-key="' + f.key + '" type="date" value="' + (val || '') + '" style="padding:.45rem .7rem;border:1px solid var(--color-border-secondary);border-radius:8px;font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);">';
+    } else {
+      html += '<input data-key="' + f.key + '" type="text" value="' + (val || '') + '" style="width:100%;padding:.45rem .7rem;border:1px solid var(--color-border-secondary);border-radius:8px;font-size:13px;box-sizing:border-box;background:var(--color-background-primary);color:var(--color-text-primary);">';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+async function saveBlockData(blockId, projectId) {
+  var newData = {};
+  document.querySelectorAll('#modal-co .modal-body [data-key]').forEach(function(el) {
+    var k = el.getAttribute('data-key');
+    var v = el.value;
+    if (v !== '') newData[k] = (el.type === 'number' && v !== '') ? parseFloat(v) : v;
+  });
+  var {error} = await supabase.from('project_block').update({data: newData, updated_at: new Date().toISOString()}).eq('id', blockId);
+  if (error) { toast('Error guardando: ' + error.message); return; }
+  document.getElementById('modal-co').style.display = 'none';
+  toast('Bloque guardado');
+  if (activeProject) loadProjectBloques(activeProject, document.getElementById('proj-tab-content'));
+}
+
+async function confirmDeleteBlock(blockId, projectId) {
+  if (!confirm('¿Eliminar este bloque y sus datos?')) return;
+  var {error} = await supabase.from('project_block').update({is_active: false}).eq('id', blockId);
+  if (error) { toast('Error: ' + error.message); return; }
+  document.getElementById('modal-co').style.display = 'none';
+  toast('Bloque eliminado');
+  if (activeProject) loadProjectBloques(activeProject, document.getElementById('proj-tab-content'));
+}
+
+// ============================================================
+// CAMPOS DE BLOQUES — B-PRU completo, otros en desarrollo
+// ============================================================
+var BLOCK_FIELDS = {
+  'B-PRU-01': [
+    {key:'estanqueidad_casco',    label:'Estanqueidad casco/compartimentos', type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'IACS UR S7'},
+    {key:'valvulas_fondo',        label:'Válvulas de fondo y cajas de mar',  type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'IR Class DS'},
+    {key:'mamparos_estancos',     label:'Puertas y mamparos estancos',        type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'SOLAS II-1'},
+    {key:'achique_bilge',         label:'Sistema de achique (bilge)',          type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'SOLAS II-1'},
+    {key:'contraincendios',       label:'Sistema contraincendios',             type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'SOLAS II-2'},
+    {key:'sistema_electrico',     label:'Sistema eléctrico',                   type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'SOLAS II-1'},
+    {key:'molinete_winches',      label:'Molinete / Winches (ancla ≥9m/min)', type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'ABS/Lloyd\'s'},
+    {key:'gobierno_muelle_seg',   label:'Gobierno en muelle — tiempo 35°→35°', type:'number', unit:'seg', limite:'≤28 seg', norma:'SOLAS II-1 R.29'},
+    {key:'gobierno_emergencia',   label:'Gobierno de emergencia',              type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'SOLAS II-1'},
+    {key:'deteccion_incendio',    label:'Detección incendio e inundación',    type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'SOLAS II-2'},
+    {key:'anodos_iccp',           label:'Ánodos sacrificio / ICCP',           type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'IR Class DS'},
+    {key:'responsable',           label:'Responsable',                          type:'text'},
+    {key:'fecha_prueba',          label:'Fecha de prueba',                      type:'date'},
+    {key:'observaciones',         label:'Observaciones generales',              type:'textarea'},
+  ],
+  'B-PRU-02': [
+    {key:'fecha_sea_trial',       label:'Fecha',                               type:'date'},
+    {key:'condicion_carga',       label:'Condición de carga',                  type:'text'},
+    {key:'ruta',                  label:'Ruta / Zona de prueba',               type:'text'},
+    {key:'condiciones_meteo',     label:'Condiciones meteorológicas',          type:'text'},
+    {key:'personal_abordo',       label:'Personal a bordo',                    type:'text'},
+    {key:'velocidad_prueba_kn',   label:'Velocidad medida',                    type:'number', unit:'kn'},
+    {key:'rpm_prueba',            label:'RPM de prueba',                       type:'number'},
+    {key:'velocidad_diseno_kn',   label:'Velocidad de diseño',                 type:'number', unit:'kn'},
+    {key:'propulsion_avante',     label:'Propulsión avante/atrás',             type:'select', options:['Aprobado','Con observaciones','Reprobado']},
+    {key:'gobierno_35_seg',       label:'Gobierno bajo carga — tiempo 35°→35°',type:'number', unit:'seg', limite:'≤28 seg', norma:'SOLAS II-1 R.29'},
+    {key:'gobierno_emergencia_mar',label:'Gobierno de emergencia en mar',      type:'select', options:['Aprobado','Con observaciones','Reprobado']},
+    {key:'fondeo_velocidad',      label:'Fondeo — velocidad cobrado',          type:'number', unit:'m/min', limite:'≥9 m/min'},
+    {key:'temp_motores',          label:'Temperatura motores',                 type:'number', unit:'°C'},
+    {key:'temp_cojinetes',        label:'Temperatura cojinetes',               type:'number', unit:'°C'},
+    {key:'vibraciones',           label:'Vibraciones ejes/bocines',            type:'select', options:['Dentro de tolerancia','Fuera de tolerancia'], norma:'ISO 20283'},
+    {key:'generadores',           label:'Generadores bajo carga',              type:'select', options:['Aprobado','Con observaciones','Reprobado']},
+    {key:'comunicaciones',        label:'Comunicaciones VHF + intercom',       type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'SOLAS IV'},
+    {key:'ows_marpol',            label:'Separador OWS — MARPOL',             type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'MARPOL Anx.I'},
+    {key:'parada_emergencia',     label:'Parada de emergencia',                type:'select', options:['Aprobado','Con observaciones','Reprobado'], norma:'IMO A.601(15)'},
+    {key:'resultado_general',     label:'Resultado general',                   type:'select', options:['Aprobado','Aprobado con condiciones','Reprobado']},
+    {key:'responsable',           label:'Jefe de Dique / Ing. de Proyecto',    type:'text'},
+    {key:'observaciones',         label:'Observaciones',                        type:'textarea'},
+  ],
+  'B-PRU-03': [
+    {key:'estanqueidad_a_flote',  label:'Estanqueidad confirmada a flote',     type:'select', options:['Sin novedades','Con observaciones']},
+    {key:'pintura_obras_vivas',   label:'Pintura / protección obras vivas',    type:'select', options:['Sin daños','Con daños menores','Con daños mayores']},
+    {key:'apendices',             label:'Apéndices (hélice, timón, bocines)',  type:'select', options:['Sin daños','Con daños menores','Con daños mayores']},
+    {key:'fecha',                 label:'Fecha de inspección',                 type:'date'},
+    {key:'responsable',           label:'Responsable',                          type:'text'},
+    {key:'observaciones',         label:'Observaciones',                        type:'textarea'},
+  ],
+  'B-PRU-04': [
+    {key:'total_items',           label:'Total ítems del punch list',          type:'number'},
+    {key:'items_resueltos',       label:'Ítems resueltos',                     type:'number'},
+    {key:'items_pendientes',      label:'Ítems pendientes',                    type:'number'},
+    {key:'fecha_cierre_estimada', label:'Fecha de cierre estimada',            type:'date'},
+    {key:'responsable_cierre',    label:'Responsable del cierre',              type:'text'},
+    {key:'notas',                 label:'Notas generales',                     type:'textarea'},
+  ],
+  'B-PRU-05': [
+    {key:'regida_por_convenio',   label:'¿Embarcación regida por convenio?',  type:'select', options:['Sí — aplica clasificadora','No — DIRNEA directa']},
+    {key:'clasificadora',         label:'Sociedad de clasificación',           type:'select', options:['ABS','Lloyd\'s Register','Bureau Veritas','DNV','RNA Ecuador','DIRNEA directa','Otra']},
+    {key:'tipo_inspeccion',       label:'Tipo de inspección',                  type:'select', options:['Anual','Dique (cada 2.5 años)','Especial (cada 5 años)','Construcción nueva']},
+    {key:'inspector',             label:'Inspector asignado',                  type:'text'},
+    {key:'credencial_inspector',  label:'Credencial / N° inspector',          type:'text'},
+    {key:'cert_clase',            label:'Certificado de clase',                type:'select', options:['Emitido','Condicionado','No emitido']},
+    {key:'cert_seguridad',        label:'Certificado de seguridad',            type:'select', options:['Emitido','Condicionado','No emitido']},
+    {key:'cert_marpol',           label:'Certificado MARPOL',                 type:'select', options:['Emitido','N/A','Pendiente']},
+    {key:'cert_ism',              label:'Certificado ISM',                    type:'select', options:['Emitido','N/A','Pendiente']},
+    {key:'cert_matricula',        label:'Matrícula DIRNEA',                   type:'select', options:['Vigente','Renovada','Pendiente']},
+    {key:'cert_permiso_operacion',label:'Permiso de operación',               type:'select', options:['Emitido','Pendiente']},
+    {key:'fecha_proxima_anual',   label:'Próxima inspección anual',           type:'date'},
+    {key:'fecha_proxima_dique',   label:'Próxima inspección de dique',        type:'date'},
+    {key:'fecha_proxima_especial',label:'Próxima inspección especial',        type:'date'},
+    {key:'condiciones_pendientes',label:'Condiciones pendientes de clase',    type:'textarea'},
+  ],
+  'B-PRU-06': [
+    {key:'monto_cotizacion',      label:'Monto cotización aprobada',          type:'number', unit:'$'},
+    {key:'monto_ejecutado',       label:'Monto total ejecutado',              type:'number', unit:'$'},
+    {key:'variaciones_valor',     label:'Variaciones aprobadas',              type:'number', unit:'$'},
+    {key:'variaciones_detalle',   label:'Detalle de variaciones',             type:'textarea'},
+    {key:'retencion_pct',         label:'Retención contractual',              type:'number', unit:'%'},
+    {key:'retencion_valor',       label:'Valor retenido',                     type:'number', unit:'$'},
+    {key:'factura_numero',        label:'N° factura final',                   type:'text'},
+    {key:'factura_fecha',         label:'Fecha factura',                      type:'date'},
+    {key:'estado_pago',           label:'Estado de pago',                     type:'select', options:['Pendiente','Parcial','Pagado']},
+    {key:'acta_entrega',          label:'Acta de entrega firmada',            type:'select', options:['Sí','No']},
+    {key:'fecha_entrega_oficial', label:'Fecha oficial de entrega',           type:'date'},
+    {key:'observaciones',         label:'Observaciones',                      type:'textarea'},
+  ],
+};
+
+// ============================================================
 function openBitacoraModal(projectId){
   var overlay=document.getElementById('modal-co');
   overlay.querySelector('.modal-title').textContent='Nuevo registro de bitácora';
