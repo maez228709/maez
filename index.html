@@ -2262,15 +2262,17 @@ async function openProject(p){
   // Build tabs
   var tabBar=document.getElementById('proj-tabs');
   var TABS=[
-    ['resumen','📋 Resumen',false],
-    ['bitacora','📝 Bitácora',false],
+    ['visor3d','🧊 Visor 3D',false],
+    ['resumen','📋 Datos del activo',false],
     ['ordenes','🔧 Órdenes',false],
     ['bloques','🧩 Bloques',false],
-    ['bodega','📦 Bodega',true],
-    ['informes','📄 Informes',true],
-    ['visor3d','🧊 Visor 3D',false],
+    ['cronograma','📅 Cronograma',true],
+    ['finanzas','💰 Finanzas',true],
+    ['materiales','📦 Materiales',true],
+    ['calidad','✅ Calidad',true],
+    ['documentos','📄 Documentos',true],
   ];
-  var activeTab='resumen';
+  var activeTab='visor3d';
   TABS.forEach(function(t){
     var btn=document.createElement('button');
     btn.id='ptab-'+t[0];
@@ -2302,18 +2304,17 @@ async function openProject(p){
   },0);
 
   // Activate first tab
-  document.getElementById('ptab-resumen').click();
+  document.getElementById('ptab-visor3d').click();
 }
 
 async function loadProjectTab(p, tab){
   var content=document.getElementById('proj-tab-content');
   if(!content) return;
-  if(tab==='resumen')  await loadProjectResumen(p, content);
-  else if(tab==='bitacora') await loadProjectBitacora(p, content);
+  if(tab==='visor3d')   await loadProjectVisor3D(p, content);
+  else if(tab==='resumen')  await loadProjectResumen(p, content);
   else if(tab==='ordenes')  await loadProjectOrdenes(p, content);
   else if(tab==='bloques')  await loadProjectBloques(p, content);
-  else if(tab==='visor3d')  await loadProjectVisor3D(p, content);
-  else content.innerHTML='<div style="color:var(--color-text-tertiary);padding:2rem;text-align:center;">Próximamente</div>';
+  else content.innerHTML='<div style="color:var(--color-text-tertiary);padding:2rem;text-align:center;"><div style="font-size:2rem;margin-bottom:.75rem;">🚧</div>Próximamente</div>';
 }
 
 async function loadProjectResumen(p, content){
@@ -5073,7 +5074,10 @@ document.addEventListener('click', function(e){
 // Project button delegation
 document.addEventListener('click', function(e){
   var id=e.target.id||'';
-  if(id==='btn-open-visor') toast('Visor 3D — próximamente');
+  if(id==='btn-open-visor'){
+    var vBtn=document.getElementById('ptab-visor3d');
+    if(vBtn) vBtn.click(); else toast('Visor 3D');
+  }
   else if(id==='btn-upload-model') toast('Subir modelo — próximamente');
   else if(id==='btn-new-ot') toast('Nueva OT — próximamente');
   else if(id==='btn-vinc-asset') toast('Vincular activo — próximamente');
