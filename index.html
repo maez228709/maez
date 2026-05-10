@@ -269,7 +269,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 
     <div style="margin-top:1.5rem;text-align:center;">
       <div style="font-size:10px;color:#D1D5DB;">ENGRAVIS · Gestión Naval Digital</div>
-      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v1.8.5</div>
+      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v1.8.6</div>
     </div>
   </div>
 </div>
@@ -777,7 +777,7 @@ async function ariaEntryDoLogin(pass){
   // Now authenticated — can query user_profile
   var {data:prof} = await sb.from('user_profile')
     .select('is_active, full_name, company:company_id(trade_name,name,logo_url)')
-    .eq('auth_id', user.id).maybeSingle();
+    .eq('id', user.id).maybeSingle();
 
   if(!prof){
     // Auth exists but no profile — first time, go to register to complete
