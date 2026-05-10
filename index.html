@@ -216,8 +216,13 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
     <div id="login-step-pass" style="display:none;">
       <div class="login-field">
         <label>Contraseña</label>
-        <input id="aria-entry-pass" type="password" placeholder="••••••••" autocomplete="current-password"
-          onkeydown="if(event.key==='Enter')ariaEntrySubmit()">
+        <div style="position:relative;">
+          <input id="aria-entry-pass" type="password" placeholder="••••••••" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')ariaEntrySubmit()"
+            style="width:100%;padding:.6rem 2.5rem .6rem .75rem;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;color:#111827;outline:none;box-sizing:border-box;transition:border .15s;font-family:Inter,sans-serif;">
+          <button type="button" onclick="togglePassVis('aria-entry-pass',this)"
+            style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:16px;padding:0;line-height:1;">👁</button>
+        </div>
       </div>
       <button class="login-btn" onclick="ariaEntrySubmit()">Ingresar</button>
       <button class="login-back" onclick="ariaEntryBack()">← Cambiar correo</button>
@@ -238,18 +243,31 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
       </div>
       <div class="login-field">
         <label>Contraseña</label>
-        <input id="aria-reg-pass" type="password" placeholder="Contraseña">
+        <div style="position:relative;">
+          <input id="aria-reg-pass" type="password" placeholder="Contraseña"
+            style="width:100%;padding:.6rem 2.5rem .6rem .75rem;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;color:#111827;outline:none;box-sizing:border-box;transition:border .15s;font-family:Inter,sans-serif;">
+          <button type="button" onclick="togglePassVis('aria-reg-pass',this)"
+            style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:16px;padding:0;line-height:1;">👁</button>
+        </div>
       </div>
       <div class="login-field">
         <label>Confirmar contraseña</label>
-        <input id="aria-reg-pass2" type="password" placeholder="Repetir contraseña">
+        <div style="position:relative;">
+          <input id="aria-reg-pass2" type="password" placeholder="Repetir contraseña"
+            style="width:100%;padding:.6rem 2.5rem .6rem .75rem;border:1.5px solid #E5E7EB;border-radius:8px;font-size:14px;color:#111827;outline:none;box-sizing:border-box;transition:border .15s;font-family:Inter,sans-serif;">
+          <button type="button" onclick="togglePassVis('aria-reg-pass2',this)"
+            style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:16px;padding:0;line-height:1;">👁</button>
+        </div>
       </div>
       <button class="login-btn" onclick="ariaEntrySubmit()">Crear cuenta</button>
       <button class="login-back" onclick="ariaEntryBack()">← Volver</button>
       <div class="login-err" id="login-err-3"></div>
     </div>
 
-    <div style="margin-top:1.5rem;text-align:center;font-size:10px;color:#D1D5DB;">ENGRAVIS · Gestión Naval Digital</div>
+    <div style="margin-top:1.5rem;text-align:center;">
+      <div style="font-size:10px;color:#D1D5DB;">ENGRAVIS · Gestión Naval Digital</div>
+      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v1.8.4</div>
+    </div>
   </div>
 </div>
 
@@ -886,6 +904,35 @@ async function ariaEntryDoRegister(){
     ariaEntryMsg('Algo salió mal. Intenta de nuevo.', 0);
   }
 }
+
+function togglePassVis(inputId, btn){
+  var inp = document.getElementById(inputId);
+  if(!inp) return;
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+// Inyectar versión en login
+(function(){
+  var vEl = document.getElementById('login-version');
+  if(vEl){
+    var vSpan = document.querySelector('.topbar span[style*="Inter,monospace"]') ||
+                document.querySelector('#modal-info [style*="9CA3AF"]');
+    // Leer versión del footer
+    var allSpans = document.querySelectorAll('span');
+    for(var i=0;i<allSpans.length;i++){
+      if(allSpans[i].textContent.match(/^v\d+\.\d+\.\d+/)){
+        vEl.textContent = allSpans[i].textContent.trim();
+        break;
+      }
+    }
+  }
+})();
 
 // ── LOGIN BRAND DETECTION ───────────────────────────────
 var ENGRAVIS_LOGO = document.getElementById('login-logo-img') ? document.getElementById('login-logo-img').src : '';
