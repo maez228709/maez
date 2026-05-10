@@ -226,6 +226,9 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
       </div>
       <button class="login-btn" onclick="ariaEntrySubmit()">Ingresar</button>
       <button class="login-back" onclick="ariaEntryBack()">← Cambiar correo</button>
+      <div style="text-align:center;margin-top:.75rem;">
+        <button onclick="loginForgotPassword()" style="background:none;border:none;font-size:11px;color:#6B7280;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline;">¿Olvidaste tu contraseña?</button>
+      </div>
       <div class="login-err" id="login-err-2"></div>
     </div>
 
@@ -266,7 +269,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 
     <div style="margin-top:1.5rem;text-align:center;">
       <div style="font-size:10px;color:#D1D5DB;">ENGRAVIS · Gestión Naval Digital</div>
-      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v1.8.4</div>
+      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v1.8.5</div>
     </div>
   </div>
 </div>
@@ -902,6 +905,30 @@ async function ariaEntryDoRegister(){
   } catch(e){
     ariaEntryErr(e.message);
     ariaEntryMsg('Algo salió mal. Intenta de nuevo.', 0);
+  }
+}
+
+async function loginForgotPassword(){
+  var email = (document.getElementById('aria-entry-input')||{}).value||'';
+  email = email.trim().toLowerCase();
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    ariaEntryErr('Ingresa tu correo primero'); return;
+  }
+  var btn = event.target;
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
+  var {error} = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  btn.disabled = false;
+  if(error){
+    btn.textContent = '¿Olvidaste tu contraseña?';
+    ariaEntryErr('Error: ' + error.message);
+  } else {
+    btn.textContent = '✓ Email enviado';
+    btn.style.color = '#15803D';
+    var err2 = document.getElementById('login-err-2');
+    if(err2){ err2.style.color='#15803D'; err2.textContent='Revisa tu correo para restablecer la contraseña.'; }
   }
 }
 
