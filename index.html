@@ -2494,6 +2494,8 @@ async function openProject(p){
 async function loadProjectTab(p, tab){
   var content=document.getElementById('proj-tab-content');
   if(!content) return;
+  // Si salimos del visor 3D, destruir el renderer
+  if(tab!=='visor3d') _v3dDestroy();
   if(tab==='visor3d')   await loadProjectVisor3D(p, content);
   else if(tab==='resumen')  await loadProjectResumen(p, content);
   else if(tab==='ordenes')  await loadProjectOrdenes(p, content);
@@ -2933,20 +2935,246 @@ async function saveEditOT(otId, p){
   loadProjectOrdenes(p, document.getElementById('proj-tab-content'));
 }
 
+// ── VISOR 3D ─────────────────────────────────────────────────
+var _v3dRenderer=null, _v3dAnimId=null;
+
+function _v3dDestroy(){
+  if(_v3dAnimId){cancelAnimationFrame(_v3dAnimId);_v3dAnimId=null;}
+  if(_v3dRenderer){_v3dRenderer.dispose();_v3dRenderer=null;}
+}
+
+function _v3dLoadGLTFLoader(cb){
+  if(window.THREE&&window.THREE.GLTFLoader){cb();return;}
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+  s.onload=cb;
+  s.onerror=function(){console.error('GLTFLoader no cargó');};
+  document.head.appendChild(s);
+}
+
+function _v3dInit(glbUrl, assetName, containerId){
+  _v3dDestroy();
+  var wrap=document.getElementById(containerId);
+  if(!wrap)return;
+
+  var W=wrap.clientWidth||800, H=480;
+  var renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setSize(W,H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.2;
+  wrap.appendChild(renderer.domElement);
+  _v3dRenderer=renderer;
+
+  var scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0d1b2e);
+  var grid=new THREE.GridHelper(40,20,0x1a3a5c,0x1a3a5c);
+  grid.position.y=-0.01;
+  scene.add(grid);
+
+  var ambLight=new THREE.AmbientLight(0xffffff,0.7);
+  scene.add(ambLight);
+  var d1=new THREE.DirectionalLight(0xffffff,1.1);d1.position.set(6,10,6);scene.add(d1);
+  var d2=new THREE.DirectionalLight(0x88ccff,0.4);d2.position.set(-6,4,-6);scene.add(d2);
+
+  var camera=new THREE.PerspectiveCamera(45,W/H,0.01,2000);
+  var pivot=new THREE.Group();scene.add(pivot);
+
+  // Estado interacción
+  var drag=false,lastX=0,lastY=0,rotX=0.25,rotY=0.4,zf=1;
+  var el=renderer.domElement;
+  el.style.borderRadius='10px';
+  el.style.cursor='grab';
+  el.addEventListener('mousedown',function(e){drag=true;lastX=e.clientX;lastY=e.clientY;el.style.cursor='grabbing';});
+  window.addEventListener('mouseup',function(){drag=false;el.style.cursor='grab';});
+  window.addEventListener('mousemove',function(e){
+    if(!drag)return;
+    rotY+=(e.clientX-lastX)*0.005;
+    rotX+=(e.clientY-lastY)*0.005;
+    rotX=Math.max(-1.4,Math.min(1.4,rotX));
+    lastX=e.clientX;lastY=e.clientY;
+  });
+  el.addEventListener('wheel',function(e){
+    zf*=e.deltaY>0?1.1:0.9;
+    zf=Math.max(0.1,Math.min(10,zf));
+    e.preventDefault();
+  },{passive:false});
+  // Touch
+  var t0x=0,t0y=0;
+  el.addEventListener('touchstart',function(e){if(e.touches.length===1){drag=true;t0x=e.touches[0].clientX;t0y=e.touches[0].clientY;}},{passive:true});
+  el.addEventListener('touchend',function(){drag=false;},{passive:true});
+  el.addEventListener('touchmove',function(e){
+    if(!drag||e.touches.length!==1)return;
+    rotY+=(e.touches[0].clientX-t0x)*0.005;
+    rotX+=(e.touches[0].clientY-t0y)*0.005;
+    rotX=Math.max(-1.4,Math.min(1.4,rotX));
+    t0x=e.touches[0].clientX;t0y=e.touches[0].clientY;
+  },{passive:true});
+
+  // Capas SWBS
+  var layers={}, allMeshes=[], wireframeOn=false;
+  var colorPalette=[0x1D9E75,0x1D5FA5,0xE67E22,0x9B59B6,0xE74C3C,0x2ECC71,0xF1C40F,0x1ABC9C,0xE91E63,0xFF5722];
+
+  function buildLayerPanel(layerNames){
+    var panel=document.getElementById('v3d-layer-panel');
+    if(!panel)return;
+    panel.innerHTML='';
+    layerNames.forEach(function(name,i){
+      var color=colorPalette[i%colorPalette.length];
+      var hex='#'+color.toString(16).padStart(6,'0');
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:6px;padding:4px 0;cursor:pointer;font-size:11px;';
+      row.innerHTML='<div style="width:10px;height:10px;border-radius:2px;background:'+hex+';flex-shrink:0;"></div>'+
+        '<span style="flex:1;color:#dce8f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+name+'">'+name+'</span>'+
+        '<input type="checkbox" checked style="accent-color:'+hex+';" data-layer="'+name+'">';
+      row.querySelector('input').addEventListener('change',function(e){
+        if(layers[name])layers[name].forEach(function(m){m.visible=e.target.checked;});
+      });
+      panel.appendChild(row);
+    });
+  }
+
+  var badge=document.getElementById('v3d-badge');
+  if(badge)badge.textContent='Cargando modelo...';
+
+  new THREE.GLTFLoader().load(
+    glbUrl,
+    function(gltf){
+      var model=gltf.scene;
+      var colorIdx=0;
+      model.traverse(function(obj){
+        if(obj.isMesh){
+          allMeshes.push(obj);
+          obj.userData.origMat=obj.material;
+          // Agrupar por nombre de objeto padre o propio
+          var layerName=obj.parent&&obj.parent.name?obj.parent.name:obj.name;
+          if(!layerName||layerName==='Scene')layerName='GENERAL';
+          if(!layers[layerName]){
+            layers[layerName]=[];
+            // Asignar color único por capa
+            var col=colorPalette[colorIdx%colorPalette.length];colorIdx++;
+            obj.material=obj.material.clone();
+            obj.material.color.setHex(col);
+          }else{
+            // Mismo color que el primero de la capa
+            var firstMesh=layers[layerName][0];
+            obj.material=obj.material.clone();
+            obj.material.color.copy(firstMesh.material.color);
+          }
+          obj.material.metalness=0.15;
+          obj.material.roughness=0.65;
+          layers[layerName].push(obj);
+        }
+      });
+      var box=new THREE.Box3().setFromObject(model);
+      var center=box.getCenter(new THREE.Vector3());
+      model.position.sub(center);
+      pivot.add(model);
+      var sz=box.getSize(new THREE.Vector3());
+      var maxDim=Math.max(sz.x,sz.y,sz.z);
+      camera.position.set(0,sz.y*0.5,maxDim*2);
+      camera.lookAt(0,0,0);
+      grid.scale.setScalar(maxDim/20);
+      if(badge)badge.textContent=assetName||'Modelo 3D';
+      buildLayerPanel(Object.keys(layers));
+    },
+    function(xhr){if(badge&&xhr.total)badge.textContent='Cargando... '+Math.round(xhr.loaded/xhr.total*100)+'%';},
+    function(err){if(badge)badge.textContent='Error al cargar modelo';}
+  );
+
+  // Controles de toolbar
+  document.getElementById('v3d-btn-wireframe')&&document.getElementById('v3d-btn-wireframe').addEventListener('click',function(){
+    wireframeOn=!wireframeOn;
+    allMeshes.forEach(function(m){
+      if(wireframeOn){m.userData.savedMat=m.material;m.material=new THREE.MeshBasicMaterial({color:0x1D9E75,wireframe:true});}
+      else{m.material=m.userData.savedMat||m.userData.origMat;}
+    });
+    this.style.background=wireframeOn?'rgba(29,158,117,0.3)':'rgba(255,255,255,0.08)';
+  });
+  document.getElementById('v3d-btn-reset')&&document.getElementById('v3d-btn-reset').addEventListener('click',function(){
+    rotX=0.25;rotY=0.4;zf=1;
+  });
+  document.getElementById('v3d-btn-top')&&document.getElementById('v3d-btn-top').addEventListener('click',function(){
+    rotX=Math.PI/2-0.01;rotY=0;zf=1;
+  });
+  document.getElementById('v3d-btn-front')&&document.getElementById('v3d-btn-front').addEventListener('click',function(){
+    rotX=0;rotY=0;zf=1;
+  });
+  document.getElementById('v3d-btn-side')&&document.getElementById('v3d-btn-side').addEventListener('click',function(){
+    rotX=0;rotY=Math.PI/2;zf=1;
+  });
+
+  // Resize
+  var resizeObs=new ResizeObserver(function(){
+    var nW=wrap.clientWidth;
+    if(nW<10)return;
+    renderer.setSize(nW,H);
+    camera.aspect=nW/H;
+    camera.updateProjectionMatrix();
+  });
+  resizeObs.observe(wrap);
+
+  // Loop
+  function animate(){
+    _v3dAnimId=requestAnimationFrame(animate);
+    pivot.rotation.x=rotX;
+    pivot.rotation.y=rotY;
+    camera.zoom=zf;
+    camera.updateProjectionMatrix();
+    renderer.render(scene,camera);
+  }
+  animate();
+}
+
 async function loadProjectVisor3D(p, content){
+  // Si había un visor anterior, destruirlo
+  _v3dDestroy();
+
   if(p.asset_id){
     var {data:asset}=await sb.from('asset').select('model_3d_url,name').eq('id',p.asset_id).maybeSingle();
     if(asset&&asset.model_3d_url){
-      content.innerHTML='<div style="font-size:13px;color:var(--color-text-tertiary);margin-bottom:8px;">Modelo 3D: '+asset.name+'</div>'+
-        '<iframe src="'+asset.model_3d_url+'" style="width:100%;height:500px;border:none;border-radius:10px;"></iframe>';
+      content.innerHTML=
+        // Barra de herramientas
+        '<div style="display:flex;align-items:center;gap:6px;padding:8px 0 10px;flex-wrap:wrap;">'+
+          '<span id="v3d-badge" style="font-size:11px;color:#5DCAA5;background:rgba(29,158,117,0.12);border:0.5px solid rgba(29,158,117,0.4);padding:2px 8px;border-radius:3px;margin-right:4px;"></span>'+
+          '<button id="v3d-btn-front"   style="'+_v3dBtnStyle()+'">Frente</button>'+
+          '<button id="v3d-btn-side"    style="'+_v3dBtnStyle()+'">Lateral</button>'+
+          '<button id="v3d-btn-top"     style="'+_v3dBtnStyle()+'">Planta</button>'+
+          '<button id="v3d-btn-reset"   style="'+_v3dBtnStyle()+'">Reset</button>'+
+          '<button id="v3d-btn-wireframe" style="'+_v3dBtnStyle()+'">Wireframe</button>'+
+        '</div>'+
+        // Layout: visor + panel
+        '<div style="display:grid;grid-template-columns:1fr 180px;gap:10px;align-items:start;">'+
+          '<div id="v3d-wrap" style="width:100%;background:#0d1b2e;border-radius:10px;overflow:hidden;position:relative;"></div>'+
+          '<div style="background:#0d1b2e;border-radius:10px;padding:10px;">'+
+            '<div style="font-size:9px;letter-spacing:.1em;color:#3d5a75;text-transform:uppercase;margin-bottom:8px;">CAPAS SWBS</div>'+
+            '<div id="v3d-layer-panel" style="max-height:440px;overflow-y:auto;"></div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="font-size:10px;color:#3d5a75;margin-top:8px;text-align:right;">Clic + arrastre: rotar · Scroll: zoom</div>';
+
+      _v3dLoadGLTFLoader(function(){
+        _v3dInit(asset.model_3d_url, asset.name, 'v3d-wrap');
+      });
       return;
     }
+    // Activo sin modelo
+    content.innerHTML=_v3dEmptyState('<b>'+((asset&&asset.name)||'Activo')+'</b> no tiene un modelo GLB asignado.<br>Sube el archivo GLB a Supabase Storage y actualiza el activo.');
+    return;
   }
-  content.innerHTML='<div class="card" style="text-align:center;padding:3rem;color:var(--color-text-tertiary);">'+
-    '<div style="font-size:36px;margin-bottom:8px;">🧊</div>'+
-    '<div style="font-size:14px;font-weight:500;margin-bottom:4px;">Sin modelo 3D</div>'+
-    '<div style="font-size:12px;margin-bottom:16px;">Vincula un activo con modelo GLB para visualizarlo aquí.</div>'+
-    '<button class="edit-btn" id="btn-upload-model">Subir modelo GLB</button>'+
+  // Sin activo vinculado
+  content.innerHTML=_v3dEmptyState('Este proyecto no tiene un activo vinculado.<br>Edita el proyecto para asignar un activo con modelo 3D.');
+}
+
+function _v3dBtnStyle(){
+  return 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);color:#dce8f5;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;transition:background .12s;';
+}
+function _v3dEmptyState(msg){
+  return '<div style="background:#0d1b2e;border-radius:12px;padding:3rem;text-align:center;">'+
+    '<div style="font-size:40px;margin-bottom:10px;">🧊</div>'+
+    '<div style="font-size:13px;font-weight:500;color:#5DCAA5;margin-bottom:6px;">Visor 3D</div>'+
+    '<div style="font-size:12px;color:#3d5a75;line-height:1.6;">'+msg+'</div>'+
   '</div>';
 }
 
