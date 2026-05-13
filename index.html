@@ -1603,6 +1603,7 @@ async function enterApp(){
       var nw = document.getElementById('navis-wrap');
       if(nw) nw.style.display='block';
       nInit();
+      engravisRealtimeInit(); // Sprint C — Realtime
     },600);
   } else {
     showScreen('sc-app');
@@ -1612,7 +1613,180 @@ async function enterApp(){
     var nw2 = document.getElementById('navis-wrap');
     if(nw2) nw2.style.display='block';
     nInit();
+    engravisRealtimeInit(); // Sprint C — Realtime
   }
+}
+
+// ══ SPRINT C — REALTIME SUPABASE ══════════════════════════════
+// Canal global por empresa + canal por proyecto activo
+// Cambios de otros usuarios → BUS → visor, árbol, tabla, OT se actualizan solos
+
+var _rtChannels = {};  // canales activos
+
+function engravisRealtimeInit(){
+  if(!company || !company.id) return;
+  _rtChannelGlobal();
+}
+
+function _rtChannelGlobal(){
+  // Limpiar canal previo si existe
+  if(_rtChannels.global){
+    sb.removeChannel(_rtChannels.global);
+    delete _rtChannels.global;
+  }
+
+  var ch = sb.channel('engravis-company-'+company.id)
+    // Cambios en model_component — estado, espesor, material
+    .on('postgres_changes',{
+      event: '*',
+      schema: 'public',
+      table: 'model_component',
+      filter: 'asset_id=in.(select id from asset where owner_company_id=eq.'+company.id+')'
+    }, function(payload){
+      _rtHandleComponentChange(payload);
+    })
+    // Cambios en work_order — nueva OT, cambio de estado
+    .on('postgres_changes',{
+      event: '*',
+      schema: 'public',
+      table: 'work_order'
+    }, function(payload){
+      _rtHandleOTChange(payload);
+    })
+    .subscribe(function(status){
+      if(status==='SUBSCRIBED'){
+        console.log('[RT] Canal empresa activo');
+      }
+    });
+
+  _rtChannels.global = ch;
+}
+
+// Suscribirse al canal de un proyecto específico (llamado al abrir proyecto)
+function _rtChannelProject(projectId){
+  if(_rtChannels.project){
+    sb.removeChannel(_rtChannels.project);
+    delete _rtChannels.project;
+  }
+  if(!projectId) return;
+
+  var ch = sb.channel('engravis-project-'+projectId)
+    .on('postgres_changes',{
+      event: '*',
+      schema: 'public',
+      table: 'work_order',
+      filter: 'project_id=eq.'+projectId
+    }, function(payload){
+      _rtHandleOTChange(payload);
+    })
+    .subscribe();
+
+  _rtChannels.project = ch;
+}
+
+// Handler — cambio en model_component
+function _rtHandleComponentChange(payload){
+  var rec = payload.new || payload.old;
+  if(!rec) return;
+  var eventType = payload.eventType; // INSERT UPDATE DELETE
+
+  // Actualizar en _v3dComponents si está en memoria
+  if(window._v3dComponents && _v3dComponents.length){
+    if(eventType==='UPDATE'){
+      var idx = _v3dComponents.findIndex(function(c){return c.id===rec.id;});
+      if(idx>=0){
+        _v3dComponents[idx] = Object.assign(_v3dComponents[idx], rec);
+        // Notificar al BUS por cada campo que pudo cambiar
+        if(rec.status) BUS.emit('COMPONENT_UPDATED',{id:rec.id, field:'status', value:rec.status});
+        if(rec.thickness_mm) BUS.emit('COMPONENT_UPDATED',{id:rec.id, field:'thickness_mm', value:rec.thickness_mm});
+        // Recolorear el modelo
+        if(window._v3dApplyStatusColors) _v3dApplyStatusColors(_v3dComponents);
+        // Notificación discreta
+        _rtToast('Componente actualizado por otro usuario: '+(rec.name||''));
+      }
+    }
+    if(eventType==='INSERT'){
+      // Nuevo componente — agregar al árbol y tabla sin recargar
+      _v3dComponents.push(rec);
+      _v3dRenderTree(_v3dComponents);
+      if(document.getElementById('v3d-table-wrap')&&document.getElementById('v3d-table-wrap').style.display!=='none'){
+        _v3dRenderTableContent();
+      }
+      _rtToast('Nuevo componente agregado: '+(rec.name||''));
+    }
+  }
+}
+
+// Handler — cambio en work_order
+function _rtHandleOTChange(payload){
+  var rec = payload.new || payload.old;
+  if(!rec) return;
+  var eventType = payload.eventType;
+
+  if(eventType==='INSERT'){
+    // Nueva OT — si tiene componente vinculado, actualizar modelo
+    BUS.emit('OT_CREATED',{ot:rec, comp_id: _rtFindCompByName(rec.task_name)});
+    _rtToast('Nueva OT: '+(rec.task_name||'')+(rec.responsible_name?' — '+rec.responsible_name:''));
+
+    // Si la pestaña OT está abierta, recargarla
+    _rtRefreshOTTab();
+  }
+
+  if(eventType==='UPDATE'){
+    // OT completada → componente puede volver a verde
+    if(rec.status==='completed'){
+      var compId = _rtFindCompByName(rec.task_name);
+      if(compId){
+        // Verificar si quedan OTs pendientes en ese componente
+        sb.from('work_order').select('id').eq('project_id',rec.project_id)
+          .eq('status','pending').ilike('task_name','%'+_rtCompNameById(compId)+'%')
+          .then(function(r){
+            if(!r.data||!r.data.length){
+              BUS.emit('COMPONENT_UPDATED',{id:compId, field:'status', value:'ok'});
+            }
+          });
+      }
+    }
+    BUS.emit('OT_UPDATED',{ot_id:rec.id, status:rec.status});
+    _rtRefreshOTTab();
+    _rtToast('OT actualizada: '+(rec.task_name||'')+' → '+rec.status);
+  }
+}
+
+// Helpers
+function _rtFindCompByName(taskName){
+  if(!taskName||!window._v3dComponents) return null;
+  var tn=(taskName||'').toLowerCase();
+  var comp=_v3dComponents.find(function(c){ return tn.includes((c.name||'').toLowerCase()); });
+  return comp?comp.id:null;
+}
+function _rtCompNameById(id){
+  if(!window._v3dComponents) return '';
+  var comp=_v3dComponents.find(function(c){return c.id===id;});
+  return comp?comp.name:'';
+}
+function _rtRefreshOTTab(){
+  // Si la pestaña OT está activa en el proyecto abierto, recargar
+  var activeTab=document.querySelector('.proj-tab-btn.active');
+  if(activeTab&&activeTab.getAttribute('data-tab')==='ordenes'&&window._currentProject){
+    var content=document.getElementById('proj-tab-content');
+    if(content) loadProjectOrdenes(_currentProject, content);
+  }
+}
+
+// Toast discreto para eventos de otros usuarios (diferente al toast principal)
+function _rtToast(msg){
+  var existing=document.getElementById('rt-toast');
+  if(existing) existing.remove();
+  var t=document.createElement('div');
+  t.id='rt-toast';
+  t.style.cssText='position:fixed;bottom:80px;left:20px;background:rgba(13,27,46,0.95);border:0.5px solid rgba(29,95,165,0.5);color:#8fb3cc;padding:6px 12px;border-radius:6px;font-size:10px;z-index:500;font-family:Inter,sans-serif;max-width:260px;backdrop-filter:blur(8px);transition:opacity .3s;';
+  t.innerHTML='<span style="color:#1D5FA5;margin-right:6px;">↻</span>'+msg;
+  document.body.appendChild(t);
+  setTimeout(function(){
+    t.style.opacity='0';
+    setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},300);
+  },3500);
 }
 
 // ── COMPANY PAGE ─────────────────────────────────────────
@@ -2129,19 +2303,9 @@ async function uploadAvatar(){
   input.click();
 }
 
-function openInfo(){
-  $('modal-info').classList.add('on');
-}
 
 
 // ── WEB EXTRACTOR ─────────────────────────────────────────
-function openWebExtractor(){
-  var url = (company && company.website) ? company.website : '';
-  document.getElementById('ext-url').value = url;
-  document.getElementById('ext-result').style.display = 'none';
-  document.getElementById('ext-result').innerHTML = '';
-  $('modal-extract').classList.add('on');
-}
 
 async function extractFromWeb(){
   var url = document.getElementById('ext-url').value.trim();
@@ -2265,13 +2429,6 @@ var MODULE_CFG={
 
 
 
-function toggleSidebar(){
-  var sb=document.getElementById('app-sidebar');
-  if(!sb) return;
-  var collapsed=sb.classList.toggle('collapsed');
-  var btn=document.getElementById('sidebar-toggle');
-  if(btn) btn.title=collapsed?'Mostrar menú':'Ocultar menú';
-}
 
 function buildSidebar(){
   var nav=document.getElementById('nav-modules');
@@ -2391,7 +2548,9 @@ function setActiveProject(p){
 }
 
 async function openProject(p){
+  window._currentProject = p; // tracking global para btn-new-ot etc
   setActiveProject(p);
+  _rtChannelProject(p.id); // Sprint C — suscripción al proyecto
   var mc=document.getElementById('app-main');
   if(!mc) return;
 
@@ -2542,8 +2701,16 @@ async function loadProjectResumen(p, content){
           fld('Eslora',asset.length_m?asset.length_m+' m':'—')+
           fld('Manga',asset.width_m?asset.width_m+' m':'—')+
           fld('TRB',asset.trb||'—')+
-          fld('Modelo 3D',asset.model_3d_url?'<a href="'+asset.model_3d_url+'" target="_blank" style="color:#1D5FA5;">Ver modelo</a>':'Sin modelo')+
-          '<button class="edit-btn" style="margin-top:12px;width:100%;" id="btn-open-visor">Visor 3D</button>':
+          '<div style="margin:8px 0;">'+
+            '<div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px;">MODELO 3D</div>'+
+            (asset.model_3d_url?
+              '<div style="font-size:12px;color:#1D9E75;margin-bottom:6px;">✓ Modelo asignado</div>':
+              '<div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:6px;">Sin modelo GLB</div>')+
+            '<button class="edit-btn" id="btn-upload-glb" data-asset-id="'+asset.id+'" style="width:100%;margin-bottom:6px;background:#1D9E75;color:#fff;border-color:#1D9E75;">⬆ Subir modelo GLB</button>'+
+            '<input type="file" id="glb-file-input" accept=".glb,.gltf" style="display:none;">'+
+            (asset.model_3d_url?'<div id="glb-status" style="font-size:10px;color:#6B7280;text-align:center;"><a href="'+asset.model_3d_url+'" target="_blank" style="color:#1D5FA5;">Ver archivo actual</a></div>':'<div id="glb-status" style="font-size:10px;color:#6B7280;text-align:center;"></div>')+
+          '</div>'+
+          '<button class="edit-btn" style="margin-top:6px;width:100%;" id="btn-open-visor">🧊 Visor 3D</button>':
           '<div style="text-align:center;padding:2rem;color:var(--color-text-tertiary);">'+
             '<div style="font-size:32px;margin-bottom:8px;">🔗</div>'+
             '<div style="font-size:13px;margin-bottom:8px;">Sin activo vinculado</div>'+
@@ -2935,6 +3102,70 @@ async function saveEditOT(otId, p){
   loadProjectOrdenes(p, document.getElementById('proj-tab-content'));
 }
 
+// ── UPLOAD MODELO GLB ────────────────────────────────────────
+async function uploadModelGLB(file, assetId, statusElemId, onSuccess){
+  var statusEl=document.getElementById(statusElemId);
+  function setStatus(msg, color){
+    if(statusEl){statusEl.textContent=msg;statusEl.style.color=color||'#5DCAA5';}
+  }
+
+  // Validaciones básicas
+  if(!file.name.match(/\.(glb|gltf)$/i)){
+    toast('Solo se aceptan archivos .glb o .gltf');
+    setStatus('Formato no válido','#EF4444');
+    return;
+  }
+  var maxMB=150;
+  if(file.size>maxMB*1024*1024){
+    toast('El archivo supera los '+maxMB+' MB');
+    setStatus('Archivo demasiado grande','#EF4444');
+    return;
+  }
+
+  setStatus('Subiendo... 0%','#F59E0B');
+
+  // Path: models/{company_id}/{asset_id}/model.glb
+  var path=company.id+'/'+assetId+'/model.glb';
+
+  // Supabase Storage upload
+  var {data, error}=await sb.storage.from('models').upload(path, file, {
+    upsert:true,
+    contentType:'model/gltf-binary',
+    onUploadProgress:function(p){
+      var pct=Math.round((p.loaded/p.total)*100);
+      setStatus('Subiendo... '+pct+'%','#F59E0B');
+    }
+  });
+
+  if(error){
+    // Si el bucket no existe, intentar crearlo (solo admin de Supabase puede hacerlo vía SQL)
+    if(error.message&&error.message.toLowerCase().includes('bucket')){
+      setStatus('Bucket "models" no existe. Créalo en Supabase Storage.','#EF4444');
+      toast('Crea el bucket "models" en Supabase Dashboard → Storage');
+    } else {
+      setStatus('Error: '+error.message,'#EF4444');
+      toast('Error al subir: '+error.message);
+    }
+    return;
+  }
+
+  // Obtener URL pública
+  var {data:urlData}=sb.storage.from('models').getPublicUrl(path);
+  var publicUrl=urlData.publicUrl+'?t='+Date.now();
+
+  // Actualizar asset.model_3d_url en Supabase
+  var {error:updErr}=await sb.from('asset').update({model_3d_url:publicUrl}).eq('id',assetId);
+  if(updErr){
+    setStatus('Subido pero no se actualizó el activo: '+updErr.message,'#EF4444');
+    toast('Archivo subido — error al guardar URL en activo');
+    return;
+  }
+
+  setStatus('✓ Modelo actualizado correctamente','#1D9E75');
+  toast('Modelo 3D subido y asignado al activo');
+  if(typeof onSuccess==='function') onSuccess(publicUrl);
+}
+
 // ── VISOR 3D ─────────────────────────────────────────────────
 var _v3dRenderer=null, _v3dAnimId=null;
 
@@ -3038,6 +3269,72 @@ function _v3dInit(glbUrl, assetName, containerId){
   var badge=document.getElementById('v3d-badge');
   if(badge)badge.textContent='Cargando modelo...';
 
+  // Mapa meshName → componente (para sincronización con BUS)
+  var meshToComp = {};
+  window._v3dMeshToComp = meshToComp;
+
+  // Función global para recolorear meshes por estado (llamada por BUS)
+  window._v3dApplyStatusColors = function(components){
+    if(!components||!components.length) return;
+    // Construir mapa meshName → status
+    var meshStatus = {};
+    components.forEach(function(c){
+      (c.mesh_names||[]).forEach(function(mn){
+        meshStatus[mn] = c.status||'no_data';
+        meshToComp[mn] = c;
+      });
+    });
+    allMeshes.forEach(function(m){
+      var st = meshStatus[m.name] || 'no_data';
+      var col = STATUS_COLORS[st] || STATUS_COLORS.no_data;
+      if(!m.userData.statusMat || m.userData.lastStatus !== st){
+        m.userData.statusMat = m.material.clone();
+        m.userData.statusMat.color.setHex(col);
+        m.userData.statusMat.metalness = 0.1;
+        m.userData.statusMat.roughness = 0.7;
+        m.userData.lastStatus = st;
+      }
+      if(!wireframeOn) m.material = m.userData.statusMat;
+    });
+  };
+
+  // Función global para resaltar meshes de un componente
+  window._v3dHighlightMeshes = function(meshNames){
+    var nameSet = {};
+    (meshNames||[]).forEach(function(n){ nameSet[n]=true; });
+    var hasFilter = meshNames && meshNames.length > 0;
+    allMeshes.forEach(function(m){
+      if(!hasFilter){
+        // Restaurar todos
+        m.material = m.userData.statusMat || m.userData.origMat;
+        m.material.transparent = false;
+        m.material.opacity = 1;
+      } else if(nameSet[m.name]){
+        // Resaltar: blanco brillante
+        if(!m.userData.hlMat){
+          m.userData.hlMat = m.material.clone();
+          m.userData.hlMat.color.setHex(0xffffff);
+          m.userData.hlMat.emissive = new THREE.Color(0x1D9E75);
+          m.userData.hlMat.emissiveIntensity = 0.3;
+          m.userData.hlMat.metalness = 0.3;
+          m.userData.hlMat.roughness = 0.4;
+          m.userData.hlMat.transparent = false;
+          m.userData.hlMat.opacity = 1;
+        }
+        m.material = m.userData.hlMat;
+      } else {
+        // Oscurecer el resto — translúcido
+        if(!m.userData.dimMat){
+          m.userData.dimMat = m.material.clone();
+          m.userData.dimMat.transparent = true;
+          m.userData.dimMat.opacity = 0.12;
+          m.userData.dimMat.color.setHex(0x1a3a5c);
+        }
+        m.material = m.userData.dimMat;
+      }
+    });
+  };
+
   new THREE.GLTFLoader().load(
     glbUrl,
     function(gltf){
@@ -3046,24 +3343,16 @@ function _v3dInit(glbUrl, assetName, containerId){
       model.traverse(function(obj){
         if(obj.isMesh){
           allMeshes.push(obj);
-          obj.userData.origMat=obj.material;
-          // Agrupar por nombre de objeto padre o propio
-          var layerName=obj.parent&&obj.parent.name?obj.parent.name:obj.name;
-          if(!layerName||layerName==='Scene')layerName='GENERAL';
-          if(!layers[layerName]){
-            layers[layerName]=[];
-            // Asignar color único por capa
-            var col=colorPalette[colorIdx%colorPalette.length];colorIdx++;
-            obj.material=obj.material.clone();
-            obj.material.color.setHex(col);
-          }else{
-            // Mismo color que el primero de la capa
-            var firstMesh=layers[layerName][0];
-            obj.material=obj.material.clone();
-            obj.material.color.copy(firstMesh.material.color);
-          }
+          obj.userData.origMat=obj.material.clone();
+          // Color base por defecto (no_data) hasta que se apliquen los estados
+          obj.material=obj.material.clone();
+          obj.material.color.setHex(STATUS_COLORS.no_data);
           obj.material.metalness=0.15;
           obj.material.roughness=0.65;
+          // Agrupar en layers por nombre
+          var layerName=obj.parent&&obj.parent.name?obj.parent.name:obj.name;
+          if(!layerName||layerName==='Scene')layerName='GENERAL';
+          if(!layers[layerName]) layers[layerName]=[];
           layers[layerName].push(obj);
         }
       });
@@ -3078,10 +3367,51 @@ function _v3dInit(glbUrl, assetName, containerId){
       grid.scale.setScalar(maxDim/20);
       if(badge)badge.textContent=assetName||'Modelo 3D';
       buildLayerPanel(Object.keys(layers));
+
+      // Aplicar colores por estado si hay componentes cargados
+      if(window._v3dComponents && window._v3dComponents.length){
+        window._v3dApplyStatusColors(window._v3dComponents);
+      }
+
+      // Clic en mesh → seleccionar componente via BUS
+      var raycaster = new THREE.Raycaster();
+      var mouse = new THREE.Vector2();
+      var canvas = renderer.domElement;
+      canvas.addEventListener('click', function(e){
+        if(drag) return; // no seleccionar si fue arrastre
+        var rect = canvas.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        var hits = raycaster.intersectObjects(allMeshes, false);
+        if(hits.length){
+          var meshName = hits[0].object.name;
+          var comp = meshToComp[meshName];
+          if(comp){
+            BUS.emit('COMPONENT_SELECTED', {id: comp.id, comp: comp});
+          }
+        }
+      });
+
+      BUS.emit('MODEL_LOADED', {asset_id: assetName, count: allMeshes.length});
     },
     function(xhr){if(badge&&xhr.total)badge.textContent='Cargando... '+Math.round(xhr.loaded/xhr.total*100)+'%';},
     function(err){if(badge)badge.textContent='Error al cargar modelo';}
   );
+
+  // Escuchar BUS — actualizar colores cuando cambia un componente
+  BUS.on('COMPONENT_UPDATED', function(d){
+    if(d.field==='status' && window._v3dComponents){
+      var comp = window._v3dComponents.find(function(c){return c.id===d.id;});
+      if(comp){ comp.status = d.value; window._v3dApplyStatusColors(window._v3dComponents); }
+    }
+  });
+  BUS.on('OT_CREATED', function(d){
+    if(d.comp_id && window._v3dComponents){
+      var comp = window._v3dComponents.find(function(c){return c.id===d.comp_id;});
+      if(comp && comp.status==='no_data'){ comp.status='pending'; window._v3dApplyStatusColors(window._v3dComponents); }
+    }
+  });
 
   // Controles de toolbar
   document.getElementById('v3d-btn-wireframe')&&document.getElementById('v3d-btn-wireframe').addEventListener('click',function(){
@@ -3127,49 +3457,655 @@ function _v3dInit(glbUrl, assetName, containerId){
   animate();
 }
 
+// ── TRIMESH PROXY URL ────────────────────────────────────────
+// ══ ENGRAVIS EVENT BUS ════════════════════════════════════════
+// Bus de eventos central — sincroniza visor, tabla, árbol, OT, ARIA
+var BUS = {
+  _l: {},
+  emit: function(evt, data){
+    (this._l[evt]||[]).forEach(function(fn){ try{fn(data);}catch(e){console.warn('BUS',evt,e);} });
+  },
+  on: function(evt, fn){
+    if(!this._l[evt]) this._l[evt]=[];
+    this._l[evt].push(fn);
+    return function(){ BUS._l[evt]=BUS._l[evt].filter(function(f){return f!==fn;}); };
+  }
+};
+
+// Eventos del sistema:
+// COMPONENT_SELECTED  {id, comp}        — usuario seleccionó un componente
+// COMPONENT_UPDATED   {id, field, value}— campo de componente modificado
+// OT_CREATED          {ot, comp_id}     — OT nueva vinculada a componente
+// OT_UPDATED          {ot_id, status}   — estado de OT cambió
+// MODEL_LOADED        {asset_id, count} — modelo terminó de cargar
+// FILTER_CHANGED      {type, value}     — filtro visual aplicado al modelo
+
+// Colores por estado (fuente única de verdad)
+var STATUS_COLORS = {
+  ok:       0x1D9E75,   // verde
+  pending:  0xF59E0B,   // amarillo
+  critical: 0xEF4444,   // rojo
+  no_data:  0x2A4A6B,   // azul oscuro neutro
+};
+function statusColorHex(s){ return '#'+((STATUS_COLORS[s]||STATUS_COLORS.no_data).toString(16).padStart(6,'0')); }
+
+var TRIMESH_EDGE = 'https://ukcfzijdegclgavjtrug.supabase.co/functions/v1/rapid-action';
+var _v3dAsset = null;
+var _v3dProject = null;
+var _v3dComponents = [];
+
 async function loadProjectVisor3D(p, content){
-  // Si había un visor anterior, destruirlo
   _v3dDestroy();
+  _v3dProject = p;
 
-  if(p.asset_id){
-    var {data:asset}=await sb.from('asset').select('model_3d_url,name').eq('id',p.asset_id).maybeSingle();
-    if(asset&&asset.model_3d_url){
-      content.innerHTML=
-        // Barra de herramientas
-        '<div style="display:flex;align-items:center;gap:6px;padding:8px 0 10px;flex-wrap:wrap;">'+
-          '<span id="v3d-badge" style="font-size:11px;color:#5DCAA5;background:rgba(29,158,117,0.12);border:0.5px solid rgba(29,158,117,0.4);padding:2px 8px;border-radius:3px;margin-right:4px;"></span>'+
-          '<button id="v3d-btn-front"   style="'+_v3dBtnStyle()+'">Frente</button>'+
-          '<button id="v3d-btn-side"    style="'+_v3dBtnStyle()+'">Lateral</button>'+
-          '<button id="v3d-btn-top"     style="'+_v3dBtnStyle()+'">Planta</button>'+
-          '<button id="v3d-btn-reset"   style="'+_v3dBtnStyle()+'">Reset</button>'+
-          '<button id="v3d-btn-wireframe" style="'+_v3dBtnStyle()+'">Wireframe</button>'+
-        '</div>'+
-        // Layout: visor + panel
-        '<div style="display:grid;grid-template-columns:1fr 180px;gap:10px;align-items:start;">'+
-          '<div id="v3d-wrap" style="width:100%;background:#0d1b2e;border-radius:10px;overflow:hidden;position:relative;"></div>'+
-          '<div style="background:#0d1b2e;border-radius:10px;padding:10px;">'+
-            '<div style="font-size:9px;letter-spacing:.1em;color:#3d5a75;text-transform:uppercase;margin-bottom:8px;">CAPAS SWBS</div>'+
-            '<div id="v3d-layer-panel" style="max-height:440px;overflow-y:auto;"></div>'+
-          '</div>'+
-        '</div>'+
-        '<div style="font-size:10px;color:#3d5a75;margin-top:8px;text-align:right;">Clic + arrastre: rotar · Scroll: zoom</div>';
-
-      _v3dLoadGLTFLoader(function(){
-        _v3dInit(asset.model_3d_url, asset.name, 'v3d-wrap');
-      });
-      return;
-    }
-    // Activo sin modelo
-    content.innerHTML=_v3dEmptyState('<b>'+((asset&&asset.name)||'Activo')+'</b> no tiene un modelo GLB asignado.<br>Sube el archivo GLB a Supabase Storage y actualiza el activo.');
+  if(!p.asset_id){
+    content.innerHTML=_v3dEmptyState('Este proyecto no tiene un activo vinculado.<br>Edita el proyecto para asignar un activo con modelo 3D.');
     return;
   }
-  // Sin activo vinculado
-  content.innerHTML=_v3dEmptyState('Este proyecto no tiene un activo vinculado.<br>Edita el proyecto para asignar un activo con modelo 3D.');
+
+  var {data:asset}=await sb.from('asset').select('model_3d_url,name,id').eq('id',p.asset_id).maybeSingle();
+  _v3dAsset = asset;
+
+  if(!asset||!asset.model_3d_url){
+    var assetId=asset?asset.id:null;
+    var assetNombre=(asset&&asset.name)||'Activo';
+    content.innerHTML=
+      '<div style="background:#0d1b2e;border-radius:12px;padding:3rem;text-align:center;">'+
+        '<div style="font-size:40px;margin-bottom:10px;">🧊</div>'+
+        '<div style="font-size:13px;font-weight:500;color:#5DCAA5;margin-bottom:6px;">Visor 3D</div>'+
+        '<div style="font-size:12px;color:#3d5a75;margin-bottom:20px;"><b style="color:#dce8f5;">'+assetNombre+'</b> no tiene modelo 3D asignado.</div>'+
+        (assetId?
+          '<button id="btn-upload-glb-visor" data-asset-id="'+assetId+'" style="background:#1D9E75;color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;">⬆ Subir modelo GLB</button>'+
+          '<input type="file" id="glb-file-input-visor" accept=".glb,.gltf" style="display:none;">'+
+          '<div id="glb-status-visor" style="font-size:11px;color:#5DCAA5;margin-top:12px;"></div>':
+          '<div style="font-size:11px;color:#3d5a75;">Vincula un activo al proyecto primero.</div>')+
+      '</div>';
+    if(assetId){
+      setTimeout(function(){
+        var btn=document.getElementById('btn-upload-glb-visor');
+        var inp=document.getElementById('glb-file-input-visor');
+        if(btn&&inp){
+          btn.onclick=function(){inp.click();};
+          inp.onchange=function(){
+            if(this.files[0]) uploadModelGLB(this.files[0],assetId,'glb-status-visor',function(){
+              loadProjectVisor3D(p,content);
+            });
+          };
+        }
+      },50);
+    }
+    return;
+  }
+
+  var {data:comps}=await sb.from('model_component').select('*').eq('asset_id',asset.id).order('sort_order');
+  _v3dComponents = comps||[];
+
+  content.innerHTML = _v3dBuildLayout(asset, _v3dComponents.length>0);
+
+  if(_v3dComponents.length>0){
+    _v3dRenderTree(_v3dComponents);
+    ariaSpeak('Modelo cargado. '+_v3dComponents.length+' componentes identificados. Puedes hacer clic en cualquier elemento o navegar por el árbol.');
+  } else {
+    ariaSpeak('Cargué el modelo de '+asset.name+'. Aún no tiene componentes analizados. Puedo analizar la geometría ahora si quieres.');
+  }
+
+  _v3dLoadGLTFLoader(function(){
+    _v3dInit(asset.model_3d_url, asset.name, 'v3d-canvas-wrap', _v3dComponents);
+  });
+
+  // Registrar listener BUS para selección (limpiar el anterior si existía)
+  if(window._v3dBusOff) window._v3dBusOff();
+  window._v3dBusOff = BUS.on('COMPONENT_SELECTED', function(d){
+    if(d.id) _v3dOnComponentSelected(d);
+  });
+
+  setTimeout(function(){
+    var btnA=document.getElementById('v3d-btn-analyze');
+    if(btnA) btnA.addEventListener('click',function(){ _v3dStartAnalysis(asset,content,p); });
+    var btnT=document.getElementById('v3d-btn-table');
+    if(btnT) btnT.addEventListener('click',function(){ _v3dToggleTable(); });
+  },100);
 }
 
-function _v3dBtnStyle(){
-  return 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);color:#dce8f5;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;transition:background .12s;';
+function _v3dBuildLayout(asset, hasComponents){
+  var bs=_v3dBtnStyle();
+  return '<div style="display:flex;align-items:center;gap:6px;padding:8px 0 10px;flex-wrap:wrap;">'+
+    '<span id="v3d-badge" style="font-size:11px;color:#5DCAA5;background:rgba(29,158,117,0.12);border:0.5px solid rgba(29,158,117,0.4);padding:2px 8px;border-radius:3px;">'+asset.name+'</span>'+
+    '<button id="v3d-btn-front" style="'+bs+'">Frente</button>'+
+    '<button id="v3d-btn-side" style="'+bs+'">Lateral</button>'+
+    '<button id="v3d-btn-top" style="'+bs+'">Planta</button>'+
+    '<button id="v3d-btn-reset" style="'+bs+'">Reset</button>'+
+    '<button id="v3d-btn-wireframe" style="'+bs+'">Wireframe</button>'+
+    '<button id="v3d-btn-table" style="'+bs+'">📊 Tabla</button>'+
+    (!hasComponents?
+      '<button id="v3d-btn-analyze" style="background:#1D9E75;color:#fff;border:none;padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;margin-left:8px;">🤖 Analizar con ARIA</button>':
+      '<button id="v3d-btn-analyze" style="'+bs+';margin-left:8px;">🔄 Re-analizar</button>')+
+  '</div>'+
+  '<div style="display:grid;grid-template-columns:220px 1fr;gap:10px;align-items:start;position:relative;">'+
+    '<div id="v3d-tree-panel" style="background:#0d1b2e;border-radius:10px;padding:10px;max-height:520px;overflow-y:auto;">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
+        '<div style="font-size:9px;letter-spacing:.1em;color:#3d5a75;text-transform:uppercase;">ÁRBOL SWBS</div>'+
+        '<button id="v3d-tree-collapse" style="background:none;border:none;color:#3d5a75;cursor:pointer;font-size:12px;">−</button>'+
+      '</div>'+
+      '<div id="v3d-tree-content" style="font-size:11px;">'+(hasComponents?'':'<div style="color:#3d5a75;font-size:11px;padding:8px 0;">Sin componentes.<br>Analiza el modelo primero.</div>')+'</div>'+
+    '</div>'+
+    '<div style="position:relative;">'+
+      '<div id="v3d-canvas-wrap" style="width:100%;background:#0d1b2e;border-radius:10px;overflow:hidden;"></div>'+
+      '<div id="v3d-component-panel" style="display:none;position:absolute;top:10px;right:10px;width:260px;background:rgba(13,27,46,0.97);border:0.5px solid rgba(29,158,117,0.4);border-radius:10px;padding:14px;backdrop-filter:blur(10px);z-index:10;">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'+
+          '<div id="v3d-comp-name" style="font-size:13px;font-weight:500;color:#dce8f5;"></div>'+
+          '<button id="v3d-comp-close" style="background:none;border:none;color:#3d5a75;cursor:pointer;font-size:16px;">×</button>'+
+        '</div>'+
+        '<div id="v3d-comp-body" style="font-size:11px;color:#8fb3cc;"></div>'+
+        '<button id="v3d-comp-ot" style="margin-top:10px;width:100%;background:#1D5FA5;color:#fff;border:none;padding:6px;border-radius:4px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;">+ Nueva OT en este componente</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>'+
+  '<div id="v3d-table-wrap" style="display:none;margin-top:12px;background:#0d1b2e;border-radius:10px;padding:14px;">'+
+    '<div style="font-size:11px;font-weight:500;color:#5DCAA5;margin-bottom:10px;">Tabla de componentes</div>'+
+    '<div id="v3d-table-content"></div>'+
+  '</div>'+
+  '<div style="font-size:10px;color:#3d5a75;margin-top:8px;text-align:right;">Clic en componente · Arrastre: rotar · Scroll: zoom</div>';
 }
+
+function _v3dRenderTree(components){
+  var treeEl=document.getElementById('v3d-tree-content');
+  if(!treeEl) return;
+
+  var map={};
+  components.forEach(function(c){map[c.id]=c;c._children=[];});
+  var roots=[];
+  components.forEach(function(c){
+    if(c.parent_id&&map[c.parent_id]) map[c.parent_id]._children.push(c);
+    else roots.push(c);
+  });
+
+  function rn(c,d){
+    var ind=d*12;
+    var hasChildren=c._children&&c._children.length>0;
+    var sc=statusColorHex(c.status);
+    var typeIcon={structural:'⬡',space:'▭',equipment:'⚙',safety:'◈',system:'◎'}[c.component_type]||'◆';
+
+    var h='<div class="v3d-tree-item" data-tree-id="'+c.id+'">';
+    h+='<div class="v3d-tree-node" data-comp-id="'+c.id+'" data-depth="'+d+'" '+
+      'style="padding:4px 4px 4px '+(8+ind)+'px;cursor:pointer;border-radius:4px;display:flex;align-items:center;gap:5px;transition:background .1s;">'+
+      (hasChildren?'<span class="v3d-tree-toggle" style="color:#3d5a75;font-size:8px;width:10px;cursor:pointer;flex-shrink:0;">▶</span>':
+                   '<span style="width:10px;display:inline-block;flex-shrink:0;"></span>')+
+      '<span style="font-size:9px;color:#3d5a75;flex-shrink:0;">'+typeIcon+'</span>'+
+      '<div style="width:5px;height:5px;border-radius:50%;background:'+sc+';flex-shrink:0;"></div>'+
+      '<span style="color:#dce8f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-size:11px;" title="'+c.name+'">'+c.name+'</span>'+
+      (c.swbs_code?'<span style="color:#3d5a75;font-size:9px;flex-shrink:0;">'+c.swbs_code+'</span>':'')+
+    '</div>';
+
+    if(hasChildren){
+      h+='<div class="v3d-tree-children" style="display:none;border-left:1px solid rgba(61,87,117,0.25);margin-left:'+(14+ind)+'px;">';
+      c._children.forEach(function(ch){h+=rn(ch,d+1);});
+      h+='</div>';
+    }
+    h+='</div>';
+    return h;
+  }
+
+  var html='';
+  roots.forEach(function(r){html+=rn(r,0);});
+  treeEl.innerHTML=html||'<div style="color:#3d5a75;font-size:11px;">Sin componentes</div>';
+
+  // Event delegation — más eficiente que listener por nodo
+  treeEl.addEventListener('click', function(e){
+    var toggle=e.target.closest('.v3d-tree-toggle');
+    var node=e.target.closest('.v3d-tree-node');
+
+    if(toggle){
+      e.stopPropagation();
+      var item=toggle.closest('.v3d-tree-item');
+      var children=item?item.querySelector('.v3d-tree-children'):null;
+      if(children){
+        var open=children.style.display!=='none';
+        children.style.display=open?'none':'block';
+        toggle.textContent=open?'▶':'▼';
+      }
+      return;
+    }
+
+    if(node){
+      var compId=node.getAttribute('data-comp-id');
+      var comp=_v3dComponents.find(function(c){return c.id===compId;});
+      if(comp) BUS.emit('COMPONENT_SELECTED',{id:compId,comp:comp});
+    }
+  });
+
+  // Hover via delegation
+  treeEl.addEventListener('mouseover',function(e){
+    var node=e.target.closest('.v3d-tree-node');
+    if(node&&node.getAttribute('data-selected')!=='true')
+      node.style.background='rgba(255,255,255,0.05)';
+  });
+  treeEl.addEventListener('mouseout',function(e){
+    var node=e.target.closest('.v3d-tree-node');
+    if(node&&node.getAttribute('data-selected')!=='true')
+      node.style.background='transparent';
+  });
+
+  // BUS → resaltar nodo en árbol cuando selección viene de modelo o tabla
+  BUS.on('COMPONENT_SELECTED',function(d){
+    treeEl.querySelectorAll('.v3d-tree-node').forEach(function(n){
+      var isSelected=d.id&&n.getAttribute('data-comp-id')===d.id;
+      n.style.background=isSelected?'rgba(29,158,117,0.15)':'transparent';
+      n.setAttribute('data-selected',isSelected?'true':'false');
+      if(isSelected){
+        // Auto-expand padres hasta llegar al nodo
+        var item=n.closest('.v3d-tree-item');
+        var parent=item?item.parentElement:null;
+        while(parent){
+          if(parent.classList&&parent.classList.contains('v3d-tree-children')){
+            parent.style.display='block';
+            var tog=parent.previousElementSibling?
+              parent.previousElementSibling.querySelector('.v3d-tree-toggle'):null;
+            if(tog) tog.textContent='▼';
+          }
+          parent=parent.parentElement;
+          if(parent===treeEl) break;
+        }
+        n.scrollIntoView({block:'nearest',behavior:'smooth'});
+      }
+    });
+  });
+
+  // BUS → actualizar color del punto de estado cuando cambia
+  BUS.on('COMPONENT_UPDATED',function(d){
+    if(d.field==='status'){
+      var node=treeEl.querySelector('.v3d-tree-node[data-comp-id="'+d.id+'"]');
+      if(node){
+        var dot=node.querySelector('div[style*="border-radius:50%"]');
+        if(dot) dot.style.background=statusColorHex(d.value);
+      }
+    }
+  });
+
+  // Collapse toggle del panel
+  var cb=document.getElementById('v3d-tree-collapse');
+  if(cb) cb.onclick=function(){
+    var tc=document.getElementById('v3d-tree-content');
+    var collapsed=tc.style.display==='none';
+    tc.style.display=collapsed?'':'none';
+    cb.textContent=collapsed?'−':'+';
+  };
+}
+
+async function _v3dSelectComponent(compId){
+  var comp=_v3dComponents.find(function(c){return c.id===compId;});
+  if(!comp) return;
+  // Emitir al BUS — árbol, modelo y panel escuchan
+  BUS.emit('COMPONENT_SELECTED', {id:compId, comp:comp});
+}
+
+// BUS listener para selección de componente — registrado en loadProjectVisor3D
+function _v3dOnComponentSelected(d){
+  var compId=d.id, comp=d.comp;
+  if(!comp) return;
+
+  // 1. Resaltar en árbol
+  document.querySelectorAll('.v3d-tree-node').forEach(function(n){
+    n.style.background=n.getAttribute('data-comp-id')===compId?'rgba(29,158,117,0.15)':'transparent';
+  });
+
+  // 2. Resaltar en modelo 3D
+  if(window._v3dHighlightMeshes) window._v3dHighlightMeshes(comp.mesh_names||[]);
+
+  // 3. Resaltar fila en tabla si está visible
+  document.querySelectorAll('[data-table-comp-id]').forEach(function(row){
+    row.style.background=row.getAttribute('data-table-comp-id')===compId?'rgba(29,158,117,0.08)':'transparent';
+  });
+
+  // 4. Abrir panel de información
+  var panel=document.getElementById('v3d-component-panel');
+  var nameEl=document.getElementById('v3d-comp-name');
+  var bodyEl=document.getElementById('v3d-comp-body');
+  if(!panel||!nameEl||!bodyEl) return;
+  nameEl.textContent=comp.name;
+  var peso=comp.weight_kg?comp.weight_kg+'kg':
+    (comp.area_m2&&comp.thickness_mm?Math.round(comp.area_m2*(comp.thickness_mm/1000)*7850)+'kg (calc.)':'—');
+
+  // 5. Indicador de estado con color real
+  var statusBadge='<span style="display:inline-block;padding:1px 7px;border-radius:3px;font-size:9px;background:'+
+    statusColorHex(comp.status)+'22;color:'+statusColorHex(comp.status)+';">'+
+    (comp.status||'sin datos')+'</span>';
+
+  bodyEl.innerHTML=
+    _v3dCompRow('Tipo',comp.component_type||'—')+
+    _v3dCompRow('SWBS',comp.swbs_code||'—')+
+    _v3dCompRow('Material',comp.material||'—')+
+    _v3dCompRow('Espesor',comp.thickness_mm?comp.thickness_mm+'mm':'—')+
+    _v3dCompRow('Área',comp.area_m2?comp.area_m2+'m²':'—')+
+    _v3dCompRow('Peso',peso)+
+    _v3dCompRow('Estado',statusBadge)+
+    (comp.norm_ref?_v3dCompRow('Norma',comp.norm_ref):'');
+
+  panel.style.display='block';
+
+  var closeBtn=document.getElementById('v3d-comp-close');
+  if(closeBtn) closeBtn.onclick=function(){
+    panel.style.display='none';
+    if(window._v3dHighlightMeshes) window._v3dHighlightMeshes([]);
+    BUS.emit('COMPONENT_SELECTED',{id:null, comp:null});
+  };
+
+  // Botón nueva OT — ahora real
+  var otBtn=document.getElementById('v3d-comp-ot');
+  if(otBtn) otBtn.onclick=function(){ _v3dCreateOT(comp); };
+
+  // ARIA habla
+  ariaSpeak(comp.name+'. '+
+    (comp.area_m2?'Área: '+comp.area_m2+' metros cuadrados. ':'')+
+    (comp.status==='critical'?'¡Tiene observación crítica pendiente!':
+     comp.status==='pending'?'Tiene trabajos pendientes.':'Sin observaciones activas.'));
+
+  // Cargar OT asíncronamente y agregar al panel
+  if(_v3dProject){
+    sb.from('work_order').select('task_name,status,end_date,responsible_name')
+      .eq('project_id',_v3dProject.id)
+      .ilike('task_name','%'+comp.name+'%')
+      .limit(5)
+      .then(function(res){
+        var ots=res.data||[];
+        if(!ots.length) return;
+        var otHtml='<div style="margin-top:10px;border-top:0.5px solid rgba(255,255,255,0.08);padding-top:8px;">'+
+          '<div style="color:#3d5a75;font-size:9px;text-transform:uppercase;margin-bottom:4px;">OT ('+ots.length+')</div>';
+        ots.forEach(function(o){
+          otHtml+='<div style="padding:3px 0;color:#dce8f5;font-size:10px;">'+o.task_name+
+            '<span style="float:right;color:'+statusColorHex(o.status==='completed'?'ok':o.status==='pending'?'pending':'no_data')+';">'+o.status+'</span></div>';
+        });
+        otHtml+='</div>';
+        if(bodyEl) bodyEl.innerHTML+=otHtml;
+      });
+  }
+}
+
+// Crear OT desde el visor — flujo real
+async function _v3dCreateOT(comp){
+  if(!_v3dProject){ toast('No hay proyecto activo'); return; }
+  var taskName = comp.name + ' — Inspección';
+  var input = prompt('Nombre de la OT para "'+comp.name+'":', taskName);
+  if(!input) return;
+  var {data:ot, error} = await sb.from('work_order').insert({
+    task_name: input,
+    project_id: _v3dProject.id,
+    company_id: company.id,
+    status: 'pending',
+    division_code: comp.swbs_code||'',
+    responsible_name: user.full_name||''
+  }).select().single();
+  if(error){ toast('Error: '+error.message); return; }
+  toast('OT creada: '+input);
+  // Actualizar estado del componente a pending y notificar al BUS
+  await sb.from('model_component').update({status:'pending'}).eq('id',comp.id);
+  BUS.emit('OT_CREATED', {ot:ot, comp_id:comp.id});
+  BUS.emit('COMPONENT_UPDATED', {id:comp.id, field:'status', value:'pending'});
+  ariaSpeak('OT creada para '+comp.name+'. El componente ahora aparece en amarillo en el modelo.');
+}
+
+function _v3dCompRow(label,val){
+  return '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:0.5px solid rgba(255,255,255,0.04);">'+
+    '<span style="color:#3d5a75;">'+label+'</span><span style="color:#dce8f5;font-weight:500;">'+val+'</span></div>';
+}
+
+function _v3dToggleTable(){
+  var wrap=document.getElementById('v3d-table-wrap');
+  if(!wrap) return;
+  var visible=wrap.style.display!=='none';
+  if(visible){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  _v3dRenderTableContent();
+}
+
+function _v3dRenderTableContent(){
+  var el=document.getElementById('v3d-table-content');
+  if(!el||!_v3dComponents.length){
+    if(el) el.innerHTML='<div style="color:#3d5a75;">Sin componentes analizados.</div>';
+    return;
+  }
+
+  // Barra de filtro rápido
+  var filterBar='<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'+
+    '<input id="v3d-table-filter" placeholder="Filtrar..." style="flex:1;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);color:#dce8f5;padding:4px 10px;border-radius:4px;font-size:11px;font-family:Inter,sans-serif;" oninput="_v3dFilterTable(this.value)">'+
+    '<select id="v3d-table-status-filter" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);color:#dce8f5;padding:4px 8px;border-radius:4px;font-size:11px;font-family:Inter,sans-serif;" onchange="_v3dFilterTable(document.getElementById(\'v3d-table-filter\').value)">'+
+      '<option value="">Todos los estados</option>'+
+      '<option value="ok">✓ OK</option>'+
+      '<option value="pending">⚠ Pendiente</option>'+
+      '<option value="critical">✗ Crítico</option>'+
+      '<option value="no_data">— Sin datos</option>'+
+    '</select>'+
+  '</div>';
+
+  var rows=_v3dComponents.map(function(c){
+    var peso=c.weight_kg?c.weight_kg:
+      (c.area_m2&&c.thickness_mm?Math.round(c.area_m2*(c.thickness_mm/1000)*7850):null);
+    var sc=statusColorHex(c.status);
+    return '<tr class="v3d-table-row" data-table-comp-id="'+c.id+'" data-comp-name="'+(c.name||'').toLowerCase()+'" data-comp-status="'+(c.status||'no_data')+'" '+
+      'style="border-bottom:0.5px solid rgba(255,255,255,0.05);cursor:pointer;transition:background .1s;" '+
+      'onclick="_v3dTableRowClick(this)">'+
+      '<td style="padding:6px 8px;">'+
+        '<div style="display:flex;align-items:center;gap:6px;">'+
+          '<div style="width:6px;height:6px;border-radius:50%;background:'+sc+';flex-shrink:0;"></div>'+
+          '<span style="color:#dce8f5;">'+c.name+'</span>'+
+        '</div>'+
+      '</td>'+
+      '<td style="padding:6px 8px;color:#8fb3cc;">'+(c.swbs_code||'—')+'</td>'+
+      '<td style="padding:6px 8px;color:#8fb3cc;">'+(c.material||'—')+'</td>'+
+      '<td style="padding:6px 8px;">'+
+        '<input type="number" value="'+(c.thickness_mm||'')+'" placeholder="—" '+
+          'data-comp-id="'+c.id+'" '+
+          'style="width:60px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);color:#dce8f5;padding:2px 6px;border-radius:3px;font-size:11px;" '+
+          'onchange="_v3dUpdateThickness(this)" onclick="event.stopPropagation()">'+
+      '</td>'+
+      '<td style="padding:6px 8px;color:#8fb3cc;">'+(c.area_m2?c.area_m2+'m²':'—')+'</td>'+
+      '<td style="padding:6px 8px;color:#8fb3cc;">'+(peso?peso+'kg':'—')+'</td>'+
+      '<td style="padding:6px 8px;">'+
+        '<button data-select-comp="'+c.id+'" title="Ir al componente" onclick="event.stopPropagation()" '+
+          'style="background:rgba(29,95,165,0.2);border:0.5px solid rgba(29,95,165,0.4);color:#5DCAA5;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:10px;">🎯</button>'+
+      '</td>'+
+    '</tr>';
+  }).join('');
+
+  el.innerHTML=filterBar+
+    '<div style="overflow-x:auto;"><table id="v3d-main-table" style="width:100%;border-collapse:collapse;font-size:11px;">'+
+      '<thead><tr style="border-bottom:0.5px solid rgba(255,255,255,0.1);">'+
+        '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">Componente</th>'+
+        '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">SWBS</th>'+
+        '<th style="padding:6px 8px;color:#3d5a73;text-align:left;font-weight:400;">Material</th>'+
+        '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">Esp(mm)</th>'+
+        '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">Área</th>'+
+        '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">Peso</th>'+
+        '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">→</th>'+
+      '</tr></thead>'+
+      '<tbody>'+rows+'</tbody>'+
+    '</table></div>';
+
+  // Event listener delegado para botones 🎯
+  el.addEventListener('click', function(e){
+    var btn=e.target.closest('[data-select-comp]');
+    if(btn) BUS.emit('COMPONENT_SELECTED',{
+      id: btn.getAttribute('data-select-comp'),
+      comp: _v3dComponents.find(function(c){return c.id===btn.getAttribute('data-select-comp');})
+    });
+  });
+
+  // Escuchar BUS para resaltar fila cuando se selecciona desde modelo o árbol
+  BUS.on('COMPONENT_SELECTED', function(d){
+    document.querySelectorAll('.v3d-table-row').forEach(function(row){
+      var isSelected = d.id && row.getAttribute('data-table-comp-id')===d.id;
+      row.style.background = isSelected ? 'rgba(29,158,117,0.1)' : 'transparent';
+      if(isSelected){
+        // Scroll automático a la fila
+        row.scrollIntoView({block:'nearest', behavior:'smooth'});
+      }
+    });
+  });
+
+  // Escuchar BUS para actualizar dot de estado en tabla
+  BUS.on('COMPONENT_UPDATED', function(d){
+    var row=document.querySelector('.v3d-table-row[data-table-comp-id="'+d.id+'"]');
+    if(!row) return;
+    if(d.field==='status'){
+      row.setAttribute('data-comp-status', d.value);
+      var dot=row.querySelector('div[style*="border-radius:50%"]');
+      if(dot) dot.style.background=statusColorHex(d.value);
+    }
+    if(d.field==='thickness_mm'){
+      var inp=row.querySelector('input[data-comp-id="'+d.id+'"]');
+      if(inp) inp.value=d.value;
+    }
+  });
+}
+
+// Clic en fila de tabla → selección propagada al modelo y árbol
+function _v3dTableRowClick(row){
+  var compId = row.getAttribute('data-table-comp-id');
+  var comp = _v3dComponents.find(function(c){return c.id===compId;});
+  if(comp) BUS.emit('COMPONENT_SELECTED', {id:compId, comp:comp});
+}
+
+// Filtro de tabla en tiempo real
+function _v3dFilterTable(text){
+  var statusF = document.getElementById('v3d-table-status-filter');
+  var statusVal = statusF ? statusF.value : '';
+  var q = (text||'').toLowerCase().trim();
+  document.querySelectorAll('.v3d-table-row').forEach(function(row){
+    var name = row.getAttribute('data-comp-name')||'';
+    var status = row.getAttribute('data-comp-status')||'';
+    var matchText = !q || name.includes(q);
+    var matchStatus = !statusVal || status===statusVal;
+    row.style.display = (matchText && matchStatus) ? '' : 'none';
+  });
+}
+
+async function _v3dUpdateThickness(input){
+  var compId=input.getAttribute('data-comp-id');
+  var val=parseFloat(input.value);
+  if(!compId||isNaN(val)) return;
+  await sb.from('model_component').update({thickness_mm:val}).eq('id',compId);
+  var comp=_v3dComponents.find(function(c){return c.id===compId;});
+  if(comp){
+    comp.thickness_mm=val;
+    // Recalcular peso y actualizar en Supabase
+    if(comp.area_m2){
+      var densidad=7850; // acero kg/m³
+      var pesoCalc=Math.round(comp.area_m2*(val/1000)*densidad);
+      comp.weight_kg=pesoCalc;
+      await sb.from('model_component').update({weight_kg:pesoCalc}).eq('id',compId);
+    }
+  }
+  BUS.emit('COMPONENT_UPDATED',{id:compId, field:'thickness_mm', value:val});
+  toast('Espesor actualizado → peso recalculado');
+}
+
+async function _v3dStartAnalysis(asset,content,p){
+  var btnA=document.getElementById('v3d-btn-analyze');
+  if(btnA){btnA.disabled=true;btnA.textContent='Analizando...';}
+  ariaSpeak('Iniciando análisis del modelo. Esto puede tomar hasta un minuto mientras el servicio de geometría se activa.');
+  try{
+    var {data:{session}}=await sb.auth.getSession();
+    var token=session?session.access_token:'';
+    var r1=await fetch(TRIMESH_EDGE,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'analyze',glb_url:asset.model_3d_url})});
+    var d1=await r1.json();
+    if(!d1.ok) throw new Error(d1.error||'Error en análisis geométrico');
+    ariaSpeak('Encontré '+d1.mesh_count+' elementos en '+d1.cluster_count+' grupos. Ahora los clasifico con mi conocimiento naval.');
+    var r2=await fetch(TRIMESH_EDGE,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'classify',clusters:d1.clusters})});
+    var d2=await r2.json();
+    if(!d2.ok) throw new Error(d2.error||'Error en clasificación');
+    var proposals=d2.proposals||[];
+    ariaSpeak('Propuesta lista con '+proposals.length+' componentes. Revísala y confirma.');
+    _v3dShowProposalModal(proposals,d1.clusters,asset,p,content);
+  }catch(e){
+    ariaSpeak('Tuve un problema: '+e.message);
+    toast('Error: '+e.message);
+    if(btnA){btnA.disabled=false;btnA.textContent='🔄 Re-analizar';}
+  }
+}
+
+function _v3dShowProposalModal(proposals,clusters,asset,p,content){
+  var clMap={};
+  clusters.forEach(function(c){clMap[c.cluster_id]=c;});
+  var rows=proposals.map(function(pr,i){
+    var cl=clMap[pr.cluster_id]||{};
+    return '<tr style="border-bottom:0.5px solid rgba(255,255,255,0.05);">'+
+      '<td style="padding:6px 8px;"><input type="checkbox" checked id="prop-chk-'+i+'"></td>'+
+      '<td style="padding:6px 8px;"><input type="text" value="'+pr.nombre+'" id="prop-name-'+i+'" style="background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);color:#dce8f5;padding:3px 8px;border-radius:3px;font-size:11px;width:160px;"></td>'+
+      '<td style="padding:6px 8px;color:#8fb3cc;font-size:10px;">'+(pr.swbs||'—')+'</td>'+
+      '<td style="padding:6px 8px;color:#8fb3cc;font-size:10px;">'+(cl.area_m2||'—')+'m²</td>'+
+      '<td style="padding:6px 8px;"><span style="font-size:9px;padding:2px 6px;border-radius:3px;background:'+(pr.confianza==='high'?'rgba(29,158,117,0.2)':pr.confianza==='medium'?'rgba(245,158,11,0.2)':'rgba(239,68,68,0.2)')+';color:'+(pr.confianza==='high'?'#1D9E75':pr.confianza==='medium'?'#F59E0B':'#EF4444')+';">'+pr.confianza+'</span></td>'+
+      '<td style="padding:6px 8px;color:#3d5a75;font-size:10px;">'+(cl.mesh_count||1)+' mesh</td>'+
+    '</tr>';
+  }).join('');
+  var modal=document.createElement('div');
+  modal.id='v3d-proposal-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML=
+    '<div style="background:#0d1b2e;border:0.5px solid rgba(29,158,117,0.4);border-radius:14px;padding:24px;max-width:700px;width:100%;max-height:80vh;display:flex;flex-direction:column;">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">'+
+        '<div><div style="font-size:15px;font-weight:500;color:#dce8f5;">Propuesta de ARIA</div>'+
+        '<div style="font-size:11px;color:#3d5a75;margin-top:2px;">Edita los nombres y confirma</div></div>'+
+        '<button id="v3d-modal-close" style="background:none;border:none;color:#3d5a75;font-size:20px;cursor:pointer;">×</button>'+
+      '</div>'+
+      '<div style="overflow-y:auto;flex:1;">'+
+        '<table style="width:100%;border-collapse:collapse;font-size:11px;">'+
+          '<thead><tr style="border-bottom:0.5px solid rgba(255,255,255,0.1);">'+
+            '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">✓</th>'+
+            '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">Nombre</th>'+
+            '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">SWBS</th>'+
+            '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">Área</th>'+
+            '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">Confianza</th>'+
+            '<th style="padding:6px 8px;color:#3d5a75;text-align:left;font-weight:400;">Meshes</th>'+
+          '</tr></thead><tbody>'+rows+'</tbody></table>'+
+      '</div>'+
+      '<div style="display:flex;gap:10px;margin-top:16px;padding-top:16px;border-top:0.5px solid rgba(255,255,255,0.08);">'+
+        '<button id="v3d-modal-confirm" style="flex:1;background:#1D9E75;color:#fff;border:none;padding:10px;border-radius:6px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;">✓ Confirmar y guardar</button>'+
+        '<button id="v3d-modal-cancel" style="background:rgba(255,255,255,0.06);color:#dce8f5;border:0.5px solid rgba(255,255,255,0.12);padding:10px 20px;border-radius:6px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;">Cancelar</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+  function closeModal(){
+    if(document.getElementById('v3d-proposal-modal')) document.body.removeChild(modal);
+    var btn=document.getElementById('v3d-btn-analyze');
+    if(btn){btn.disabled=false;btn.textContent='🔄 Re-analizar';}
+  }
+  document.getElementById('v3d-modal-close').onclick=closeModal;
+  document.getElementById('v3d-modal-cancel').onclick=closeModal;
+  document.getElementById('v3d-modal-confirm').onclick=async function(){
+    var btn=document.getElementById('v3d-modal-confirm');
+    btn.textContent='Guardando...';btn.disabled=true;
+    var toInsert=[];
+    proposals.forEach(function(pr,i){
+      var chk=document.getElementById('prop-chk-'+i);
+      var ni=document.getElementById('prop-name-'+i);
+      if(!chk||!chk.checked) return;
+      var cl=clMap[pr.cluster_id]||{};
+      toInsert.push({
+        asset_id:asset.id,name:ni?ni.value:pr.nombre,swbs_code:pr.swbs,
+        component_type:pr.tipo||'structural',mesh_names:cl.mesh_names||[],
+        area_m2:cl.area_m2||null,volume_m3:cl.volume_m3||null,
+        centroid_x:cl.centroid?cl.centroid[0]:null,centroid_y:cl.centroid?cl.centroid[1]:null,centroid_z:cl.centroid?cl.centroid[2]:null,
+        orientation:cl.orientation||null,created_by_aria:true,aria_confidence:pr.confianza,is_confirmed:true,sort_order:i
+      });
+    });
+    var {error}=await sb.from('model_component').insert(toInsert);
+    closeModal();
+    if(error){toast('Error: '+error.message);ariaSpeak('Error al guardar: '+error.message);}
+    else{toast(toInsert.length+' componentes guardados');ariaSpeak('Guardé '+toInsert.length+' componentes. Ya puedes explorar el modelo.');loadProjectVisor3D(p,content);}
+  };
+}
+
+function _v3dBtnStyle(type){
+  if(type==='accent') return 'background:rgba(29,158,117,0.2);border:0.5px solid rgba(29,158,117,0.6);color:#5DCAA5;padding:4px 12px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;font-weight:500;';
+  return 'background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);color:#dce8f5;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;';
+}
+
+// ARBOL DE COMPONENTES
+
+
+// ANALIZAR MODELO CON ARIA
+
+
 function _v3dEmptyState(msg){
   return '<div style="background:#0d1b2e;border-radius:12px;padding:3rem;text-align:center;">'+
     '<div style="font-size:40px;margin-bottom:10px;">🧊</div>'+
@@ -4267,88 +5203,6 @@ async function renderUsersPage(){
   return;
 }
 
-async function renderUsersPageOld(){
-  var mc=document.getElementById('app-main');
-  mc.innerHTML='';
-
-  // Header
-  var hdr=document.createElement('div');
-  hdr.innerHTML='<div class="page-title">👥 Personal</div><div class="page-sub">Personal de la empresa</div>';
-  mc.appendChild(hdr);
-
-  // Toolbar
-  var toolbar=document.createElement('div');
-  toolbar.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;';
-  var countEl=document.createElement('div');
-  countEl.id='users-count'; countEl.style.cssText='font-size:13px;color:#6B7280;';
-  countEl.textContent='Cargando...';
-  var addBtn=document.createElement('button');
-  addBtn.className='edit-btn';
-  addBtn.style.cssText='background:#1D5FA5;color:#fff;border-color:#1D5FA5;padding:8px 18px;font-size:13px;';
-  addBtn.textContent='+ Agregar usuario';
-  addBtn.onclick=openInviteModal;
-  var bulkBtn=document.createElement('button');
-  bulkBtn.className='edit-btn';
-  bulkBtn.style.cssText='padding:8px 14px;font-size:13px;gap:4px;';
-  bulkBtn.innerHTML='📊 Carga masiva';
-  bulkBtn.onclick=openBulkImport;
-  var btnGroup=document.createElement('div');
-  btnGroup.style.cssText='display:flex;gap:8px;';
-  btnGroup.appendChild(bulkBtn); btnGroup.appendChild(addBtn);
-  toolbar.appendChild(countEl); toolbar.appendChild(btnGroup);
-  mc.appendChild(toolbar);
-
-  var listEl=document.createElement('div'); listEl.id='users-list';
-  mc.appendChild(listEl);
-
-  if(!company) return;
-  var {data,error}=await sb.from('user_profile').select('*').eq('company_id',company.id).order('created_at');
-  if(error){ document.getElementById('users-count').textContent='Error: '+error.message; return; }
-  var users=data||[];
-  // Put current user first
-  if(profile){
-    users.sort(function(a,b){
-      if(a.id===profile.id) return -1;
-      if(b.id===profile.id) return 1;
-      return 0;
-    });
-  }
-  document.getElementById('users-count').textContent=users.length+' usuario'+(users.length!==1?'s':'');
-  var list=document.getElementById('users-list');
-  if(!list) return;
-  if(users.length===0){
-    list.innerHTML='<div class="card" style="text-align:center;padding:2rem;color:#9CA3AF;">No hay usuarios registrados aún.</div>';
-    return;
-  }
-  users.forEach(function(u){
-    var ini=(u.full_name||'U').split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
-    var roleLabel={admin:'Administrador',designer:'Diseñador Naval',shipyard:'Jefe de Dique',captain:'Capitán',inspector:'Inspector',supplier:'Proveedor'}[u.global_role]||u.global_role||'Usuario';
-    var badgeClass=u.is_active===false?'badge-inactive':u.global_role==='admin'?'badge-admin':'badge-user';
-    var badgeText=u.is_active===false?'Inactivo':roleLabel;
-    var card=document.createElement('div');
-    card.className='user-card';
-    if(profile&&u.id===profile.id){
-      card.style.borderColor='#1D5FA5';
-      card.style.background='#F8FBFF';
-    }
-    var avEl=document.createElement('div'); avEl.className='u-av';
-    if(u.avatar_url){avEl.innerHTML='<img src="'+u.avatar_url+'" style="width:100%;height:100%;object-fit:cover;">'; }
-    else{ avEl.textContent=ini; }
-    var infoEl=document.createElement('div'); infoEl.style.flex='1';
-    infoEl.innerHTML='<div style="font-size:13px;font-weight:600;">'+( u.full_name||'Sin nombre')+'</div>'+
-      '<div style="font-size:11px;color:#6B7280;margin-top:2px;">'+(u.title||roleLabel)+' · '+(u.email||'')+'</div>';
-    var badgeEl=document.createElement('span'); badgeEl.className='u-badge '+badgeClass; badgeEl.textContent=badgeText;
-    card.appendChild(avEl); card.appendChild(infoEl); card.appendChild(badgeEl);
-    if(profile&&profile.global_role==='admin'&&u.id!==profile.id){
-      var eb=document.createElement('button');
-      eb.style.cssText='background:none;border:none;color:#9CA3AF;cursor:pointer;font-size:18px;padding:4px 8px;';
-      eb.textContent='\u22ee';
-      (function(uid){eb.onclick=function(){openEditUser(uid);};})(u.id);
-      card.appendChild(eb);
-    }
-    list.appendChild(card);
-  });
-}
 
 function openInviteModal(){
   var overlay=document.getElementById('modal-co');
@@ -4802,21 +5656,6 @@ async function deleteUser(userId, userName){
   loadResTab('personal');
 }
 
-async function deleteCompany(){
-  if(!company) return;
-  if(!confirm('Eliminar la empresa '+( company.trade_name||company.name)+' y TODOS sus datos? Esta accion no se puede deshacer.')) return;
-  if(!typed || typed.trim().toLowerCase() !== coName3.toLowerCase()){
-    toast('Nombre incorrecto. Empresa no eliminada.'); return;
-  }
-  // Delete company profiles first
-  await sb.from('user_profile').delete().eq('company_id',company.id);
-  var {error}=await sb.from('company').delete().eq('id',company.id);
-  if(error){toast('Error: '+error.message);return;}
-  toast('Empresa eliminada');
-  // Logout
-  await sb.auth.signOut();
-  location.reload();
-}
 
 // ── ASSETS MODULE (placeholder) ───────────────────────
 async function renderAssetsPage(){
@@ -5656,8 +6495,31 @@ document.addEventListener('click', function(e){
     if(vBtn) vBtn.click(); else toast('Visor 3D');
   }
   else if(id==='btn-upload-model') toast('Subir modelo — próximamente');
-  else if(id==='btn-new-ot') toast('Nueva OT — próximamente');
-  else if(id==='btn-vinc-asset') toast('Vincular activo — próximamente');
+  else if(id==='v3d-btn-analyze'){
+    // El análisis ahora se maneja desde el listener interno del visor
+    var btnAnalyze=document.getElementById('v3d-btn-analyze');
+    if(btnAnalyze) btnAnalyze.dispatchEvent(new Event('click'));
+  }
+  else if(id==='btn-upload-glb'){
+    var assetId=e.target.getAttribute('data-asset-id');
+    var inp=document.getElementById('glb-file-input');
+    if(inp&&assetId){
+      inp.onchange=function(){
+        if(this.files[0]) uploadModelGLB(this.files[0], assetId, 'glb-status', null);
+      };
+      inp.click();
+    }
+  }
+  else if(id==='btn-new-ot'){
+    // Abrir modal de nueva OT del proyecto actual
+    if(window._currentProject) openNewOTModal(_currentProject);
+    else toast('Abre un proyecto primero');
+  }
+  else if(id==='btn-vinc-asset'){
+    // Vincular activo al proyecto actual
+    if(window._currentProject) openVincAssetModal(_currentProject);
+    else toast('Abre un proyecto primero');
+  }
 });
 
 // Resource action delegation
@@ -6073,64 +6935,6 @@ async function getListValues(tabla, parametro){
 
 
 // ══ CÓDIGO DE PROYECTO — CONFIGURACIÓN ════════════════
-async function loadCodeConfig(){
-  // Check if company has code config in lists
-  var {data:cfg}=await sb.from('lists')
-    .select('parametro,valor')
-    .eq('company_id',company.id)
-    .eq('tabla','codigo_proyecto')
-    .eq('activo',true);
-
-  var cfgMap={};
-  (cfg||[]).forEach(function(c){cfgMap[c.parametro]=c.valor;});
-
-  // If no config exists, show setup prompt
-  var hasConfig=Object.keys(cfgMap).length>0;
-
-  // Inject code config UI into company page
-  var container=document.getElementById('code-config-section');
-  if(!container) return;
-
-  var PREFIX_DEFAULTS={
-    'Mantenimiento en dique':'D',
-    'Construcción':'C',
-    'Diseño':'DE',
-    'Inspección':'I',
-    'Reparación':'R',
-    'Mantenimiento interno':'M',
-    'Estudio / Consultoría':'ES',
-  };
-
-  var html2='<div style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);margin-bottom:10px;letter-spacing:.05em;">CODIFICACIÓN DE PROYECTOS</div>';
-  html2+='<div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;">'+
-    'Define los prefijos para cada tipo de proyecto. El código se genera automáticamente: <code style="font-size:11px;background:var(--color-background-tertiary);padding:1px 4px;border-radius:3px;">[PREFIJO][N°]-[ACTIVO]T[VEZ]</code>'+
-  '</div>';
-
-  html2+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">';
-  Object.keys(PREFIX_DEFAULTS).forEach(function(tipo){
-    var key='prefix_'+tipo.toLowerCase().replace(/[^a-z]/g,'_');
-    var val=cfgMap[key]||PREFIX_DEFAULTS[tipo];
-    html2+='<div style="display:flex;align-items:center;gap:8px;">'+
-      '<label style="font-size:12px;flex:1;color:var(--color-text-secondary);">'+tipo+'</label>'+
-      '<input id="cc-'+key+'" type="text" value="'+val+'" maxlength="3" '+
-        'style="width:48px;padding:4px 6px;border:1px solid var(--color-border-secondary);border-radius:6px;font-size:13px;font-weight:500;text-align:center;background:var(--color-background-primary);color:var(--color-text-primary);">'+
-    '</div>';
-  });
-  html2+='</div>';
-
-  html2+='<div style="display:flex;gap:16px;margin-bottom:8px;">'+
-    '<label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;">'+
-      '<input type="checkbox" id="cc-use-asset"'+(cfgMap['use_asset']!=='false'?' checked':'')+'>'+
-      'Incluir número de activo en código</label>'+
-    '<label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;">'+
-      '<input type="checkbox" id="cc-use-times"'+(cfgMap['use_times']!=='false'?' checked':'')+'>'+
-      'Incluir contador de veces del activo</label>'+
-  '</div>';
-
-  html2+='<button class="edit-btn" style="background:var(--color-text-info);color:#fff;border-color:var(--color-text-info);" onclick="saveCodeConfig()">Guardar configuración de códigos</button>';
-
-  container.innerHTML=html2;
-}
 
 async function saveCodeConfig(){
   var PREFIX_TYPES=['Mantenimiento en dique','Construcción','Diseño','Inspección','Reparación','Mantenimiento interno','Estudio / Consultoría'];
@@ -7228,6 +8032,57 @@ function navisToggleMinimize(){
     if(btn) btn.textContent='−';
   }
 }
+
+// ── FUNCIONES CONECTADAS (antes próximamente) ─────────────────
+
+// Nueva OT desde toolbar del proyecto (btn-new-ot)
+async function openNewOTModal(p){
+  if(!p){ toast('No hay proyecto activo'); return; }
+  var {data:divs} = await sb.from('system').select('id,code,name').eq('company_id',company.id).order('code');
+  openNewOT(p, divs||[]);
+}
+
+// Vincular activo al proyecto (btn-vinc-asset)
+async function openVincAssetModal(p){
+  if(!p){ toast('No hay proyecto activo'); return; }
+  var {data:assets} = await sb.from('asset')
+    .select('id,name,asset_type,vessel_type').eq('owner_company_id',company.id).eq('status','active').order('name');
+  if(!assets||!assets.length){ toast('No hay activos disponibles'); return; }
+  var modal = document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  var rows = assets.map(function(a){
+    return '<div data-asset-id="'+a.id+'" style="padding:10px 12px;border-radius:6px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.08);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">'+
+      '<div><div style="font-size:13px;color:#dce8f5;">'+a.name+'</div>'+
+      '<div style="font-size:10px;color:#3d5a75;">'+(a.asset_type||'')+(a.vessel_type?' · '+a.vessel_type:'')+'</div></div>'+
+      '<span style="font-size:10px;color:#1D9E75;">Vincular →</span></div>';
+  }).join('');
+  modal.innerHTML='<div style="background:#0d1b2e;border:0.5px solid rgba(29,158,117,0.4);border-radius:14px;padding:24px;max-width:480px;width:100%;max-height:70vh;display:flex;flex-direction:column;">'+
+    '<div style="font-size:15px;font-weight:500;color:#dce8f5;margin-bottom:4px;">Vincular activo</div>'+
+    '<div style="font-size:11px;color:#3d5a75;margin-bottom:16px;">Proyecto: '+p.name+'</div>'+
+    '<div style="overflow-y:auto;flex:1;">'+rows+'</div>'+
+    '<button id="vinc-cancel" style="margin-top:16px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);color:#dce8f5;padding:8px;border-radius:6px;cursor:pointer;font-family:Inter,sans-serif;width:100%;">Cancelar</button>'+
+  '</div>';
+  document.body.appendChild(modal);
+  modal.querySelectorAll('[data-asset-id]').forEach(function(row){
+    row.addEventListener('click', async function(){
+      var assetId = this.getAttribute('data-asset-id');
+      var {error} = await sb.from('project').update({asset_id:assetId}).eq('id',p.id);
+      document.body.removeChild(modal);
+      if(error){ toast('Error: '+error.message); return; }
+      toast('Activo vinculado');
+      window._currentProject = Object.assign({},p,{asset_id:assetId});
+      openProject(window._currentProject);
+    });
+  });
+  document.getElementById('vinc-cancel').onclick=function(){ document.body.removeChild(modal); };
+}
+
+// btn-do-invite
+document.addEventListener('DOMContentLoaded', function(){
+  var ib = document.getElementById('btn-do-invite');
+  if(ib) ib.addEventListener('click', openInviteModal);
+});
+
 </script>
 
 <!-- ══ ARIA WIDGET ══════════════════════════════════════ -->
@@ -7429,122 +8284,6 @@ function nDraw(){
       fc.z+=(curC[2]*1.0-fc.z)*0.02;
     });
 
-    mesh.rotation.y+=0.003;
-    renderer.render(scene,camera);
-  }
-  loop();
-}
-  var cv = document.getElementById('navis-canvas');
-  if(!cv || typeof THREE === 'undefined'){ setTimeout(nDraw, 300); return; }
-
-  cv.width=160; cv.height=160;
-  var renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,canvas:cv});
-  renderer.setSize(160,160);
-  renderer.setClearColor(0x000000,0);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  var scene=new THREE.Scene();
-  var camera=new THREE.PerspectiveCamera(60,1,0.1,100);
-  camera.position.z=3.5;
-
-  var N=6000;
-  var positions=new Float32Array(N*3);
-  var targets=new Float32Array(N*3);
-  var pPhi=new Float32Array(N),pTheta=new Float32Array(N),pSpeed=new Float32Array(N);
-
-  for(var i=0;i<N;i++){
-    var phi=Math.acos(1-2*Math.random());
-    var theta=Math.random()*Math.PI*2;
-    var r=0.78+Math.random()*0.12;
-    targets[i*3]  =r*Math.sin(phi)*Math.cos(theta);
-    targets[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
-    targets[i*3+2]=r*Math.cos(phi);
-    var angle=(i/N)*Math.PI*6;
-    var rr=2+Math.random()*3;
-    positions[i*3]  =rr*Math.cos(angle);
-    positions[i*3+1]=(Math.random()-0.5)*5;
-    positions[i*3+2]=rr*Math.sin(angle)*0.4;
-    pPhi[i]=phi; pTheta[i]=theta;
-    pSpeed[i]=0.004+Math.random()*0.006;
-  }
-
-  var geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
-  geo.setAttribute('aTarget', new THREE.BufferAttribute(targets,3));
-
-  var VS=`
-    attribute vec3 aTarget;
-    uniform float uTime;
-    uniform float uMorph;
-    uniform vec3 uColor;
-    varying float vA;
-    float h(float n){return fract(sin(n)*43758.5);}
-    void main(){
-      vec3 pos=mix(position,aTarget,uMorph);
-      float n=h(float(gl_VertexID)*0.01+uTime*0.1)*0.12;
-      pos+=normalize(pos)*sin(uTime*1.5+float(gl_VertexID)*0.05)*0.04;
-      vec4 mv=modelViewMatrix*vec4(pos,1.0);
-      gl_PointSize=10.0*(1.0/-mv.z);
-      gl_Position=projectionMatrix*mv;
-      vA=0.5+n*2.0;
-    }
-  `;
-  var FS=`
-    varying float vA;
-    uniform vec3 uColor;
-    void main(){
-      float r=distance(gl_PointCoord,vec2(0.5));
-      if(r>0.5) discard;
-      gl_FragColor=vec4(uColor,pow(1.0-r*2.0,1.5)*vA);
-    }
-  `;
-
-  var mat=new THREE.ShaderMaterial({
-    uniforms:{uTime:{value:0},uMorph:{value:0},uColor:{value:new THREE.Vector3(0,0.85,1)}},
-    vertexShader:VS, fragmentShader:FS,
-    transparent:true, blending:THREE.AdditiveBlending, depthTest:false
-  });
-  var mesh=new THREE.Points(geo,mat);
-  scene.add(mesh);
-
-  var tt=0, morphV=0;
-  var COLS={idle:[0,0.65,0.9], thinking:[0.1,0.5,1], speaking:[0.6,0.1,1], listening:[0,0.88,1]};
-  var curC=[0,0.2,0.5], tgtC=[0,0.88,1];
-
-  // Exponer para cambiar estado visual de ARIA
-  window.ariaSetState = function(st){
-    if(COLS[st]) tgtC = COLS[st].slice();
-  };
-
-  function loop(){
-    requestAnimationFrame(loop);
-    tt+=0.012;
-    // Interpolar color
-    curC[0]+=(tgtC[0]-curC[0])*0.04;
-    curC[1]+=(tgtC[1]-curC[1])*0.04;
-    curC[2]+=(tgtC[2]-curC[2])*0.04;
-    mat.uniforms.uTime.value=tt;
-    mat.uniforms.uColor.value.set(curC[0],curC[1],curC[2]);
-
-    // Morph hacia esfera
-    morphV=Math.min(1,morphV+0.008);
-    mat.uniforms.uMorph.value=morphV;
-
-    if(morphV>=1){
-      // Movimiento orgánico
-      var pulse=1+Math.sin(tt*1.5)*0.04;
-      mesh.scale.setScalar(pulse);
-      var tArr=geo.attributes.aTarget.array;
-      for(var i=0;i<N;i++){
-        pTheta[i]+=pSpeed[i];
-        pPhi[i]  +=pSpeed[i]*0.3;
-        var ph=pPhi[i],th=pTheta[i];
-        var r=0.82+Math.sin(ph*3+tt)*0.06+Math.sin(th*2+tt*0.7)*0.04;
-        tArr[i*3]  =r*Math.sin(ph)*Math.cos(th);
-        tArr[i*3+1]=r*Math.sin(ph)*Math.sin(th);
-        tArr[i*3+2]=r*Math.cos(ph);
-      }
-      geo.attributes.aTarget.needsUpdate=true;
-    }
     mesh.rotation.y+=0.003;
     renderer.render(scene,camera);
   }
