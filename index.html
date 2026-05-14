@@ -3172,6 +3172,13 @@ var _v3dRenderer=null, _v3dAnimId=null;
 function _v3dDestroy(){
   if(_v3dAnimId){cancelAnimationFrame(_v3dAnimId);_v3dAnimId=null;}
   if(_v3dRenderer){_v3dRenderer.dispose();_v3dRenderer=null;}
+  // Limpiar tooltip flotante
+  if(window._v3dTooltip){
+    window._v3dTooltip.style.display='none';
+  }
+  // Limpiar mapa de meshes
+  window._v3dAllMeshNames = [];
+  window._v3dMeshToComp = {};
 }
 
 function _v3dLoadGLTFLoader(cb){
@@ -3273,15 +3280,60 @@ function _v3dInit(glbUrl, assetName, containerId){
   var meshToComp = {};
   window._v3dMeshToComp = meshToComp;
 
+  // Poblar meshToComp desde componentes de Supabase
+  // con fuzzy matching: exacto → normalizado → parcial → por capa
+  function _buildMeshToComp(components){
+    meshToComp = {};
+    window._v3dMeshToComp = meshToComp;
+    if(!components||!components.length) return;
+
+    // Índice de búsqueda: meshName normalizado → componente
+    var normIndex = {};
+    function norm(s){ return (s||'').toLowerCase().replace(/[\s_\-\.]/g,''); }
+
+    components.forEach(function(c){
+      // 1. Match exacto por mesh_names del componente
+      (c.mesh_names||[]).forEach(function(mn){
+        meshToComp[mn] = c;
+        normIndex[norm(mn)] = c;
+      });
+      // 2. Indexar también por nombre del componente normalizado
+      normIndex[norm(c.name)] = c;
+      // 3. Por código SWBS
+      if(c.swbs_code) normIndex[norm(c.swbs_code)] = c;
+    });
+
+    // 4. Para meshes sin match exacto, intentar fuzzy por nombre normalizado
+    if(window._v3dAllMeshNames){
+      window._v3dAllMeshNames.forEach(function(mn){
+        if(meshToComp[mn]) return; // ya tiene match
+        var nm = norm(mn);
+        // Buscar componente cuyo nombre normalizado está contenido en el mesh o viceversa
+        var found = null;
+        components.forEach(function(c){
+          if(found) return;
+          var nc = norm(c.name);
+          if(nm.includes(nc) || nc.includes(nm)) found = c;
+        });
+        if(found) meshToComp[mn] = found;
+      });
+    }
+  }
+
+  // Tooltip flotante para hover sobre meshes
+  var tooltip = document.createElement('div');
+  tooltip.style.cssText='position:fixed;background:rgba(13,27,46,0.92);border:0.5px solid rgba(29,158,117,0.4);color:#dce8f5;padding:4px 10px;border-radius:4px;font-size:11px;pointer-events:none;z-index:200;display:none;backdrop-filter:blur(6px);font-family:Inter,sans-serif;';
+  document.body.appendChild(tooltip);
+  window._v3dTooltip = tooltip;
+
   // Función global para recolorear meshes por estado (llamada por BUS)
   window._v3dApplyStatusColors = function(components){
     if(!components||!components.length) return;
-    // Construir mapa meshName → status
+    _buildMeshToComp(components);
     var meshStatus = {};
     components.forEach(function(c){
       (c.mesh_names||[]).forEach(function(mn){
         meshStatus[mn] = c.status||'no_data';
-        meshToComp[mn] = c;
       });
     });
     allMeshes.forEach(function(m){
@@ -3368,17 +3420,81 @@ function _v3dInit(glbUrl, assetName, containerId){
       if(badge)badge.textContent=assetName||'Modelo 3D';
       buildLayerPanel(Object.keys(layers));
 
+      // Registrar todos los nombres de mesh para fuzzy matching
+      window._v3dAllMeshNames = allMeshes.map(function(m){return m.name;});
+
       // Aplicar colores por estado si hay componentes cargados
       if(window._v3dComponents && window._v3dComponents.length){
         window._v3dApplyStatusColors(window._v3dComponents);
       }
 
-      // Clic en mesh → seleccionar componente via BUS
+      // ── RAYCASTER: clic + hover ────────────────────────────
       var raycaster = new THREE.Raycaster();
       var mouse = new THREE.Vector2();
       var canvas = renderer.domElement;
+      var hoverMesh = null;
+      var hoverMat = null;
+
+      canvas.addEventListener('mousemove', function(e){
+        var rect = canvas.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        var hits = raycaster.intersectObjects(allMeshes, false);
+
+        // Restaurar mesh anterior
+        if(hoverMesh && hoverMat){
+          hoverMesh.material = hoverMat;
+          hoverMesh = null; hoverMat = null;
+        }
+
+        if(hits.length){
+          var mesh = hits[0].object;
+          var comp = meshToComp[mesh.name];
+
+          // Tooltip
+          if(comp){
+            tooltip.textContent = comp.name + (comp.swbs_code?' ['+comp.swbs_code+']':'');
+            tooltip.style.display='block';
+            tooltip.style.left=(e.clientX+14)+'px';
+            tooltip.style.top=(e.clientY-10)+'px';
+          } else {
+            tooltip.textContent = mesh.name||'Componente';
+            tooltip.style.display='block';
+            tooltip.style.left=(e.clientX+14)+'px';
+            tooltip.style.top=(e.clientY-10)+'px';
+          }
+
+          // Hover highlight — borde brillante
+          if(!drag){
+            hoverMesh = mesh;
+            hoverMat = mesh.material;
+            var hm = mesh.material.clone();
+            hm.emissive = new THREE.Color(0x1D9E75);
+            hm.emissiveIntensity = 0.2;
+            mesh.material = hm;
+            canvas.style.cursor = 'pointer';
+          }
+        } else {
+          tooltip.style.display='none';
+          canvas.style.cursor = drag?'grabbing':'grab';
+        }
+      });
+
+      canvas.addEventListener('mouseleave', function(){
+        tooltip.style.display='none';
+        if(hoverMesh && hoverMat){
+          hoverMesh.material = hoverMat;
+          hoverMesh = null; hoverMat = null;
+        }
+      });
+
+      // Clic — selección via BUS
+      var clickStartX=0, clickStartY=0;
+      canvas.addEventListener('mousedown',function(e){clickStartX=e.clientX;clickStartY=e.clientY;});
       canvas.addEventListener('click', function(e){
-        if(drag) return; // no seleccionar si fue arrastre
+        // No seleccionar si fue un arrastre real (>5px)
+        if(Math.abs(e.clientX-clickStartX)>5||Math.abs(e.clientY-clickStartY)>5) return;
         var rect = canvas.getBoundingClientRect();
         mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -3389,6 +3505,10 @@ function _v3dInit(glbUrl, assetName, containerId){
           var comp = meshToComp[meshName];
           if(comp){
             BUS.emit('COMPONENT_SELECTED', {id: comp.id, comp: comp});
+          } else {
+            // Mesh sin componente mapeado — ARIA informa
+            ariaSpeak('Hice clic en '+meshName+'. Este elemento aún no está clasificado. ¿Quieres que lo analice?');
+            tooltip.style.display='none';
           }
         }
       });
@@ -3455,6 +3575,107 @@ function _v3dInit(glbUrl, assetName, containerId){
     renderer.render(scene,camera);
   }
   animate();
+}
+
+// ── SISTEMA DE FILTROS ACTIVOS ────────────────────────────────
+var _v3dActiveFilter = {status: 'all', type: ''};
+
+// Función principal — aplica filtro al modelo, árbol y contador
+function _v3dApplyFilter(statusFilter, typeFilter){
+  if(statusFilter !== undefined) _v3dActiveFilter.status = statusFilter;
+  if(typeFilter   !== undefined) _v3dActiveFilter.type   = typeFilter;
+
+  var sf = _v3dActiveFilter.status;
+  var tf = _v3dActiveFilter.type;
+
+  // Filtrar componentes
+  var matching = (_v3dComponents||[]).filter(function(c){
+    var statusOk = sf==='all' || c.status===sf;
+    var typeOk   = !tf       || c.component_type===tf;
+    return statusOk && typeOk;
+  });
+
+  // Construir set de meshes que pasan el filtro
+  var matchingMeshes = {};
+  matching.forEach(function(c){
+    (c.mesh_names||[]).forEach(function(mn){ matchingMeshes[mn]=true; });
+  });
+  var hasFilter = sf!=='all' || tf!=='';
+
+  // Aplicar al modelo 3D
+  if(window._v3dHighlightMeshes){
+    if(!hasFilter){
+      // Sin filtro — restaurar colores por estado
+      window._v3dHighlightMeshes([]);
+      if(window._v3dApplyStatusColors) _v3dApplyStatusColors(_v3dComponents);
+    } else {
+      // Con filtro — resaltar matching, oscurecer el resto
+      window._v3dHighlightMeshes(Object.keys(matchingMeshes));
+    }
+  }
+
+  // Filtrar nodos en el árbol (dim los que no pasan)
+  document.querySelectorAll('.v3d-tree-node').forEach(function(n){
+    var cid=n.getAttribute('data-comp-id');
+    var comp=(_v3dComponents||[]).find(function(c){return c.id===cid;});
+    if(!comp){ n.style.opacity='1'; return; }
+    var passes = matching.find(function(c){return c.id===cid;});
+    n.style.opacity = hasFilter ? (passes?'1':'0.3') : '1';
+  });
+
+  // Actualizar contador y botones activos
+  var countEl=document.getElementById('v3d-filter-count');
+  if(countEl){
+    countEl.textContent = hasFilter ?
+      matching.length+' / '+(_v3dComponents||[]).length+' componentes' : '';
+  }
+
+  // Resaltar botón activo
+  document.querySelectorAll('.v3d-filter-btn').forEach(function(btn){
+    var isActive = btn.getAttribute('data-filter')===sf;
+    btn.style.background    = isActive?'rgba(29,95,165,0.3)':'rgba(255,255,255,0.05)';
+    btn.style.borderColor   = isActive?'rgba(29,95,165,0.6)':'rgba(255,255,255,0.1)';
+    btn.style.color         = isActive?'#dce8f5':'#8fb3cc';
+  });
+
+  // Emitir al BUS para que otros módulos puedan reaccionar
+  BUS.emit('FILTER_CHANGED',{status:sf, type:tf, matchCount:matching.length});
+
+  return matching; // útil para ARIA
+}
+
+// Activar handlers de filtros cuando el layout está en el DOM
+function _v3dInitFilterHandlers(){
+  // Botones de estado
+  document.querySelectorAll('.v3d-filter-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      _v3dApplyFilter(this.getAttribute('data-filter'), undefined);
+    });
+  });
+  // Select de tipo
+  var typeSelect=document.getElementById('v3d-filter-type');
+  if(typeSelect) typeSelect.addEventListener('change',function(){
+    _v3dApplyFilter(undefined, this.value);
+  });
+}
+
+// ARIA puede llamar esto por voz o función
+// Ejemplos: _v3dARIAFilter('críticos'), _v3dARIAFilter('equipos'), _v3dARIAFilter('todos')
+function _v3dARIAFilter(texto){
+  var t=(texto||'').toLowerCase().trim();
+  // Status
+  if(t.includes('crítico')||t.includes('critico'))  return _v3dApplyFilter('critical','');
+  if(t.includes('pendiente'))                        return _v3dApplyFilter('pending','');
+  if(t.includes('ok')||t.includes('bien')||t.includes('bueno')) return _v3dApplyFilter('ok','');
+  if(t.includes('sin dato')||t.includes('vacio'))    return _v3dApplyFilter('no_data','');
+  if(t.includes('todo')||t.includes('all')||t.includes('limpiar')||t.includes('quitar')) return _v3dApplyFilter('all','');
+  // Tipos
+  if(t.includes('estructur'))  return _v3dApplyFilter('all','structural');
+  if(t.includes('espacio'))    return _v3dApplyFilter('all','space');
+  if(t.includes('equipo'))     return _v3dApplyFilter('all','equipment');
+  if(t.includes('seguridad'))  return _v3dApplyFilter('all','safety');
+  if(t.includes('sistema'))    return _v3dApplyFilter('all','system');
+  return null; // no reconocido
 }
 
 // ── TRIMESH PROXY URL ────────────────────────────────────────
@@ -3564,40 +3785,68 @@ async function loadProjectVisor3D(p, content){
     if(btnA) btnA.addEventListener('click',function(){ _v3dStartAnalysis(asset,content,p); });
     var btnT=document.getElementById('v3d-btn-table');
     if(btnT) btnT.addEventListener('click',function(){ _v3dToggleTable(); });
+    // Filtros activos
+    _v3dInitFilterHandlers();
+    // Resetear filtro al cargar nuevo proyecto
+    _v3dApplyFilter('all','');
+    // Exponer filtro a ARIA para comandos de voz
+    window.ariaVisorFilter = _v3dARIAFilter;
   },100);
 }
 
 function _v3dBuildLayout(asset, hasComponents){
   var bs=_v3dBtnStyle();
-  return '<div style="display:flex;align-items:center;gap:6px;padding:8px 0 10px;flex-wrap:wrap;">'+
-    '<span id="v3d-badge" style="font-size:11px;color:#5DCAA5;background:rgba(29,158,117,0.12);border:0.5px solid rgba(29,158,117,0.4);padding:2px 8px;border-radius:3px;">'+asset.name+'</span>'+
-    '<button id="v3d-btn-front" style="'+bs+'">Frente</button>'+
-    '<button id="v3d-btn-side" style="'+bs+'">Lateral</button>'+
-    '<button id="v3d-btn-top" style="'+bs+'">Planta</button>'+
-    '<button id="v3d-btn-reset" style="'+bs+'">Reset</button>'+
-    '<button id="v3d-btn-wireframe" style="'+bs+'">Wireframe</button>'+
-    '<button id="v3d-btn-table" style="'+bs+'">📊 Tabla</button>'+
-    (!hasComponents?
-      '<button id="v3d-btn-analyze" style="background:#1D9E75;color:#fff;border:none;padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;margin-left:8px;">🤖 Analizar con ARIA</button>':
-      '<button id="v3d-btn-analyze" style="'+bs+';margin-left:8px;">🔄 Re-analizar</button>')+
-  '</div>'+
-  '<div style="display:grid;grid-template-columns:220px 1fr;gap:10px;align-items:start;position:relative;">'+
-    '<div id="v3d-tree-panel" style="background:#0d1b2e;border-radius:10px;padding:10px;max-height:520px;overflow-y:auto;">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
-        '<div style="font-size:9px;letter-spacing:.1em;color:#3d5a75;text-transform:uppercase;">ÁRBOL SWBS</div>'+
-        '<button id="v3d-tree-collapse" style="background:none;border:none;color:#3d5a75;cursor:pointer;font-size:12px;">−</button>'+
-      '</div>'+
-      '<div id="v3d-tree-content" style="font-size:11px;">'+(hasComponents?'':'<div style="color:#3d5a75;font-size:11px;padding:8px 0;">Sin componentes.<br>Analiza el modelo primero.</div>')+'</div>'+
+  var fsBase='background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);color:#8fb3cc;padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;transition:all .15s;';
+  return (
+    // ── TOOLBAR PRINCIPAL ──
+    '<div style="display:flex;align-items:center;gap:6px;padding:8px 0 6px;flex-wrap:wrap;">'+
+      '<span id="v3d-badge" style="font-size:11px;color:#5DCAA5;background:rgba(29,158,117,0.12);border:0.5px solid rgba(29,158,117,0.4);padding:2px 8px;border-radius:3px;">'+asset.name+'</span>'+
+      '<button id="v3d-btn-front" style="'+bs+'">Frente</button>'+
+      '<button id="v3d-btn-side" style="'+bs+'">Lateral</button>'+
+      '<button id="v3d-btn-top" style="'+bs+'">Planta</button>'+
+      '<button id="v3d-btn-reset" style="'+bs+'">Reset</button>'+
+      '<button id="v3d-btn-wireframe" style="'+bs+'">Wireframe</button>'+
+      '<button id="v3d-btn-table" style="'+bs+'">📊 Tabla</button>'+
+      (!hasComponents?
+        '<button id="v3d-btn-analyze" style="background:#1D9E75;color:#fff;border:none;padding:3px 12px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;margin-left:4px;">🤖 Analizar</button>':
+        '<button id="v3d-btn-analyze" style="'+bs+';margin-left:4px;">🔄 Re-analizar</button>')+
     '</div>'+
-    '<div style="position:relative;">'+
-      '<div id="v3d-canvas-wrap" style="width:100%;background:#0d1b2e;border-radius:10px;overflow:hidden;"></div>'+
-      '<div id="v3d-component-panel" style="display:none;position:absolute;top:10px;right:10px;width:260px;background:rgba(13,27,46,0.97);border:0.5px solid rgba(29,158,117,0.4);border-radius:10px;padding:14px;backdrop-filter:blur(10px);z-index:10;">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'+
-          '<div id="v3d-comp-name" style="font-size:13px;font-weight:500;color:#dce8f5;"></div>'+
-          '<button id="v3d-comp-close" style="background:none;border:none;color:#3d5a75;cursor:pointer;font-size:16px;">×</button>'+
+    // ── BARRA DE FILTROS ──
+    '<div id="v3d-filter-bar" style="display:flex;align-items:center;gap:6px;padding:0 0 10px;flex-wrap:wrap;">'+
+      '<span style="font-size:9px;color:#3d5a75;text-transform:uppercase;letter-spacing:.08em;margin-right:2px;">Filtro</span>'+
+      '<button class="v3d-filter-btn" data-filter="all"    style="'+fsBase+';background:rgba(29,95,165,0.25);color:#dce8f5;border-color:rgba(29,95,165,0.5);">Todos</button>'+
+      '<button class="v3d-filter-btn" data-filter="critical" style="'+fsBase+'">🔴 Críticos</button>'+
+      '<button class="v3d-filter-btn" data-filter="pending"  style="'+fsBase+'">⚠ Pendientes</button>'+
+      '<button class="v3d-filter-btn" data-filter="ok"       style="'+fsBase+'">✓ OK</button>'+
+      '<button class="v3d-filter-btn" data-filter="no_data"  style="'+fsBase+'">— Sin datos</button>'+
+      '<select id="v3d-filter-type" style="background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);color:#8fb3cc;padding:3px 6px;border-radius:4px;font-size:10px;font-family:Inter,sans-serif;margin-left:4px;">'+
+        '<option value="">Todos los tipos</option>'+
+        '<option value="structural">⬡ Estructural</option>'+
+        '<option value="space">▭ Espacio</option>'+
+        '<option value="equipment">⚙ Equipo</option>'+
+        '<option value="safety">◈ Seguridad</option>'+
+        '<option value="system">◎ Sistema</option>'+
+      '</select>'+
+      '<span id="v3d-filter-count" style="font-size:10px;color:#3d5a75;margin-left:4px;"></span>'+
+    '</div>'+
+    // ── LAYOUT PRINCIPAL ──
+    '<div style="display:grid;grid-template-columns:220px 1fr;gap:10px;align-items:start;position:relative;">'+
+      '<div id="v3d-tree-panel" style="background:#0d1b2e;border-radius:10px;padding:10px;max-height:520px;overflow-y:auto;">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'+
+          '<div style="font-size:9px;letter-spacing:.1em;color:#3d5a75;text-transform:uppercase;">ÁRBOL SWBS</div>'+
+          '<button id="v3d-tree-collapse" style="background:none;border:none;color:#3d5a75;cursor:pointer;font-size:12px;">−</button>'+
         '</div>'+
-        '<div id="v3d-comp-body" style="font-size:11px;color:#8fb3cc;"></div>'+
-        '<button id="v3d-comp-ot" style="margin-top:10px;width:100%;background:#1D5FA5;color:#fff;border:none;padding:6px;border-radius:4px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;">+ Nueva OT en este componente</button>'+
+        '<div id="v3d-tree-content" style="font-size:11px;">'+(hasComponents?'':'<div style="color:#3d5a75;font-size:11px;padding:8px 0;">Sin componentes.<br>Analiza el modelo primero.</div>')+'</div>'+
+      '</div>'+
+      '<div style="position:relative;">'+
+        '<div id="v3d-canvas-wrap" style="width:100%;background:#0d1b2e;border-radius:10px;overflow:hidden;"></div>'+
+        '<div id="v3d-component-panel" style="display:none;position:absolute;top:10px;right:10px;width:260px;background:rgba(13,27,46,0.97);border:0.5px solid rgba(29,158,117,0.4);border-radius:10px;padding:14px;backdrop-filter:blur(10px);z-index:10;">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'+
+            '<div id="v3d-comp-name" style="font-size:13px;font-weight:500;color:#dce8f5;"></div>'+
+            '<button id="v3d-comp-close" style="background:none;border:none;color:#3d5a75;cursor:pointer;font-size:16px;">×</button>'+
+          '</div>'+
+          '<div id="v3d-comp-body" style="font-size:11px;color:#8fb3cc;"></div>'+
+          '<button id="v3d-comp-ot" style="margin-top:10px;width:100%;background:#1D5FA5;color:#fff;border:none;padding:6px;border-radius:4px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;">+ Nueva OT en este componente</button>'+
       '</div>'+
     '</div>'+
   '</div>'+
@@ -3605,7 +3854,8 @@ function _v3dBuildLayout(asset, hasComponents){
     '<div style="font-size:11px;font-weight:500;color:#5DCAA5;margin-bottom:10px;">Tabla de componentes</div>'+
     '<div id="v3d-table-content"></div>'+
   '</div>'+
-  '<div style="font-size:10px;color:#3d5a75;margin-top:8px;text-align:right;">Clic en componente · Arrastre: rotar · Scroll: zoom</div>';
+  '<div style="font-size:10px;color:#3d5a75;margin-top:8px;text-align:right;">Clic en componente · Arrastre: rotar · Scroll: zoom</div>'
+  );
 }
 
 function _v3dRenderTree(components){
@@ -4006,16 +4256,73 @@ async function _v3dStartAnalysis(asset,content,p){
   try{
     var {data:{session}}=await sb.auth.getSession();
     var token=session?session.access_token:'';
-    var r1=await fetch(TRIMESH_EDGE,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'analyze',glb_url:asset.model_3d_url})});
+
+    // ── Paso 1: Análisis geométrico básico ──────────────────
+    var r1=await fetch(TRIMESH_EDGE,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'analyze',glb_url:asset.model_3d_url})});
     var d1=await r1.json();
     if(!d1.ok) throw new Error(d1.error||'Error en análisis geométrico');
-    ariaSpeak('Encontré '+d1.mesh_count+' elementos en '+d1.cluster_count+' grupos. Ahora los clasifico con mi conocimiento naval.');
-    var r2=await fetch(TRIMESH_EDGE,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({action:'classify',clusters:d1.clusters})});
+
+    var clusters = d1.clusters;
+    var meshCount = d1.mesh_count;
+
+    // ── Paso 2: Detectar modelo sin estructurar ─────────────
+    // Si hay pocos meshes o todos tienen nombres genéricos → segmentar
+    var needsSegmentation = false;
+    if(meshCount <= 3){
+      needsSegmentation = true;
+      ariaSpeak('El modelo tiene muy pocos elementos diferenciados. Voy a intentar segmentarlo automáticamente. Dame un momento más.');
+    } else if(d1.meshes && d1.meshes.every(function(m){
+      var n=(m.name||'').toLowerCase();
+      return n.startsWith('mesh') || n==='defaultlayer' || n==='object' || !/[a-z]{3,}/.test(n);
+    })){
+      needsSegmentation = true;
+      ariaSpeak('Los elementos no tienen nombres descriptivos. Voy a intentar separar las piezas por geometría.');
+    }
+
+    if(needsSegmentation){
+      var rSeg=await fetch(TRIMESH_EDGE,{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body:JSON.stringify({action:'segment',glb_url:asset.model_3d_url,angle_threshold_deg:20})});
+      var dSeg=await rSeg.json();
+      if(dSeg.ok && dSeg.segment_count > 0){
+        ariaSpeak('Separé el modelo en '+dSeg.segment_count+' partes usando el método '+
+          (dSeg.method_used==='dihedral_angle'?'de bordes agudos':
+           dSeg.method_used==='normal_clustering'?'de orientación de superficies':'de componentes conectados')+
+          '. Ahora los clasifico.');
+        // Convertir segmentos al formato de clusters para clasificación
+        clusters = dSeg.segments.map(function(s,i){
+          return {
+            cluster_id:   i,
+            mesh_names:   [s.name],
+            mesh_count:   1,
+            area_m2:      s.area_m2,
+            volume_m3:    s.volume_m3||0,
+            centroid:     s.centroid,
+            orientation:  s.orientation,
+            bbox_approx:  s.bbox,
+            geometric_guess: s.geometric_guess
+          };
+        });
+      } else {
+        ariaSpeak('No pude separar el modelo automáticamente. Continuaré con los elementos disponibles.');
+      }
+    } else {
+      ariaSpeak('Encontré '+meshCount+' elementos en '+d1.cluster_count+' grupos. Ahora los clasifico con mi conocimiento naval.');
+    }
+
+    // ── Paso 3: Clasificación semántica con ARIA/Groq ───────
+    var r2=await fetch(TRIMESH_EDGE,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({action:'classify',clusters:clusters})});
     var d2=await r2.json();
     if(!d2.ok) throw new Error(d2.error||'Error en clasificación');
+
     var proposals=d2.proposals||[];
-    ariaSpeak('Propuesta lista con '+proposals.length+' componentes. Revísala y confirma.');
-    _v3dShowProposalModal(proposals,d1.clusters,asset,p,content);
+    ariaSpeak('Propuesta lista con '+proposals.length+' componentes. Revísala y confirma los nombres.');
+    _v3dShowProposalModal(proposals,clusters,asset,p,content);
+
   }catch(e){
     ariaSpeak('Tuve un problema: '+e.message);
     toast('Error: '+e.message);
@@ -7297,6 +7604,34 @@ var ARIA_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'filtrar_visor',
+      description: 'Filtra el modelo 3D en el visor por estado o tipo de componente. Úsalo cuando el usuario diga "muéstrame los críticos", "filtra por equipos", "solo pendientes", "limpia el filtro", etc.',
+      parameters: {
+        type: 'object',
+        properties: {
+          filtro: { type: 'string', description: 'Texto del filtro: críticos, pendientes, ok, sin datos, todos, estructural, espacio, equipo, seguridad, sistema' }
+        },
+        required: ['filtro']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'seleccionar_componente',
+      description: 'Selecciona y resalta un componente específico en el visor 3D por su nombre. Navega el árbol y abre el panel de información. Úsalo cuando el usuario pregunte por una pieza específica.',
+      parameters: {
+        type: 'object',
+        properties: {
+          nombre: { type: 'string', description: 'Nombre o parte del nombre del componente' }
+        },
+        required: ['nombre']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'reportar_problema',
       description: 'Envía un reporte o sugerencia al equipo de ENGRAVIS',
       parameters: {
@@ -7420,6 +7755,29 @@ async function ariaExecuteTool(name, args){
         var tb2 = document.getElementById('ptab-ordenes');
         if(tb2) tb2.click();
         return 'OT "'+args.tarea+'" creada y asignada'+(args.responsable?' a '+args.responsable:'')+'.';
+
+      case 'filtrar_visor':
+        // ARIA filtra el modelo 3D por estado o tipo
+        if(!window.ariaVisorFilter) return 'El visor 3D no está activo. Abre la pestaña Visor 3D primero.';
+        var resultado = window.ariaVisorFilter(args.filtro||'');
+        if(!resultado) return 'No entendí el filtro. Prueba con: críticos, pendientes, ok, equipos, estructural, todos.';
+        var n = resultado.length;
+        return 'Filtré el modelo. Mostrando '+n+' componente'+(n!==1?'s':'')+
+          (args.filtro?' con criterio: '+args.filtro:'')+'.';
+
+      case 'seleccionar_componente':
+        // ARIA selecciona un componente por nombre
+        if(!window._v3dComponents||!_v3dComponents.length)
+          return 'No hay componentes cargados en el visor.';
+        var buscar=(args.nombre||'').toLowerCase();
+        var encontrado=_v3dComponents.find(function(c){
+          return (c.name||'').toLowerCase().includes(buscar);
+        });
+        if(!encontrado) return 'No encontré un componente llamado "'+args.nombre+'". Verifica el nombre en el árbol.';
+        BUS.emit('COMPONENT_SELECTED',{id:encontrado.id, comp:encontrado});
+        return 'Seleccioné '+encontrado.nombre+'. '+
+          'Área: '+(encontrado.area_m2||'desconocida')+'m². '+
+          'Estado: '+(encontrado.status||'sin datos')+'.';
 
       case 'reportar_problema':
         await sb.from('aria_reports').insert({
