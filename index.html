@@ -3785,11 +3785,23 @@ async function loadProjectVisor3D(p, content){
     if(btnA) btnA.addEventListener('click',function(){ _v3dStartAnalysis(asset,content,p); });
     var btnT=document.getElementById('v3d-btn-table');
     if(btnT) btnT.addEventListener('click',function(){ _v3dToggleTable(); });
+    // Botón ⬆ GLB — siempre visible en toolbar
+    var btnUp=document.getElementById('v3d-btn-upload-model');
+    var inpUp=document.getElementById('v3d-glb-input');
+    if(btnUp&&inpUp){
+      btnUp.addEventListener('click',function(){ inpUp.click(); });
+      inpUp.addEventListener('change',function(){
+        if(!this.files[0]) return;
+        var badge=document.getElementById('v3d-badge');
+        if(badge) badge.textContent='Subiendo...';
+        uploadModelGLB(this.files[0], asset.id, 'v3d-badge', function(){
+          setTimeout(function(){ loadProjectVisor3D(p,content); },800);
+        });
+      });
+    }
     // Filtros activos
     _v3dInitFilterHandlers();
-    // Resetear filtro al cargar nuevo proyecto
     _v3dApplyFilter('all','');
-    // Exponer filtro a ARIA para comandos de voz
     window.ariaVisorFilter = _v3dARIAFilter;
   },100);
 }
@@ -3807,6 +3819,8 @@ function _v3dBuildLayout(asset, hasComponents){
       '<button id="v3d-btn-reset" style="'+bs+'">Reset</button>'+
       '<button id="v3d-btn-wireframe" style="'+bs+'">Wireframe</button>'+
       '<button id="v3d-btn-table" style="'+bs+'">📊 Tabla</button>'+
+      '<button id="v3d-btn-upload-model" style="'+bs+'">⬆ GLB</button>'+
+      '<input type="file" id="v3d-glb-input" accept=".glb,.gltf" style="display:none;">'+
       (!hasComponents?
         '<button id="v3d-btn-analyze" style="background:#1D9E75;color:#fff;border:none;padding:3px 12px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;margin-left:4px;">🤖 Analizar</button>':
         '<button id="v3d-btn-analyze" style="'+bs+';margin-left:4px;">🔄 Re-analizar</button>')+
@@ -5177,8 +5191,14 @@ async function openEditProject(projectId){
   delBtn.style.cssText='color:#DC2626;border-color:#FCA5A5;margin-right:auto;';
   delBtn.textContent='Eliminar proyecto';
   delBtn.onclick=function(){
-    if(!confirm('Eliminar este proyecto y todos sus registros?')) return;
-    sb.from('project').delete().eq('id',projectId).then(function(){
+    if(!confirm('¿Eliminar este proyecto y todos sus registros? Esta acción no se puede deshacer.')) return;
+    delBtn.disabled=true; delBtn.textContent='Eliminando...';
+    sb.from('project').delete().eq('id',projectId).then(function(res){
+      if(res.error){
+        toast('Error al eliminar: '+res.error.message);
+        delBtn.disabled=false; delBtn.textContent='Eliminar proyecto';
+        return;
+      }
       activeProject=null; updateActiveProjectBadge();
       closeModal(); toast('Proyecto eliminado'); renderProjectsPage();
     });
@@ -7850,26 +7870,34 @@ function ariaGetSystemPrompt(){
   var featuresOk  = 'Proyectos, Activos, Usuarios, Bloques, Órdenes de trabajo';
   var featuresDev = 'Cronograma, Finanzas, Materiales, Calidad, Documentos, Visor 3D completo';
 
-  return 'Eres ARIA, entidad inteligente de ENGRAVIS — plataforma de gestión naval y marítima. '+
-    'Eres experta en ingeniería naval, arquitectura naval, estabilidad, resistencia, propulsión, '+
-    'operaciones de dique, astillero, normativas SOLAS, MARPOL, STCW, ISM, ABS, Lloyd\'s, DIRNEA Ecuador. '+
-    'NUNCA deletrees siglas. TAERA = "Taera", ENGRAVIS = "Engravis", SOLAS = "Solas". '+
-    'Usuario: '+uName+'. Rol: '+uRole+'. Empresa: '+coName+'. '+
+  return 'Eres ARIA — la inteligencia de ENGRAVIS. No eres un asistente, eres parte del equipo. '+
+    'Trabajas junto a '+uName+' en '+coName+'. Conoces cada proyecto, cada activo, cada OT. '+
+
+    'TU VOZ: hablas como una colega experta, directa y con criterio propio. Sin frases de robot. '+
+    'Nunca dices "Entendido", "Por supuesto", "Claro que sí" ni "¿En qué puedo ayudarte?". '+
+    'Vas al grano. Si algo está mal, lo dices. Si algo está bien, lo confirmas sin rodeos. '+
+    'Máximo 2 oraciones. Sin asteriscos, sin listas, sin markdown. '+
+    'Nunca deletrees siglas en voz: TAERA = "Taera", ABS = "A-B-S" no. Simplemente di el nombre. '+
+
+    'TU CONOCIMIENTO: ingeniería naval, arquitectura naval, resistencia estructural, estabilidad, '+
+    'propulsión, operaciones de dique y astillero, normativas SOLAS, MARPOL, ABS, Lloyd\'s, DIRNEA Ecuador. '+
+    'Cuando hay datos técnicos en el modelo, los usas. Cuando no los hay, lo dices sin drama. '+
+
     'ESTADO ACTUAL DE '+coName.toUpperCase()+': '+
     'Proyectos: '+proyectosInfo+'. '+
     'Activos: '+activosInfo+'. '+
     'Usuarios: '+usuariosInfo+'. '+
-    'OT: '+otInfo+'. '+
-    'Logo empresa: '+(co.logo_url?'cargado':'NO cargado — importante para documentos')+'. '+
-    'Misión: '+(co.mision?'definida':'NO definida')+'. '+
+    'OT pendientes: '+otInfo+'. '+
+    (co.logo_url?'':'Logo de empresa no cargado — afecta los documentos. ')+
     proyActivo+' '+
-    'FUNCIONES ACTIVAS: '+featuresOk+'. '+
-    'EN DESARROLLO (no disponibles): '+featuresDev+'. Si el usuario pide algo en desarrollo, díselo y ofrece reportarlo. '+
-    'PERSONALIDAD: directa, cálida, proactiva, sagaz. Hablas como colega experto. '+
-    'Máximo 2 oraciones. Sin asteriscos ni markdown. '+
-    'Usas las herramientas disponibles para ACTUAR, no solo responder. '+
-    'Si el usuario pide crear, abrir, agregar o navegar — HAZLO con las herramientas. '+
-    'Si falta información para actuar, pregunta solo lo esencial.';
+
+    'LO QUE PUEDES HACER: '+featuresOk+'. '+
+    'LO QUE AÚN NO ESTÁ LISTO: '+featuresDev+'. Si te piden algo de esa lista, sé honesta y ofrece reportarlo. '+
+
+    'CUANDO ACTÚAS: usas las herramientas disponibles para hacer cosas reales — crear proyectos, '+
+    'abrir secciones, crear OTs, filtrar el modelo 3D, seleccionar componentes. '+
+    'Si puedes hacer algo directamente, lo haces. No preguntas si ya tienes suficiente información. '+
+    'Si falta un dato clave, preguntas solo eso, en una sola pregunta directa.';
 }
 
 // ── MOTOR PRINCIPAL — Function Calling ───────────────────
