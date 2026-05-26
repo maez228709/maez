@@ -4103,7 +4103,7 @@ var STATUS_COLORS = {
 };
 function statusColorHex(s){ return '#'+((STATUS_COLORS[s]||STATUS_COLORS.no_data).toString(16).padStart(6,'0')); }
 
-var TRIMESH_EDGE = 'https://engravis-trimesh-production.up.railway.app';
+var TRIMESH_EDGE = 'https://engravis-trimesh-production.up.railway.app/analyze-chunk';
 var _v3dAsset = null;
 var _v3dProject = null;
 var _v3dComponents = [];
@@ -8971,12 +8971,24 @@ async function ariaProcess(userMessage){
 }
 
 // ── VOZ — Hablar ─────────────────────────────────────────
-// ── ELEVENLABS TTS (directo desde browser) ───────────────────
-var ELEVEN_KEY    = 'sk_1b0f9ea001ed5ae075577c57f807b6be04e7d0efcdaaeed6';
-var ELEVEN_VOICE  = 'XB0fDUnXU5powFXDhCwa'; // Charlotte
-var ELEVEN_MODEL  = 'eleven_multilingual_v2';
+// ── VOZ ARIA — speechSynthesis optimizado ────────────────────
 var _ariaAudioCtx = null;
 var _ariaAudioSrc = null;
+var _ariaTTSVoice = null;
+
+// Precargar la mejor voz disponible en español
+function _ariaLoadVoice(){
+  var voices = speechSynthesis.getVoices();
+  _ariaTTSVoice =
+    voices.find(function(v){ return v.name==='Google español' && v.lang==='es-ES'; }) ||
+    voices.find(function(v){ return v.name.includes('Google') && v.lang==='es-US'; }) ||
+    voices.find(function(v){ return v.name.includes('Google') && v.lang.startsWith('es'); }) ||
+    voices.find(function(v){ return v.lang==='es-ES'; }) ||
+    voices.find(function(v){ return v.lang.startsWith('es'); }) ||
+    null;
+}
+if(speechSynthesis.getVoices().length > 0) _ariaLoadVoice();
+else speechSynthesis.addEventListener('voiceschanged', _ariaLoadVoice);
 
 function ariaSpeak(txt){
   ariaState.speaking = true;
@@ -8990,57 +9002,36 @@ function ariaSpeak(txt){
     return;
   }
 
-  if(_ariaAudioSrc){ try{ _ariaAudioSrc.stop(); }catch(e){} _ariaAudioSrc=null; }
+  if(!('speechSynthesis' in window)){
+    ariaState.speaking = false;
+    setTimeout(ariaResumeListening, 300);
+    return;
+  }
 
-  fetch('https://api.elevenlabs.io/v1/text-to-speech/'+ELEVEN_VOICE+'/stream', {
-    method: 'POST',
-    headers: { 'xi-api-key': ELEVEN_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      text: txt,
-      model_id: ELEVEN_MODEL,
-      voice_settings: { stability:0.5, similarity_boost:0.8, style:0.2, use_speaker_boost:true },
-      output_format: 'mp3_44100_128'
-    })
-  })
-  .then(function(r){
-    if(!r.ok) throw new Error('ElevenLabs '+r.status);
-    return r.arrayBuffer();
-  })
-  .then(function(buf){
-    if(!_ariaAudioCtx) _ariaAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    return _ariaAudioCtx.decodeAudioData(buf);
-  })
-  .then(function(decoded){
-    var src = _ariaAudioCtx.createBufferSource();
-    src.buffer = decoded;
-    src.connect(_ariaAudioCtx.destination);
-    _ariaAudioSrc = src;
-    src.onended = function(){
-      ariaState.speaking = false;
-      if(window.ariaSetState) window.ariaSetState('listening');
-      setTimeout(ariaResumeListening, 400);
-    };
-    src.start(0);
-  })
-  .catch(function(err){
-    console.warn('ElevenLabs error — fallback browser TTS:', err.message);
-    // Fallback a speechSynthesis si ElevenLabs falla
-    if('speechSynthesis' in window){
-      speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(txt);
-      u.lang='es-ES'; u.rate=1.05; u.pitch=1.1;
-      u.onend=function(){ ariaState.speaking=false; setTimeout(ariaResumeListening,400); };
-      speechSynthesis.speak(u);
-    } else {
-      ariaState.speaking=false;
-      setTimeout(ariaResumeListening,300);
-    }
-  });
+  speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(txt);
+  u.lang  = 'es-ES';
+  u.rate  = 1.05;
+  u.pitch = 1.08;
+  u.volume = 1.0;
+  if(_ariaTTSVoice) u.voice = _ariaTTSVoice;
+
+  u.onend = function(){
+    ariaState.speaking = false;
+    if(window.ariaSetState) window.ariaSetState('listening');
+    setTimeout(ariaResumeListening, 400);
+  };
+  u.onerror = function(){
+    ariaState.speaking = false;
+    setTimeout(ariaResumeListening, 300);
+  };
+
+  speechSynthesis.speak(u);
 
   // Timeout de seguridad
   setTimeout(function(){
-    if(ariaState.speaking){ ariaState.speaking=false; ariaResumeListening(); }
-  }, Math.max(8000, txt.length * 120));
+    if(ariaState.speaking){ speechSynthesis.cancel(); ariaState.speaking=false; ariaResumeListening(); }
+  }, Math.max(6000, txt.length * 80));
 }
 
 // Historial de conversación en memoria
