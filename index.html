@@ -8971,8 +8971,10 @@ async function ariaProcess(userMessage){
 }
 
 // ── VOZ — Hablar ─────────────────────────────────────────
-// ── ELEVENLABS TTS (via ARIA-PROXY — key segura en servidor) ─
-var ARIA_TTS_URL  = 'https://ukcfzijdegclgavjtrug.supabase.co/functions/v1/ARIA-PROXY/tts';
+// ── ELEVENLABS TTS (directo desde browser) ───────────────────
+var ELEVEN_KEY    = 'sk_1b0f9ea001ed5ae075577c57f807b6be04e7d0efcdaaeed6';
+var ELEVEN_VOICE  = 'XB0fDUnXU5powFXDhCwa'; // Charlotte
+var ELEVEN_MODEL  = 'eleven_multilingual_v2';
 var _ariaAudioCtx = null;
 var _ariaAudioSrc = null;
 
@@ -8988,14 +8990,17 @@ function ariaSpeak(txt){
     return;
   }
 
-  // Cancelar audio anterior
   if(_ariaAudioSrc){ try{ _ariaAudioSrc.stop(); }catch(e){} _ariaAudioSrc=null; }
 
-  // Llamar TTS via Edge Function (key nunca sale al browser)
-  fetch(ARIA_TTS_URL, {
+  fetch('https://api.elevenlabs.io/v1/text-to-speech/'+ELEVEN_VOICE+'/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: txt })
+    headers: { 'xi-api-key': ELEVEN_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text: txt,
+      model_id: ELEVEN_MODEL,
+      voice_settings: { stability:0.5, similarity_boost:0.8, style:0.2, use_speaker_boost:true },
+      output_format: 'mp3_44100_128'
+    })
   })
   .then(function(r){
     if(!r.ok) throw new Error('ElevenLabs '+r.status);
