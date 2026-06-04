@@ -1037,69 +1037,75 @@ async function loginForgotPassword(){
 }
 
 function _showPasswordResetForm(token){
-  // Usar el token para establecer la sesión
+  // 1. Usar el token para establecer la sesión activa de recuperación en Supabase
   sb.auth.setSession({access_token: token, refresh_token: token}).catch(()=>{});
-
-  // Mostrar formulario limpio de nueva contraseña
-  var entry = document.getElementById('aria-entry-screen');
+  
+  // 2. CORRECCIÓN: Apuntar al contenedor real del login/auth en el DOM ('sc-auth')
+  var entry = document.getElementById('sc-auth'); 
   if(!entry) return;
-  entry.style.display = 'flex';
-
-  var box = entry.querySelector('.aria-entry-box') || entry.querySelector('div');
+  entry.style.display = 'flex'; // Asegurar que sea visible el contenedor
+  
+  // 3. Buscar la tarjeta de login para inyectar limpiamente el formulario de la nueva contraseña
+  var box = entry.querySelector('.login-card'); 
   if(!box) return;
-
-  box.innerHTML =
-    '<div style="text-align:center;margin-bottom:24px;">'+
-      '<div style="font-size:28px;font-weight:800;color:#1B3A6B;letter-spacing:-0.5px;">ENGRAVIS</div>'+
-      '<div style="font-size:13px;color:#6B7280;margin-top:4px;">Nueva contraseña</div>'+
+  
+  // 4. Inyectar la interfaz con las celdas de contraseña y confirmación optimizadas para la UI de ENGRAVIS
+  box.innerHTML = '<div style="text-align:center;margin-bottom:24px;">'+
+    '<div style="font-size:28px;font-weight:800;color:#1D5FA5;letter-spacing:-0.5px;">ENGRAVIS</div>'+
+    '<div style="font-size:13px;color:#6B7280;margin-top:4px;">Nueva contraseña</div>'+
     '</div>'+
-    '<div id="reset-msg" style="font-size:13px;color:#374151;margin-bottom:16px;text-align:center;">Elige una contraseña nueva para tu cuenta.</div>'+
-    '<div style="margin-bottom:12px;">'+
-      '<input id="reset-pass1" type="password" placeholder="Nueva contraseña" '+
-        'style="width:100%;border:1px solid #E5E7EB;border-radius:10px;padding:12px 14px;font-size:14px;outline:none;font-family:Inter,sans-serif;">'+
+    '<div id="reset-msg" style="font-size:12px;color:#374151;margin-bottom:16px;text-align:center;">Elige una contraseña nueva para tu cuenta.</div>'+
+    '<div class="login-field">'+
+      '<label>NUEVA CONTRASEÑA</label>'+
+      '<input class="fi" id="reset-pass-1" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">'+
     '</div>'+
-    '<div style="margin-bottom:20px;">'+
-      '<input id="reset-pass2" type="password" placeholder="Confirmar contraseña" '+
-        'style="width:100%;border:1px solid #E5E7EB;border-radius:10px;padding:12px 14px;font-size:14px;outline:none;font-family:Inter,sans-serif;">'+
+    '<div class="login-field">'+
+      '<label>CONFIRMAR CONTRASEÑA</label>'+
+      '<input class="fi" id="reset-pass-2" type="password" placeholder="Repite tu contraseña" autocomplete="new-password">'+
     '</div>'+
-    '<button id="reset-btn" onclick="_doPasswordReset(\''+token+'\')" '+
-      'style="width:100%;background:#1B3A6B;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">'+
-      'Guardar contraseña'+
-    '</button>'+
-    '<div id="reset-err" style="color:#EF4444;font-size:12px;text-align:center;margin-top:10px;"></div>';
+    '<button class="login-btn" id="btn-do-reset" onclick="ariaEntryCompleteReset()">Actualizar contraseña</button>'+
+    '<div class="login-err" id="reset-err" style="font-size:11px;color:#DC2626;text-align:center;margin-top:.5rem;"></div>';
 }
 
-async function _doPasswordReset(token){
-  var p1 = (document.getElementById('reset-pass1')||{value:''}).value;
-  var p2 = (document.getElementById('reset-pass2')||{value:''}).value;
-  var err = document.getElementById('reset-err');
-  var btn = document.getElementById('reset-btn');
-
-  if(!p1 || p1.length < 6){
-    if(err) err.textContent = 'Mínimo 6 caracteres.'; return;
+// 5. FUNCIÓN COMPLEMENTARIA: Manejar el envío seguro de la nueva credencial a Supabase
+async function ariaEntryCompleteReset() {
+  var p1 = document.getElementById('reset-pass-1').value;
+  var p2 = document.getElementById('reset-pass-2').value;
+  var errEl = document.getElementById('reset-err');
+  var btn = document.getElementById('btn-do-reset');
+  
+  if(!p1 || p1.length < 8) {
+    if(errEl) errEl.textContent = 'La contraseña debe tener al menos 8 caracteres.';
+    return;
   }
-  if(p1 !== p2){
-    if(err) err.textContent = 'Las contraseñas no coinciden.'; return;
+  if(p1 !== p2) {
+    if(errEl) errEl.textContent = 'Las contraseñas no coinciden.';
+    return;
   }
-
-  btn.textContent = 'Guardando...'; btn.disabled = true;
-
-  try{
-    // Establecer sesión con el token de recovery
-    await sb.auth.setSession({access_token: token, refresh_token: token});
-    // Actualizar contraseña
-    var {error} = await sb.auth.updateUser({password: p1});
-    if(error) throw new Error(error.message);
-
-    if(err){ err.style.color='#15803D'; err.textContent='✅ Contraseña actualizada. Ingresando...'; }
-    await new Promise(r => setTimeout(r, 1500));
-    // Recargar para entrar normalmente
-    window.location.reload();
-  }catch(e){
-    if(err) err.textContent = 'Error: ' + e.message;
-    btn.textContent = 'Guardar contraseña'; btn.disabled = false;
+  
+  try {
+    if(btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+    if(errEl) errEl.textContent = '';
+    
+    // Actualizar en el backend de autenticación de Supabase
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    if (error) throw error;
+    
+    // Éxito: Notificar y recargar la página limpiamente para que ingrese con su nueva clave
+    var msgEl = document.getElementById('reset-msg');
+    if(msgEl) msgEl.innerHTML = '<span style="color:#1D9E75;font-weight:600;">✓ ¡Contraseña actualizada con éxito!</span>';
+    if(btn) { btn.textContent = 'Redireccionando...'; }
+    
+    setTimeout(function(){
+      window.location.href = window.location.pathname; // Limpia la URL y vuelve al Login normal
+    }, 2000);
+    
+  } catch(e) {
+    if(btn) { btn.disabled = false; btn.textContent = 'Actualizar contraseña'; }
+    if(errEl) errEl.textContent = e.message || 'Error al actualizar. Inténtalo de nuevo.';
   }
 }
+
 
 
 function togglePassVis(inputId, btn){
