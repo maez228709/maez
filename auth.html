@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ENGRAVIS — Autenticando...</title>
+  <style>
+    body { margin:0; background:#fff; display:flex; align-items:center; justify-content:center; height:100vh; font-family:Inter,sans-serif; }
+    .msg { text-align:center; color:#6B7280; }
+    .logo { font-size:24px; font-weight:800; color:#1B3A6B; margin-bottom:12px; }
+    .spin { width:24px; height:24px; border:3px solid #E5E7EB; border-top-color:#1B3A6B; border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="msg">
+    <div class="logo">ENGRAVIS</div>
+    <div class="spin"></div>
+    <div id="status">Verificando enlace...</div>
+  </div>
+  <script>
+    // Capturar el hash ANTES de cualquier redirect
+    var hash = window.location.hash;
+    var params = new URLSearchParams(hash.replace('#',''));
+    
+    var type        = params.get('type');
+    var accessToken = params.get('access_token');
+    var error       = params.get('error');
+    var errorDesc   = params.get('error_description');
+
+    if(error){
+      document.getElementById('status').textContent = 'El enlace expiró. Redirigiendo...';
+      setTimeout(function(){
+        window.location.href = '/maez/#expired';
+      }, 1500);
+    } else if(type === 'recovery' && accessToken){
+      // Guardar token en sessionStorage y redirigir a la app
+      sessionStorage.setItem('engravis_recovery_token', accessToken);
+      sessionStorage.setItem('engravis_recovery_type', 'recovery');
+      document.getElementById('status').textContent = 'Enlace válido. Abriendo formulario...';
+      setTimeout(function(){
+        window.location.href = '/maez/#reset-password';
+      }, 800);
+    } else if(accessToken){
+      // Otro tipo de token (confirmación de email, etc.)
+      sessionStorage.setItem('engravis_recovery_token', accessToken);
+      sessionStorage.setItem('engravis_recovery_type', type || 'login');
+      document.getElementById('status').textContent = 'Verificado. Ingresando...';
+      setTimeout(function(){
+        window.location.href = '/maez/';
+      }, 800);
+    } else {
+      document.getElementById('status').textContent = 'Redirigiendo...';
+      setTimeout(function(){
+        window.location.href = '/maez/';
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
