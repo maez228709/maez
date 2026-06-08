@@ -3861,9 +3861,9 @@ function _v3dInit(glbUrl, assetName, containerId){
           allMeshes.push(obj);
           obj.userData.origMat = obj.material.clone();
           obj.material = obj.material.clone();
-          obj.material.color.setHex(STATUS_COLORS.no_data);
-          obj.material.metalness = 0.15;
-          obj.material.roughness = 0.65;
+          obj.material.color.setHex(0xB0BEC5);  // gris azulado claro — visible sobre fondo blanco
+          obj.material.metalness = 0.2;
+          obj.material.roughness = 0.6;
 
           // Asignar nombre de capa desde el mapa JSON del GLB
           var layerName = layerNameMap[meshIdx] || '';
