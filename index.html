@@ -96,6 +96,52 @@
       distorsionados; resolver junto con la jerarquía.
     · STERN: corregir nombres en datos/GLB (aparece "STEM").
     · TTS: regenerar ELEVENLABS_API_KEY (estuvo expuesta) y elegir voz española.
+
+  ══════════════════════════════════════════════════════════════════════════════
+  ARQUITECTURA — CONSOLA SUPERADMIN DE ENGRAVIS (VISIÓN — [PENDIENTE])
+  ══════════════════════════════════════════════════════════════════════════════
+  ENGRAVIS es multi-empresa. Existen DOS PLANOS de interfaz:
+
+  PLANO 1 — Consola ENGRAVIS (solo rol 'superadmin'):
+    Al ingresar como superadmin NO se ve la interfaz de una empresa, sino un
+    NIVEL SUPERIOR: panel de toda la plataforma con la lista de TODAS las
+    empresas, su estado y métricas. Desde ahí el superadmin "entra" a cualquier
+    empresa directamente, SIN cerrar sesión ni volver a loguearse (impersonación
+    de tenant), y puede "subir" de nuevo para entrar a otra.
+
+  PLANO 2 — Dentro de una empresa:
+    Interfaz normal de la empresa. El superadmin tiene acceso TOTAL ahí dentro
+    (recuperar un admin perdido, editar lo que sea, dar soporte). Puede volver
+    a la Consola ENGRAVIS en cualquier momento.
+
+  PRINCIPIO DE AUTORIDAD (diferencia clave superadmin vs ARIA):
+    · SUPERADMIN (humano dueño): acceso ILIMITADO en TODOS los niveles. No se
+      condiciona al bajar a una empresa: lo ve y lo hace todo, siempre.
+    · ARIA (IA): VE todo en todo momento (omnipresente), PERO cuando ACTÚA
+      dentro de un nivel queda CONDICIONADA al rol de ese nivel: solo hace lo
+      que ese rol permite. Ver-sí / actuar-limitada. (Ver Declaración de Alcance
+      de ARIA en el bloque ARIA.)
+
+  Hoy 'superadmin' aún no existe como rol; el dueño usa 'admin'. La migración a
+  'superadmin' + esta consola es [PENDIENTE]. Depende de RLS (ver abajo).
+
+  ══════════════════════════════════════════════════════════════════════════════
+  SEGURIDAD — ESTADO DE RLS (Row Level Security en Supabase)
+  ══════════════════════════════════════════════════════════════════════════════
+  La anon key de Supabase es pública por diseño (va en el cliente). El candado
+  real es RLS: políticas server-side que garantizan que cada usuario solo vea
+  los datos de SU empresa. Sin RLS, cualquiera con la anon key (visible en este
+  repo público) lee TODAS las tablas de TODAS las empresas.
+
+  ESTADO ACTUAL (16-Jun-2026): RLS DESACTIVADO en todas las tablas. Diagnóstico
+  confirmó que un usuario ve proyectos/activos/empresas/usuarios de otras
+  empresas. [CRÍTICO — arreglar ANTES de tener clientes reales con datos.]
+
+  PLAN: activar RLS tabla por tabla, probando tras cada una. Regla base: un
+  usuario solo ve filas de su empresa (vía función auth_company_id()), excepto
+  superadmin que ve todo (función is_superadmin()). Columna de empresa por tabla:
+    project→lead_company_id · asset→owner_company_id · company→id ·
+    user_profile→company_id · model_component→vía asset_id · aria_context→company_id
 ══════════════════════════════════════════════════════════════════════════════
 -->
 
