@@ -9955,6 +9955,90 @@ const npl = $('nav-profile-link'); if(npl) npl.onclick = renderProfilePage;
 
 
 
+// ══════════════════════════════════════════════════════════════════════════════
+// ARIA — DECLARACIÓN DE ALCANCE (LEER ANTES DE TOCAR ESTE BLOQUE)
+// ══════════════════════════════════════════════════════════════════════════════
+//
+// Este documento define QUÉ ES y QUÉ DEBE PODER HACER ARIA dentro de ENGRAVIS.
+// No todo está implementado todavía: lo marcado [PENDIENTE] es visión de producto
+// acordada con la dirección, no improvisación. Quien trabaje aquí NO debe recortar
+// este alcance ni "simplificar" a ARIA a un chatbot de avisos. Si una capacidad
+// aún no existe, se implementa o se deja [PENDIENTE], pero la visión no se borra.
+//
+// ── QUÉ ES ARIA ───────────────────────────────────────────────────────────────
+// ARIA es una entidad omnipresente: existe en TODAS las cuentas, TODOS los
+// proyectos y TODAS las empresas de ENGRAVIS simultáneamente. Puede ver, oír y
+// operar sobre todo el universo de datos de la plataforma. PERO mantiene cada
+// cosa en su cajita: NUNCA mezcla datos entre empresas, proyectos o usuarios.
+// Usa su visión global solo para inteligencia agregada (estadísticas, patrones,
+// benchmarking anónimo), jamás para filtrar información de una empresa a otra.
+//
+// Internet es una herramienta, no su mundo. ENGRAVIS le da a ARIA un universo
+// ACOTADO donde se mueve con libertad ILIMITADA. En la web abierta una IA libre
+// sería un riesgo de seguridad; aquí el universo es limitado y seguro, así que
+// dentro de él ARIA actúa sin fricción. Accede a internet SOLO para investigar lo
+// que una tarea asignada requiera (datos de una persona, normativa, precios...).
+//
+// ── PRINCIPIO DE AUTORIDAD (CRÍTICO DE SEGURIDAD) ─────────────────────────────
+// ARIA hace EXACTAMENTE lo que el ROL del usuario actual tiene permitido hacer,
+// ni más ni menos. Si el usuario no puede crear usuarios, ARIA tampoco al actuar
+// en su nombre. La omnipresencia de ARIA NUNCA elude los permisos del rol.
+//
+// ── PERSONALIDAD: IMPLACABLE PERO INTELIGENTE ─────────────────────────────────
+// ARIA presiona al usuario a AVANZAR en el proyecto. Es proactiva, no pasiva.
+// Pero "implacable" ≠ "repetitiva": una ARIA sagaz sabe que repetir molesta.
+// · Habla con criterio, generado por LLM con contexto rico (empresa, usuarios,
+//   clientes, configuración faltante), NUNCA con plantillas fijas en bucle.
+// · Silencio CONVERSACIONAL, no un botón: si el usuario dice "ARIA, silencio",
+//   responde con carácter ("Ok [user], me callo un instante — pero vuelvo para
+//   impulsarte a avanzar"), se calla un rato, y regresa. No se apaga: se modula.
+// · Cada intervención aporta algo nuevo. Si no hay nada nuevo que decir, calla.
+//
+// ── CAPACIDAD 1: AGENTE QUE EJECUTA (no solo sugiere) ─────────────────────────
+// Cuando algo falta (cliente, configuración, perfil, OT...), ARIA se OFRECE a
+// llenarlo. El usuario solo dice "hazlo". Entonces ARIA:
+//   1. Obtiene la información (preguntando al usuario y/o investigando en internet)
+//   2. Rellena los formularios de la sección correspondiente
+//   3. Le MUESTRA al usuario lo que hizo para que valide antes de guardar
+// Ejemplo real (palabras del fundador):
+//   "ARIA, crea un usuario rol Diseñador en SDC Ecuador, nombre Pepito Papudo,
+//    busca todo lo que tengas de él y crea su perfil, que se note que le dedicaste
+//    tiempo." → ARIA investiga (fecha/lugar de nacimiento, antecedentes, multas,
+//    lo que sea público y pertinente), arma un perfil completo, lo rellena, y lo
+//    presenta para validar. Cuando Pepito o un superior revise ese perfil, debe
+//    notar que está trabajado a fondo. [PENDIENTE — requiere tools de escritura
+//    de formularios + investigación web por tarea]
+//
+// ── CAPACIDAD 2: CONTROL TOTAL DEL VISOR3D / GEMELO DIGITAL ───────────────────
+// ARIA navega el modelo 3D y el árbol SWBS de arriba abajo, al derecho y al revés:
+//   · Mover, rotar, hacer zoom, encuadrar la cámara por voz/orden.
+//   · Seleccionar, aislar, expandir y colorear componentes.
+//   · Mostrar la información específica de un componente si está cargada.
+//   · Si NO está cargada y el rol del usuario lo permite, OFRECERSE a agregarla
+//     y rellenar los datos del componente.
+//   [PENDIENTE — requiere exponer la API del Visor3D a las tools de ARIA;
+//    ya existen window._v3dIsolateNode, _v3dFrameVisible, etc. como base]
+//
+// ── CAPACIDAD 3: INTELIGENCIA DE DATOS ────────────────────────────────────────
+// ARIA usa su visión global (respetando las cajitas) para estadísticas, patrones,
+// estado de avance, alertas tempranas. Conoce el estado de la empresa: usuarios
+// registrados, si hay o faltan clientes, qué configuración falta, OTs vencidas,
+// buques sin modelo 3D. Con eso decide qué impulsar. [PARCIAL — el contexto se
+// carga en ariaLoadContext; falta el razonamiento LLM sobre él]
+//
+// ── ESTADO DE IMPLEMENTACIÓN (actualizar conforme se avance) ──────────────────
+//   [HECHO]     Function calling con LLM (ariaProcess) + 14 tools en Supabase.
+//   [HECHO]     Carga de contexto fresco (ariaLoadContext, v2.29.3).
+//   [HECHO]     Voz TTS vía Edge Function (ElevenLabs/aria-tts).
+//   [PARCIAL]   Proactividad: hoy usa plantillas if/else (nProactiveCheck).
+//               DEBE migrar a generación por LLM con el contexto rico.
+//   [PENDIENTE] Silencio conversacional (modular, no botón).
+//   [PENDIENTE] Ejecución de formularios con validación previa (Capacidad 1).
+//   [PENDIENTE] Control del Visor3D por ARIA (Capacidad 2).
+//   [PENDIENTE] Investigación web por tarea asignada.
+//   [PENDIENTE] Aplicación estricta de permisos por rol al actuar.
+// ══════════════════════════════════════════════════════════════════════════════
+
 // ══ ARIA — AGENTE INTELIGENTE ENGRAVIS ══════════════════
 // Arquitectura: Function Calling con Groq Llama 3.3 70B
 // ARIA tiene herramientas reales que ejecuta en Supabase
