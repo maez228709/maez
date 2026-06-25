@@ -122,6 +122,11 @@
     [M] F-05 Editar proyecto: toda su info, secciones y bloques                   PARC
     [M] F-06 Plantillas de reportes e informes: crear, editar, generar           PEND
     [M] F-07 Cargar PROYECTO EJEMPLO con modelo bien compuesto (vitrina)          PEND
+    [A] F-08 HABILITAR EN UI lo que en el demo se hizo A MANO (recordatorio del
+             fundador): cargar info a cada componente, asignar mesh_names, editar
+             datos técnicos por pieza, vincular componentes al modelo. Va DENTRO
+             de los tabs/ejes que se desarrollan en P-08. Sin esto el usuario no
+             puede replicar lo que se mostró en el demo                          PEND
 
   VISOR 3D / GEMELO DIGITAL:
     [A] V-01 Bug mapeo mesh→capa (asociación 0; árbol colapsado)                  PEND
@@ -142,6 +147,12 @@
     [A] A-06 Permisos por rol estrictos cuando ARIA actúa                         PEND
     [M] A-07 ARIA auditora interna: recorre por cada rol, reporta fallas/fricción PEND
     [B] A-08 Voz: decidir plan ElevenLabs pago para acento español nativo        DECISIÓN
+    [A] A-09 PRESENTACIÓN VISUAL DE ARIA: esfera de energía Three.js flotando por
+             la pantalla (no la barra inferior del demo, que se quitó). Es su
+             forma representativa original. Imágenes de referencia las tiene el
+             fundador. Hoy existe nDraw/esfera antigua (~línea 12111) a evolucionar PEND
+    [A] A-10 Voz más NATURAL + ARIA más inteligente (en curso antes de saltar a
+             otra cosa): generación por LLM, menos robótica, sin muletillas       PARC
 
   PLATAFORMA / ARQUITECTURA:
     [M] P-01 Consola Superadmin (panel multi-empresa, entrar/salir sin re-login)  PEND
@@ -161,9 +172,64 @@
     [M] BR-1 Branding editable por empresa (logo+color en perfil)                 HECHO (v2.31.0)
     [B] P-07 Migrar Trimesh fuera de Render free (Railway/Fly) para escala        FUTURO
 
-  ORDEN SUGERIDO: 1º Seguridad RLS (S-01..05) · 2º Visor mapeo+cebolla (V-01,V-02)
-    · 3º Funcionalidad a UI (F-04,F-02,F-07) · 4º ARIA inteligente (A-01,A-03)
-    · 5º Plataforma/UX (P-01,P-02,P-03). Cerrar bloques completos, no saltar.
+  ── CRONOGRAMA DE TRABAJO POR SPRINTS (orden de ejecución, no saltar) ──
+    Objetivo: avanzar en orden, cerrando cada sprint antes del siguiente.
+    Actualizar el estado al cerrar cada item.
+
+    SPRINT 0 — HECHO: RLS 17 tablas · superadmin · branding editable · bandeja
+      aprobación · bloques por componente · ciclo de vida estructura (P-08).
+
+    SPRINT 1 — Cerrar cabos sueltos (rápido):
+      · Reporte saca NG DELFINA siempre aunque el proyecto sea otro (bug). 
+      · Crear vs editar proyecto: revisar campos coherentes.
+      · Confirmar que quitar tab Bloques no dejó huecos (los bloques van en ejes).
+
+    SPRINT 2 — Visor: bug de mapeo de capas (V-01). ALTO IMPACTO VISUAL.
+      · asociación exacta=0; "SB SURFACE" acapara 578 meshes; árbol mal repartido.
+      · Es lo que el cliente VE mal en el gemelo. Luego V-02 (jerarquía cebolla).
+
+    SPRINT 3 — Llenar la MATRIZ del ciclo de vida (P-08 contenido) + F-08:
+      · Desarrollar las herramientas dentro de cada eje × etapa, empezando por
+        las más útiles (Técnica/Económica en Mantenimiento → conecta con OTs).
+      · F-08: habilitar EN UI la carga de info por componente que en el demo se
+        hizo a mano (datos técnicos, mesh_names, vincular pieza↔modelo).
+      · Modelo OT-contenedor (tareas/cotización/fotos dentro de OT).
+
+    SPRINT 4 — ARIA (retomar lo que quedó a medias):
+      · A-10 voz más natural + A-01 proactividad por LLM (menos robótica).
+      · A-09 PRESENTACIÓN VISUAL: esfera de energía flotante (forma original;
+        reemplaza la barra inferior del demo). Imágenes las tiene el fundador.
+      · A-03 ejecutar formularios · A-04 control del visor por voz.
+
+    SPRINT 5 — REDISEÑO DE INTERFAZ (P-02) minimalista centrada en el gemelo:
+      · Layout: visor domina, árbol fino colapsable, tarjeta de componente con
+        secciones por naturaleza (AAS) + navegación por relaciones.
+      · Color de marca tiñe toda la app (variable CSS global), no solo el login.
+      · Presentación inicial de ENGRAVIS la 1ª vez; luego entra por marca empresa.
+      · NOTA: el RLS de user_profile (S-03) se resuelve AQUÍ, junto al rediseño
+        del flujo de login (cambiar cuándo se lee user_profile).
+
+    SPRINT 6 — Escala y concurrencia (antes de clientes reales):
+      · P-10 correlativos atómicos server-side (OT/cotización).
+      · P-01 consola superadmin · P-09 biblioteca empresa (RAG ARIA).
+
+    REGLA: si surge una urgencia real puede reordenarse, pero por defecto se
+    sigue este orden y se cierra un sprint antes de abrir otro.
+
+  ── PRINCIPIO RECTOR: LO MEJOR DE LO MEJOR (aplica a TODOS los sprints) ──
+    ENGRAVIS debe construirse con las MEJORES PRÁCTICAS y la MEJOR TECNOLOGÍA
+    existente en cada dominio. No "lo que funciona": lo mejor disponible.
+    OBLIGACIÓN DEL ASISTENTE: en CADA sprint y CADA decisión técnica, aconsejar
+    proactivamente la mejor opción (no callar una tecnología superior por
+    comodidad), explicando el trade-off honesto (costo, complejidad, madurez).
+    El fundador decide; el asistente nunca omite la mejor alternativa.
+    EJEMPLO ANOTADO — ARIA (presentación visual, A-09): se evaluó usar un MOTOR
+    tipo UNREAL ENGINE para renderizar a ARIA con animaciones base de ALTA
+    RESOLUCIÓN (muy superior a Three.js), generando los vids/animaciones desde
+    código. Es la opción de mayor calidad visual. [FUTURO — cuando se aborde la
+    presentación de ARIA en serio; por ahora se mantiene la esfera Three.js.]
+    Esta clase de decisión "mejor tecnología disponible" debe surgir en cada
+    sprint, no solo aquí.
 
   ════════════════════════════════════════════════════════════════════════════
   DOC 05 — SEGURIDAD: ESTADO DE RLS / SUPABASE
@@ -3598,7 +3664,6 @@ async function openProject(p){
   var TABS = [
     ['visor3d','🧊 Visor 3D',false],
     ['resumen','📋 Datos del activo',false],
-    ['bloques','🧩 Bloques',false],
     ['tecnica','⚙️ Técnica',false],
     ['economica','💰 Económica',true],
     ['legal','⚖️ Legal',true],
