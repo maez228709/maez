@@ -1938,13 +1938,21 @@ body{font-family:Inter,sans-serif;font-size:13px;background:#F0F2F5;color:#11182
 .sidebar{width:210px;background:#fff;border-right:1px solid #E5E7EB;flex-shrink:0;overflow-y:auto;transition:width .22s ease;display:flex;flex-direction:column;}
 .sidebar.collapsed{width:0;min-width:0;overflow:hidden;border:none;}
 .app-layout{display:flex;height:calc(100vh - 52px);}
+@media (max-width:767px){
+  .sidebar{position:fixed;top:52px;left:0;bottom:0;width:230px;z-index:150;box-shadow:2px 0 16px rgba(0,0,0,.15);}
+  .sidebar.collapsed{width:0;box-shadow:none;}
+  .app-content .main{padding:1rem;}
+  .topbar{padding:0 .75rem;}
+  .field-grid{grid-template-columns:1fr!important;}
+}
 .sidebar-section{padding:10px 16px 4px;font-size:10px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.07em;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 14px;font-size:13px;color:#6B7280;cursor:pointer;border-radius:6px;margin:1px 8px;transition:all .12s;}
 .nav-item:hover{background:#F9FAFB;color:#111827;}
 .nav-item.active{background:#E6F1FB;color:#1D5FA5;font-weight:500;}
 .nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
 .app-content{flex:1;overflow-y:auto;}
-.app-content .main{max-width:900px;margin:0 auto;padding:1.5rem;}
+.app-content .main{max-width:900px;margin:0 auto;padding:1.5rem;transition:max-width .15s;}
+.app-content .main.main-wide{max-width:none;}
 .user-card{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:box-shadow .15s;}
 .user-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.07);}
 .u-badge{display:inline-flex;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;}
@@ -3978,8 +3986,12 @@ function toggleSidebar(){
   var col=sb.classList.toggle('collapsed');
   try{ localStorage.setItem('sb_col',col?'1':'0'); }catch(e){}
 }
-// Restaurar sidebar
-try{ if(localStorage.getItem('sb_col')==='1'){ var _sb=document.getElementById('app-sidebar'); if(_sb) _sb.classList.add('collapsed'); } }catch(e){}
+// Restaurar sidebar — en mobile, colapsada por defecto si el usuario no eligió antes
+try{
+  var _sbPref=localStorage.getItem('sb_col');
+  var _sbCollapse = _sbPref==='1' || (_sbPref===null && window.innerWidth<768);
+  if(_sbCollapse){ var _sb=document.getElementById('app-sidebar'); if(_sb) _sb.classList.add('collapsed'); }
+}catch(e){}
 
 function closeModal(){
   $('modal-co').classList.remove('on');
@@ -4723,6 +4735,7 @@ async function openProject(p){
   _rtChannelProject(p.id); // Sprint C — suscripción al proyecto
   var mc=document.getElementById('app-main');
   if(!mc) return;
+  mc.classList.add('main-wide');
 
   // Header
   var statusColor={active:'#16A34A',paused:'#D97706',closed:'#6B7280',draft:'#9CA3AF'}[p.status]||'#9CA3AF';
@@ -7618,7 +7631,7 @@ var STATUS_COLORS = {
 };
 function statusColorHex(s){ return '#'+((STATUS_COLORS[s]||STATUS_COLORS.no_data).toString(16).padStart(6,'0')); }
 
-var TRIMESH_EDGE = 'https://engravis-trimesh-production.up.railway.app/analyze-chunk';
+var TRIMESH_EDGE = 'https://engravis-trimesh.onrender.com/analyze-chunk';
 var _v3dAsset = null;
 var _v3dProject = null;
 var _v3dComponents = [];
@@ -8005,21 +8018,23 @@ function _v3dApplyResponsiveLayout(){
 }
 
 function _v3dBuildLayout(asset, hasComponents){
-  var btnS='background:#fff;border:0.5px solid #e5e7eb;color:#374151;padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;transition:all .1s;';
+  var btnS='background:transparent;border:0.5px solid #21384A;color:#8FB3CC;min-width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;padding:0 8px;border-radius:5px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;transition:all .12s;';
+  var segS='background:transparent;border:none;color:#8FB3CC;min-width:30px;height:26px;padding:0 9px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;transition:all .12s;';
   var filterS='background:none;border:0.5px solid #e5e7eb;color:#6B7280;padding:3px 10px;border-radius:12px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;';
+  var isRestricted = !!(profile&&(profile.global_role==='client'||profile.global_role==='viewer'||profile.global_role==='auditor'));
 
   // Inyectar CSS responsive una sola vez
   if(!document.getElementById('v3d-responsive-css')){
     var st=document.createElement('style');
     st.id='v3d-responsive-css';
     st.textContent=`
+      #v3d-toolbar button:hover, .v3d-seg-btn:hover{background:#132A3B!important;border-color:#1596B8!important;color:#5DCAA5!important;}
+      .v3d-seg-btn.on{background:#0F3A4E!important;color:#5DCAA5!important;}
       @media (max-width: 767px){
         #v3d-badge{font-size:13px!important;}
         #v3d-breadcrumb{display:none!important;}
-        #v3d-btn-front,#v3d-btn-side,#v3d-btn-top,#v3d-btn-reset,
-        #v3d-btn-analyze,#v3d-btn-upload-model{
-          padding:8px 12px!important;font-size:12px!important;min-height:36px;
-        }
+        #v3d-toolbar{gap:8px!important;}
+        #v3d-toolbar button, .v3d-seg-btn{min-height:36px;font-size:13px!important;}
         .v3d-tree-node{padding-top:9px!important;padding-bottom:9px!important;font-size:13px!important;}
         .v3d-tree-group-header{padding-top:10px!important;padding-bottom:10px!important;font-size:13px!important;}
         .v3d-eye-btn{font-size:15px!important;padding:4px 6px!important;}
@@ -8027,6 +8042,7 @@ function _v3dBuildLayout(asset, hasComponents){
         #v3d-comp-body{font-size:13px!important;padding:14px 16px!important;}
         #v3d-comp-actions button{padding:11px!important;font-size:13px!important;}
         #v3d-filter-bar span{font-size:11px!important;}
+        #v3d-tree-panel{width:150px!important;}
       }
     `;
     document.head.appendChild(st);
@@ -8034,38 +8050,40 @@ function _v3dBuildLayout(asset, hasComponents){
 
   return (
     // ── BREADCRUMB + TOOLBAR ──────────────────────────────────
-    '<div style="display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:0.5px solid #f3f4f6;margin-bottom:0;flex-wrap:wrap;background:#fff;border-radius:10px 10px 0 0;padding-left:12px;padding-right:12px;">'+
-      '<span id="v3d-badge" style="font-size:12px;font-weight:600;color:#111827;">'+asset.name+'</span>'+
-      '<span style="color:#d1d5db;font-size:11px;">›</span>'+
-      '<span id="v3d-breadcrumb" style="font-size:11px;color:#6B7280;">Modelo completo</span>'+
+    '<div id="v3d-toolbar" style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:0.5px solid #142838;margin-bottom:0;flex-wrap:wrap;background:#0B1F2D;border-radius:10px 10px 0 0;">'+
+      '<span id="v3d-badge" style="font-size:12px;font-weight:600;color:#E6F1FB;">'+asset.name+'</span>'+
+      '<span style="color:#2C4056;font-size:11px;">›</span>'+
+      '<span id="v3d-breadcrumb" style="font-size:11px;color:#7C93A8;">Modelo completo</span>'+
       '<div style="flex:1;"></div>'+
-      '<button id="v3d-btn-front"     style="'+btnS+'">Frente</button>'+
-      '<button id="v3d-btn-side"      style="'+btnS+'">Lateral</button>'+
-      '<button id="v3d-btn-top"       style="'+btnS+'">Planta</button>'+
-      '<button id="v3d-btn-reset"     style="'+btnS+'">⟳ Reset</button>'+
-      '<button id="v3d-btn-frame"     style="'+btnS+'" title="Encuadrar objeto visible (Zoom Extents)">⊡ Encuadre</button>'+
-      '<button id="v3d-btn-color"     style="'+btnS+'" title="Cambiar modo de color">🎨 Color</button>'+
-      '<button id="v3d-btn-anim"      style="'+btnS+'" title="Animación de mecanismo">🎬 Animación</button>'+
-      '<button id="v3d-btn-fullscreen" style="'+btnS+'" title="Pantalla completa">⛶ Expandir</button>'+
-      '<div style="width:0.5px;height:16px;background:#e5e7eb;margin:0 2px;"></div>'+
-      (!(profile&&(profile.global_role==='client'||profile.global_role==='viewer'||profile.global_role==='auditor')) ?
-        '<button id="v3d-btn-upload-model" onclick="document.getElementById(\'v3d-glb-input\').click()" style="background:#EFF6FF;border:0.5px solid #BFDBFE;color:#1D4ED8;padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:Inter,sans-serif;">⬆ GLB</button>'+
-        '<input type="file" id="v3d-glb-input" accept=".glb,.gltf" style="display:none;">'
-        : '')+
-      (!hasComponents?
-        '<button id="v3d-btn-analyze" style="'+btnS+'" onclick="_v3dStartAnalysis()">🔄 Analizar</button>':
-        '<button id="v3d-btn-analyze" style="'+btnS+'" onclick="_v3dStartAnalysis()">🔄 Re-analizar</button>')+
-      (!(profile&&(profile.global_role==='client'||profile.global_role==='viewer'||profile.global_role==='auditor'))?
-        '<button style="'+btnS+'" onclick="_v3dClearCache()" title="Eliminar modelo en caché y recargar">🗑 Limpiar caché</button>':'')+
+      '<div style="display:flex;border:0.5px solid #21384A;border-radius:6px;overflow:hidden;">'+
+        '<button id="v3d-btn-front" class="v3d-seg-btn" style="'+segS+'border-right:0.5px solid #21384A;" title="Vista de frente">Frente</button>'+
+        '<button id="v3d-btn-side"  class="v3d-seg-btn" style="'+segS+'border-right:0.5px solid #21384A;" title="Vista lateral">Lateral</button>'+
+        '<button id="v3d-btn-top"   class="v3d-seg-btn" style="'+segS+'" title="Vista en planta">Planta</button>'+
+      '</div>'+
+      '<button id="v3d-btn-reset" style="'+btnS+'" title="Restablecer vista">⟳</button>'+
+      '<button id="v3d-btn-frame" style="'+btnS+'" title="Encuadrar objeto visible">⊡</button>'+
+      '<button id="v3d-btn-wireframe" style="'+btnS+'" title="Modo wireframe / holograma">◈</button>'+
+      '<button id="v3d-btn-color" style="'+btnS+'" title="Cambiar modo de color">🎨</button>'+
+      (!isRestricted?'<button id="v3d-btn-anim" style="'+btnS+'" title="Animación de mecanismo">🎬</button>':'')+
+      '<button id="v3d-btn-fullscreen" style="'+btnS+'" title="Pantalla completa">⛶</button>'+
+      (!isRestricted ? (
+        '<div style="width:0.5px;height:16px;background:#21384A;margin:0 2px;"></div>'+
+        '<button id="v3d-btn-upload-model" onclick="document.getElementById(\'v3d-glb-input\').click()" style="background:transparent;border:0.5px solid #1596B8;color:#5DCAA5;padding:0 10px;height:26px;border-radius:5px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;" title="Subir modelo GLB">⬆ GLB</button>'+
+        '<input type="file" id="v3d-glb-input" accept=".glb,.gltf" style="display:none;">'+
+        (!hasComponents?
+          '<button id="v3d-btn-analyze" style="'+btnS+'" onclick="_v3dStartAnalysis()" title="Detectar capas del modelo">🔄</button>':
+          '<button id="v3d-btn-analyze" style="'+btnS+'" onclick="_v3dStartAnalysis()" title="Re-analizar capas del modelo">🔄</button>')+
+        '<button style="'+btnS+'" onclick="_v3dClearCache()" title="Eliminar modelo en caché y recargar">🗑</button>'
+      ) : '')+
     '</div>'+
 
     // ── ZONA PRINCIPAL — layout flex responsive ──────
-    '<div id="v3d-main-layout" style="display:flex;height:calc(100vh - 200px);min-height:500px;background:#f8fafc;border-radius:0 0 12px 12px;overflow:hidden;border:0.5px solid #e5e7eb;position:relative;" data-mobile-h="calc(100vh - 130px)">'+
+    '<div id="v3d-main-layout" style="display:flex;height:calc(100vh - 200px);min-height:500px;background:#0B1F2D repeating-linear-gradient(0deg,rgba(21,150,184,.05) 0 1px,transparent 1px 32px),repeating-linear-gradient(90deg,rgba(21,150,184,.05) 0 1px,transparent 1px 32px);border-radius:0 0 12px 12px;overflow:hidden;border:0.5px solid #142838;position:relative;" data-mobile-h="calc(100vh - 130px)">'+
 
       // Árbol SWBS — columna izquierda en desktop / drawer inferior en móvil
-      '<div id="v3d-tree-panel" style="width:190px;flex-shrink:0;background:#fff;border-right:0.5px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden;">'+
+      '<div id="v3d-tree-panel" style="width:190px;flex-shrink:0;background:#fff;border-right:0.5px solid #142838;display:flex;flex-direction:column;overflow:hidden;">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px;border-bottom:0.5px solid #f3f4f6;">'+
-          '<span style="font-size:9px;color:#9CA3AF;text-transform:uppercase;letter-spacing:.08em;font-family:Inter,sans-serif;">ÁRBOL SWBS</span>'+
+          '<span style="font-size:9px;color:#9CA3AF;text-transform:uppercase;letter-spacing:.08em;font-family:Inter,sans-serif;">Árbol SWBS</span>'+
           '<button id="v3d-tree-collapse" style="background:none;border:none;color:#9CA3AF;cursor:pointer;font-size:14px;padding:0;line-height:1;">−</button>'+
         '</div>'+
         '<div id="v3d-tree-content" style="flex:1;overflow-y:auto;padding:6px;font-size:11px;font-family:Inter,sans-serif;">'+(hasComponents?'':
@@ -8877,10 +8895,10 @@ async function _v3dStartAnalysis(asset,content,p){
     } else {
       if(treeEl) treeEl.innerHTML='<div style="color:#F59E0B;font-size:11px;padding:8px 0;">⚠ Sin capas. Analizando por geometría...</div>';
       ariaSpeak('Sin capas nombradas. Analizando geometría.');
-      var r0=await _v3dFetchTrimesh('https://engravis-trimesh-production.up.railway.app/analyze',{glb_url:asset.model_3d_url});
+      var r0=await _v3dFetchTrimesh('https://engravis-trimesh.onrender.com/analyze',{glb_url:asset.model_3d_url});
       var d0=await r0.json();
       if(d0.status!=='ok') throw new Error(d0.error||'Error en análisis');
-      var r2=await _v3dFetchTrimesh('https://engravis-trimesh-production.up.railway.app/cluster-names',{clusters:(d0.clusters||[]).slice(0,60)});
+      var r2=await _v3dFetchTrimesh('https://engravis-trimesh.onrender.com/cluster-names',{clusters:(d0.clusters||[]).slice(0,60)});
       var d2=await r2.json();
       if(!d2.proposals) throw new Error(d2.error||'Error en clasificación');
       ariaSpeak('Propuesta lista con '+d2.proposals.length+' componentes.');
@@ -10398,6 +10416,7 @@ async function renderProjectsPage(){
   var isClient = profile && (profile.global_role==='client'||profile.global_role==='viewer'||profile.global_role==='auditor');
   var mc=document.getElementById('app-main');
   if(!mc) return;
+  mc.classList.remove('main-wide');
   mc.innerHTML=
     '<div class="page-title">📁 Proyectos</div>'+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">'+
@@ -10550,6 +10569,7 @@ function navigate(page){
   }
   var mc=document.getElementById('app-main');
   if(!mc) return;
+  mc.classList.remove('main-wide');
 
   // Bloquear secciones admin para clientes
   var _isClient = profile && (profile.global_role==='client'||profile.global_role==='viewer'||profile.global_role==='auditor');
