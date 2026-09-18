@@ -1,4 +1,4 @@
-const CACHE = 'engravis-shell-v7';
+const CACHE = 'engravis-shell-v8';
 const APP_SHELL = ['./', './presentacion.html', './index.html', './auth.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
