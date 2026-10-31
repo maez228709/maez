@@ -233,9 +233,10 @@
              que en AppSheet se parcheaba con "buque activo". CRÍTICO a escala   PEND
     [M] BR-1 Branding editable por empresa (logo+color en perfil)                 HECHO (v2.31.0)
     [B] P-07 Migrar Trimesh fuera de Render free (Railway/Fly) para escala        FUTURO
-    [A] P-11 Modelo de 5 etapas (v2.62.0): código y datos HECHO. Falta: proyecto
-             "Operación" por buque con OT (Levantamiento Delfina, Planos Macarella
-             como OT), unificar component_panel.applicable_stages, bloques Desguace PARC
+    [A] P-11 Modelo de 5 etapas (v2.62.0): código y datos HECHO. Falta: proyectos y
+             subproyectos dentro de una etapa (Macarella, Levantamiento = miniproyectos
+             de Operación, NO OT) con herramientas comunes; unificar
+             component_panel.applicable_stages; bloques Desguace                   PARC
     [A] V-06 Árbol del visor ANIDADO desplegable por capas del GLB (hoy plano por
              system_name) + íconos de acción junto a cada nombre + clic derecho
              con acciones en toda la plataforma + agrupar/mover + OT desde el árbol
@@ -1364,8 +1365,9 @@
     (varada fecha 1 → desvare fecha N): OT, cotizaciones e informes por sistema /
     departamento / división; rol de astillero. Es la rama clave del fundador.
     (2) El mantenimiento A FLOTE (equipos, sistemas, zonas, elementos) vive DENTRO
-    de OPERACIÓN como OT. Trabajos puntuales (levantamiento en dique del Delfina,
-    planos Macarella) son OT de Operación, NO proyectos de dique.
+    de OPERACIÓN como OT. Trabajos enfocados (levantamiento en dique del Delfina,
+    planos Macarella) son PROYECTOS / MINIPROYECTOS dentro de Operación (NO son OT:
+    corrección del fundador, 31-Oct) y NO son proyectos de dique.
     REFERENCIAS: Webb Institute "Commercial Ship Lifecycle and Standards" (4 fases:
     Diseño, Construcción, Operación, Desguace/Reciclaje; mantenimiento e
     inspecciones DENTRO de Operación — el dique no se nombra como fase); PFC
@@ -1388,9 +1390,12 @@
     PROPULSIÓN NG DELFINA: 'Mantenimiento' → 'Operación'; block_template: 4 filas
     {mantenimiento_interno} → {operacion} (Operación queda con 10 bloques; Dique
     conserva sus 12 + 3 de pruebas). NADA se borró.
-    PENDIENTE (no hecho hoy): convertir esos 2 trabajos en OT dentro de un
-    proyecto "Operación" por buque (requiere definir el contenedor de OT por
-    activo); unificar vocabulario de component_panel.applicable_stages (usa
+    PRINCIPIO (fundador): la plataforma debe dotar de HERRAMIENTAS para
+    desarrollar y ejecutar CUALQUIER tipo de proyecto o subproyecto, en cualquier
+    etapa (no solo "tabs por etapa"). Macarella y Levantamiento ya quedaron como
+    proyectos en Operación (migración de datos correcta tal cual).
+    PENDIENTE: definir proyecto/subproyecto + herramientas comunes (ver P-11);
+    unificar vocabulario de component_panel.applicable_stages (usa
     design/drydock/construction/operation, sin desguace); bloques de Desguace.
   v2.61.0 (31-Oct) NAVEGACIÓN DEL ÁRBOL del visor: ruta Modelo › Grupo › Pieza
     (migas de pan), botón ↑ para subir un nivel, buscador por nombre, botón ◎
