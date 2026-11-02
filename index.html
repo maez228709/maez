@@ -334,9 +334,9 @@
   ════════════════════════════════════════════════════════════════════════════
   DOC 08 — REGISTRO DE PENDIENTES POR GRUPO (31-Oct-2026) — MANDA SOBRE DOC 04
   ════════════════════════════════════════════════════════════════════════════
-  RESUMEN: 110 pendientes registrados · 23 HECHOS · 87 abiertos
-    (CURSO 2 · PARC 16 · PEND 60 · DECIDIR 6 · FUTURO 3)
-    Por grupo (hechos/total): UI 8/21 · ACC 2/8 · RAIZ 4/20 · V3D 7/20 · PRY 1/10 · CAP 1/12 · ARIA 0/11 · EXT 0/8
+  RESUMEN: 113 pendientes registrados · 23 HECHOS · 90 abiertos
+    (CURSO 2 · PARC 16 · PEND 63 · DECIDIR 6 · FUTURO 3)
+    Por grupo (hechos/total): UI 8/23 · ACC 2/8 · RAIZ 4/20 · V3D 7/21 · PRY 1/10 · CAP 1/12 · ARIA 0/11 · EXT 0/8
 
   REGLAS DEL REGISTRO:
   · Cada pendiente tiene ID de grupo (UI-07, V3D-05...). El estado se cambia AQUÍ
@@ -351,7 +351,7 @@
     de fondo · V3D visor · PRY proyectos y etapas · CAP capacidades específicas ·
     ARIA · EXT fuera de la plataforma.
 
-  ── UI · INTERFAZ  (8 hechos de 21; abiertos: 13) ──
+  ── UI · INTERFAZ  (8 hechos de 23; abiertos: 15) ──
     UI-01  [HECHO v2.59.1] Visor 3D ocupa toda la ventana (no un recuadro)
     UI-02  [HECHO v2.59.0] Fondo blanco con sombra del objeto; modelos en color
     UI-03  [HECHO v2.59.3] Hover: la pieza se exalta y el resto se atenúa
@@ -394,6 +394,10 @@
                un solo estilo, con color heredado y función única ic(nombre). Hoy hay 78
                emojis distintos en 381 usos. Orden: visor y bandeja → menú lateral →
                formularios → resto
+    UI-22  [PEND M] Bandeja de proyectos: la miniatura del frente se agranda un
+               poco y/o muestra vista explotada del gemelo al estar al frente
+    UI-23  [PEND A] Bandeja de proyectos: la velocidad de rotación debe
+               calcularse según la cantidad de proyectos/miniaturas (hoy es fija)
 
   ── ACC · ACCESO, USUARIOS Y CUENTAS  (2 hechos de 8; abiertos: 6) ──
     ACC-01  [HECHO v2.46.0] Acceso de cliente sin correo (usuario + clave
@@ -473,7 +477,7 @@
     RAIZ-15  [PEND A] Códigos de proyecto únicos: DE01 repetido en 2 proyectos;
                el Levantamiento NG DELFINA no tiene código
 
-  ── V3D · VISOR 3D  (7 hechos de 20; abiertos: 13) ──
+  ── V3D · VISOR 3D  (7 hechos de 21; abiertos: 14) ──
     V3D-01  [HECHO ver DOC 06] Mapeo mesh→capa: asociación exacta (verificado
                31-Oct: 8.953 de 8.953 en WATER NAVIGATOR) (DOC04 V-01)
     V3D-02  [HECHO v2.60.1] El visor ya no oculta piezas por su cuenta
@@ -525,6 +529,9 @@
                (CAP-10), color por pieza, notas/medidas, selección de grupo con Alt+clic,
                clic derecho en piezas sin componente dentro del árbol, pulsación larga en
                móvil, cursor de mano sobre piezas
+    V3D-21  [PEND M] Gemelo digital: animación de VISTA EXPLOTADA que se
+               ensambla al cargar el modelo (y posiblemente al navegar por elementos); por
+               definir cómo se agrupan las piezas y su dirección de separación
 
   ── PRY · PROYECTOS Y ETAPAS  (1 hechos de 10; abiertos: 9) ──
     PRY-01  [HECHO v2.63.0] Subproyectos: elegir proyecto padre al crear; lista
