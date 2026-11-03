@@ -334,9 +334,9 @@
   ════════════════════════════════════════════════════════════════════════════
   DOC 08 — REGISTRO DE PENDIENTES POR GRUPO (31-Oct-2026) — MANDA SOBRE DOC 04
   ════════════════════════════════════════════════════════════════════════════
-  RESUMEN: 113 pendientes registrados · 23 HECHOS · 90 abiertos
-    (CURSO 2 · PARC 16 · PEND 63 · DECIDIR 6 · FUTURO 3)
-    Por grupo (hechos/total): UI 8/23 · ACC 2/8 · RAIZ 4/20 · V3D 7/21 · PRY 1/10 · CAP 1/12 · ARIA 0/11 · EXT 0/8
+  RESUMEN: 120 pendientes registrados · 24 HECHOS · 96 abiertos
+    (CURSO 2 · PARC 16 · PEND 68 · DECIDIR 7 · FUTURO 3)
+    Por grupo (hechos/total): UI 8/23 · ACC 2/8 · RAIZ 4/20 · V3D 7/21 · PRY 2/17 · CAP 1/12 · ARIA 0/11 · EXT 0/8
 
   REGLAS DEL REGISTRO:
   · Cada pendiente tiene ID de grupo (UI-07, V3D-05...). El estado se cambia AQUÍ
@@ -533,7 +533,7 @@
                ensambla al cargar el modelo (y posiblemente al navegar por elementos); por
                definir cómo se agrupan las piezas y su dirección de separación
 
-  ── PRY · PROYECTOS Y ETAPAS  (1 hechos de 10; abiertos: 9) ──
+  ── PRY · PROYECTOS Y ETAPAS  (2 hechos de 17; abiertos: 15) ──
     PRY-01  [HECHO v2.63.0] Subproyectos: elegir proyecto padre al crear; lista
                jerárquica (máx. 2 niveles)
     PRY-02  [PEND A] Ver los subproyectos DENTRO del proyecto padre y mover un
@@ -553,6 +553,43 @@
                componente de 12.525 meshes); CAT-20M_BRISA sin asset ni modelo
     PRY-09  [PEND M] Formulario de carga de modelo UNIFICADO (Proyectos y
                Activos hoy tienen dos) y no pedir la info del modelo dos veces
+    PRY-10  [PEND A] DIQUE · OT completa: el formulario de OT pide
+               buque/proyecto (auto), división, tarea (catálogo de 88 filtrado por
+               división), sistema, equipo (filtrado por sistema y buque), zona, encargado
+               (personal de la división), tiempos, ORIGEN (base/adicional = control de
+               crecimiento, método NAVSEA), materiales y botón a cotización. Hoy work_order
+               solo tiene
+               código/división/tarea/cobro/monto/fechas/detalle/estado/encargado(texto);
+               faltan sistema, equipo, zona, origen, encargado como referencia, tabla de
+               materiales y de líneas de cotización
+    PRY-11  [PEND A] DIQUE · COTIZACIÓN como formulario aparte, siempre dentro
+               de una OT, varias líneas de 4 tipos (fórmulas verificadas con datos reales
+               del libro BUQUES): MONTO cant×costo · HORAS-HOMBRE días×hombres×costo · ÁREA
+               m²×factor×costo · PESO L×W×T×7850 kg/m³×costo/kg. Suma de líneas = costo de
+               la OT
+    PRY-12  [PEND A] DIQUE · ZONAS del buque: cada espacio físico es una zona
+               donde se puede trabajar; se cargan por buque y se seleccionan también desde
+               el gemelo digital (vínculo zona↔piezas del modelo). Falta tabla de zonas
+    PRY-13  [DECIDIR M] DIQUE · MATERIALES de la OT: deben salir del kardex de
+               bodega, que aún NO está configurado. Mientras tanto: material libre (nombre,
+               cantidad, unidad) con campo preparado para enlazar al kardex después. Kardex
+               = nuevo pendiente de bodega/inventario
+    PRY-14  [PEND M] DIQUE · INFORME y documentos por buque (informe de dique
+               con sección por división, descargo, claros, cotización, solicitudes):
+               plantillas con registros fijos por división llenados con los datos del buque
+               activo; formato final (Word u otro) se decide después de tener los datos.
+               Faltan las plantillas Word actuales del fundador. Documentos candidatos
+               (propuesta desde las 88 tareas): informe, descargo, claros, cotización,
+               solicitud de planos, permiso de vare, OT, áreas/pintura, mediciones/ensayos,
+               acta de varado/desvare, prueba de mar
+    PRY-15  [PEND M] DIQUE · Bloques nuevos tomados de método NAVSEA/clase (DOC:
+               fuentes en changelog): registro de deterioros y pendientes, servicios de
+               dique cotizables por día, control de llegada de materiales antes del vare,
+               estudio de cierre planificado vs real por división. Referencia: cruzar con
+               la clasificadora de cada buque de TAERA (dato por obtener)
+    PRY-16  [HECHO —] DIQUE · Decisión: los 3.717 registros de OT y 3.128 de
+               cotización del libro BUQUES son SOLO REFERENCIA (otro astillero, no se
+               importan); el libro sirve como modelo de campos y fórmulas
     PRY-10  [PARC M] Editar proyecto: toda su info, secciones y bloques (DOC04
                F-05); subir GLB desde la plataforma (F-01)
 
@@ -1726,6 +1763,12 @@
     ejecutar, sin "cargar modelo abierto" ni "guardar" — no puede cambiar nada.
     PENDIENTE: persistir la animación con el asset para que el cliente la vea sin
     que el editor la cargue en la misma sesión.
+  (03-Nov) DISEÑO DE LA ETAPA MANTENIMIENTO EN DIQUE (solo DOC 08, sin código): PRY-10 a PRY-16 registrados.
+    Base: libro BUQUES.xlsx (solo referencia) + método NAVSEA (paquete base, trabajo adicional/crecimiento,
+    estudio de cierre) + inspección de dique de clasificadora. Decisiones del fundador: materiales saldrán
+    del kardex de bodega (aún sin configurar; mientras, texto libre), zonas = espacios del buque
+    seleccionables en el gemelo, los 3.717 registros viejos no se importan. PENDIENTE: construir
+    (tablas nuevas con RLS, formulario de OT, formulario de cotización).
   v2.69.0 (01-Nov) SEGURIDAD DE BASE DE DATOS (DOC 08: RAIZ-10 PARC, ACC-09 y ACC-10 NUEVOS). SOLO BD + docs; sin cambios en la app.
     HALLAZGOS CRÍTICOS (probados con simulación de rol): (1) un anónimo podía insertar un perfil
     admin/superadmin en CUALQUIER empresa existente; (2) cualquier usuario con sesión leía todas las
