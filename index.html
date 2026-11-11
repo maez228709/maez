@@ -334,9 +334,9 @@
   ════════════════════════════════════════════════════════════════════════════
   DOC 08 — REGISTRO DE PENDIENTES POR GRUPO (31-Oct-2026) — MANDA SOBRE DOC 04
   ════════════════════════════════════════════════════════════════════════════
-  RESUMEN: 120 pendientes registrados · 24 HECHOS · 96 abiertos
-    (CURSO 2 · PARC 16 · PEND 68 · DECIDIR 7 · FUTURO 3)
-    Por grupo (hechos/total): UI 8/23 · ACC 2/8 · RAIZ 4/20 · V3D 7/21 · PRY 2/17 · CAP 1/12 · ARIA 0/11 · EXT 0/8
+  RESUMEN: 126 pendientes registrados · 25 HECHOS · 101 abiertos
+    (CURSO 2 · PARC 19 · PEND 71 · DECIDIR 6 · FUTURO 3)
+    Por grupo (hechos/total): UI 8/23 · ACC 2/8 · RAIZ 4/22 · V3D 7/21 · PRY 3/21 · CAP 1/12 · ARIA 0/11 · EXT 0/8
 
   REGLAS DEL REGISTRO:
   · Cada pendiente tiene ID de grupo (UI-07, V3D-05...). El estado se cambia AQUÍ
@@ -416,7 +416,7 @@
     ACC-08  [PEND A] REQUISITO: preservar el acceso de Eduardo (expeditions) y
                Joao (navilusal) (DOC04 S-05)
 
-  ── RAIZ · RAÍZ, MOTOR Y ORGANIZACIONAL DE FONDO  (4 hechos de 20; abiertos: 16) ──
+  ── RAIZ · RAÍZ, MOTOR Y ORGANIZACIONAL DE FONDO  (4 hechos de 22; abiertos: 18) ──
     RAIZ-01  [HECHO v2.62.0] Modelo de 5 etapas (Diseño, Construcción,
                Operación, Mantenimiento en dique, Desguace) en código y datos
     RAIZ-02  [HECHO v2.63.0] project.stage obsoleta (la etapa es project_type);
@@ -453,6 +453,14 @@
     ACC-10  [DECIDIR M] Empresa "SDC ECUADOR" (id ba24a869…) existe SIN
                perfiles: ya no es reclamable (>15 min). Decidir: vincular el perfil del
                fundador a ella o eliminarla
+    ACC-11  [PEND A] 34 de 43 perfiles activos NO están enlazados a un acceso
+               (auth_id vacío): no podrán entrar aunque tengan cuenta. Caso resuelto a mano
+               el 10-Nov: gerente de TAERA (correo confirmado + perfil enlazado). Falta
+               flujo de invitación que lo haga solo
+    ACC-12  [PEND A] Almacenamiento: el contenedor models es público y cualquier
+               usuario con sesión puede borrar o reemplazar archivos de otra empresa
+               (modelos, miniaturas, fotos de OT). Falta separar por empresa y volver
+               privadas las fotos
     RAIZ-11  [CURSO A] Preparar migración a la plataforma definitiva: funciones
                puras, catálogos a BD (DOC04 P-14; reglas en el encabezado)
     RAIZ-12  [FUTURO B] Sacar Trimesh de Render free (Railway/Fly) para escala
@@ -533,7 +541,7 @@
                ensambla al cargar el modelo (y posiblemente al navegar por elementos); por
                definir cómo se agrupan las piezas y su dirección de separación
 
-  ── PRY · PROYECTOS Y ETAPAS  (2 hechos de 17; abiertos: 15) ──
+  ── PRY · PROYECTOS Y ETAPAS  (3 hechos de 21; abiertos: 18) ──
     PRY-01  [HECHO v2.63.0] Subproyectos: elegir proyecto padre al crear; lista
                jerárquica (máx. 2 niveles)
     PRY-02  [PEND A] Ver los subproyectos DENTRO del proyecto padre y mover un
@@ -553,27 +561,25 @@
                componente de 12.525 meshes); CAT-20M_BRISA sin asset ni modelo
     PRY-09  [PEND M] Formulario de carga de modelo UNIFICADO (Proyectos y
                Activos hoy tienen dos) y no pedir la info del modelo dos veces
-    PRY-10  [PEND A] DIQUE · OT completa: el formulario de OT pide
-               buque/proyecto (auto), división, tarea (catálogo de 88 filtrado por
-               división), sistema, equipo (filtrado por sistema y buque), zona, encargado
-               (personal de la división), tiempos, ORIGEN (base/adicional = control de
-               crecimiento, método NAVSEA), materiales y botón a cotización. Hoy work_order
-               solo tiene
-               código/división/tarea/cobro/monto/fechas/detalle/estado/encargado(texto);
-               faltan sistema, equipo, zona, origen, encargado como referencia, tabla de
-               materiales y de líneas de cotización
-    PRY-11  [PEND A] DIQUE · COTIZACIÓN como formulario aparte, siempre dentro
-               de una OT, varias líneas de 4 tipos (fórmulas verificadas con datos reales
-               del libro BUQUES): MONTO cant×costo · HORAS-HOMBRE días×hombres×costo · ÁREA
-               m²×factor×costo · PESO L×W×T×7850 kg/m³×costo/kg. Suma de líneas = costo de
-               la OT
+    PRY-10  [PARC A] DIQUE · OT completa. HECHO v2.70.0: al crear la OT se elige
+               división, tarea (texto libre o las 87 estándar), sistema SFI (8 grupos
+               principales), origen base/adicional, zona (existente o nueva), equipo y
+               encargado; empresa sin divisiones puede cargar las 14 estándar; arreglado el
+               botón de las 87 tareas (fallaba). FALTA: editar esos campos nuevos en una OT
+               ya creada, SFI de segundo y tercer nivel, tareas filtradas por división,
+               vincular la OT a una pieza del gemelo, alta de equipos desde el mismo
+               formulario
+    PRY-11  [HECHO v2.70.0] DIQUE · Detalle de OT con cotización (monto,
+               días-hombre, área, peso, lineal, volumen), materiales (los pone el varadero
+               o el cliente), mano de obra por cargo e indirectos con base variable;
+               calcula VALOR A COBRAR, COSTO NETO DEL VARADERO y MARGEN; el monto de la OT
+               = suma de su cotización. Tabla wo_line con seguridad por empresa probada
     PRY-12  [PEND A] DIQUE · ZONAS del buque: cada espacio físico es una zona
                donde se puede trabajar; se cargan por buque y se seleccionan también desde
                el gemelo digital (vínculo zona↔piezas del modelo). Falta tabla de zonas
-    PRY-13  [DECIDIR M] DIQUE · MATERIALES de la OT: deben salir del kardex de
-               bodega, que aún NO está configurado. Mientras tanto: material libre (nombre,
-               cantidad, unidad) con campo preparado para enlazar al kardex después. Kardex
-               = nuevo pendiente de bodega/inventario
+    PRY-13  [PARC M] DIQUE · MATERIALES de la OT: HECHO v2.70.0 como texto libre
+               con quién lo suministra y campo listo para el kardex. FALTA: kardex de
+               bodega (no configurado) y enlazarlo
     PRY-14  [PEND M] DIQUE · INFORME y documentos por buque (informe de dique
                con sección por división, descargo, claros, cotización, solicitudes):
                plantillas con registros fijos por división llenados con los datos del buque
@@ -590,6 +596,18 @@
     PRY-16  [HECHO —] DIQUE · Decisión: los 3.717 registros de OT y 3.128 de
                cotización del libro BUQUES son SOLO REFERENCIA (otro astillero, no se
                importan); el libro sirve como modelo de campos y fórmulas
+    PRY-17  [PARC A] OT con FOTOS desde el celular: HECHO v2.70.0 (se reducen a
+               1600 px antes de subir). FALTA: antes/después por foto, y que las fotos de
+               OT alimenten el informe de dique como trabajos realizados
+    PRY-18  [PEND A] Reporte para gerencia por proyecto: suma de todas las OT
+               con costo neto, valor a cobrar y margen, separado por división y por origen
+               (base/adicional)
+    PRY-19  [PEND A] Motor de reportes DENTRO de la plataforma: hoy corre aparte
+               en Python (docxtpl); GitHub Pages no ejecuta Python. Opciones: rehacerlo en
+               el navegador (docxtemplater) o función en servidor. Plantilla TAERA
+               aprobada, no se cambia
+    PRY-20  [PEND M] Tarifa de mano de obra por cargo como catálogo de la
+               empresa (hoy se escribe el costo por hora en cada línea)
     PRY-10  [PARC M] Editar proyecto: toda su info, secciones y bloques (DOC04
                F-05); subir GLB desde la plataforma (F-01)
 
@@ -1763,6 +1781,25 @@
     ejecutar, sin "cargar modelo abierto" ni "guardar" — no puede cambiar nada.
     PENDIENTE: persistir la animación con el asset para que el cliente la vea sin
     que el editor la cargue en la misma sesión.
+  v2.70.0 (10-Nov) NÚCLEO DE OT: COTIZACIÓN, COSTOS Y FOTOS (DOC 08: PRY-11 HECHO; PRY-10, PRY-13, PRY-17 PARC;
+    PRY-18/19/20, ACC-11/12 NUEVOS). El fundador levantó el freno de "primero metodología" y pidió construir.
+    HALLAZGOS: (1) TAERA no tenía divisiones y el formulario las exige → no podía crear OT; (2) "Cargar 87
+    tareas" fallaba (enviaba is_active, columna inexistente); (3) el detalle de OT era "próximamente".
+    BD (migración v2_70_0_nucleo_ot_lineas): work_order + sfi_group, equipment_id, space_id, responsible_id,
+    origin (base/adicional), piece_name, photos; tabla nueva wo_line (line_type cotizacion/material/mano_obra/
+    indirecto; basis monto/horas_hombre/area/peso/lineal/volumen/fijo; params jsonb; total = cantidad × valor
+    unitario; supplied_by varadero/cliente) con RLS por empresa. APP: openNewOT (tarea libre + lista, SFI,
+    origen, zona existente o nueva → physical_space, equipo, encargado, sembrar 14 divisiones), saveNewOT
+    (el tipo de cobro queda como primera línea de cotización y abre el detalle), openOTDetail real + módulo
+    "v2.70.0 — NÚCLEO DE OT" (_otl*, _otTotals, _otSyncAmount, _otPhoto*). REGLAS: valor a cobrar = Σ cotización;
+    costo neto = materiales del varadero + mano de obra + indirectos; el material del cliente no entra al costo;
+    work_order.amount = Σ cotización. OJO: "horas-hombre" de cotización se calcula días × hombres × tarifa
+    (así está en el libro BUQUES: 2×6×25=300), por eso la etiqueta dice "por hombre y día". Fotos: contenedor
+    models, ruta ot/<empresa>/<ot>/, reducidas a 1600 px. PROBADO: RLS con el usuario de TAERA (inserta en su
+    empresa, bloqueado en otra, anónimo no ve nada) y permisos de división/tarea/zona/OT; flujo completo en
+    navegador de prueba con datos simulados, PC y móvil 390 px (fórmulas de área 2.469,06 y peso 960,84 iguales
+    al libro). NO probado: sesión real contra producción, subida real de fotos, cámara del celular.
+    TAMBIÉN: cuenta del gerente de TAERA reparada a mano (correo confirmado, perfil enlazado; ver ACC-11).
   (03-Nov) DISEÑO DE LA ETAPA MANTENIMIENTO EN DIQUE (solo DOC 08, sin código): PRY-10 a PRY-16 registrados.
     Base: libro BUQUES.xlsx (solo referencia) + método NAVSEA (paquete base, trabajo adicional/crecimiento,
     estudio de cierre) + inspección de dique de clasificadora. Decisiones del fundador: materiales saldrán
@@ -3083,7 +3120,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 
     <div style="margin-top:1.5rem;text-align:center;">
       <div style="font-size:10px;color:#D1D5DB;">ENGRAVIS · Gestión Naval Digital</div>
-      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v2.69.0</div>
+      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v2.70.0</div>
     </div>
   </div>
 </div>
@@ -3137,7 +3174,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
       Soportado por <a href="https://engravis.com" target="_blank" style="color:#1D5FA5;text-decoration:none;font-weight:500;">ENGRAVIS</a>
       · Desarrollado por <a href="https://www.sdcecuador.com" target="_blank" style="color:#1D5FA5;text-decoration:none;font-weight:500;">SDC Ecuador</a>
       · Una visión del <a href="https://www.sdcecuador.com" target="_blank" style="color:#9CA3AF;text-decoration:none;">Ing. Miguel Ángel Engracia</a>
-      · <span style="color:#CBD5E1;">v2.69.0</span>
+      · <span style="color:#CBD5E1;">v2.70.0</span>
     </div>
     <button onclick="openInfo()" style="background:none;border:none;cursor:pointer;color:#D1D5DB;font-size:14px;padding:2px 6px;border-radius:4px;transition:color .15s;" title="Información" onmouseover="this.style.color='#6B7280'" onmouseout="this.style.color='#D1D5DB'">ⓘ</button>
   </div>
@@ -3154,7 +3191,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
     <div class="modal-body">
       <div style="text-align:center;margin-bottom:1.5rem;">
         <img src="data:image/png;base64,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3neveOF2tI7/ANC5Pj1UtPWurt0lVLWVlPUyVBZ9JpzE1oa3d5F7ifbVXRZc5SzNY0oReKQVu11juklfVVFHcrfHFUSiUsqKB8rmnq2M4ObK3h4GeXariRYTayNpRUlgy1jYL8f7bWbyTJ8oQafv37LWbyVJ8oV0ottpLmabGnyLWOn792XazezaZPlCed+/dt3s3kmT5QrpRNpLmNhT5FrHT99/ZazePNqk+UINPXztutmPrWqX5QrpRNpLmNhT5FqnTt7I4XWzj8Fy/KF187d8J/VezgduLVJ+eoV2Im0lzGwp8i34dLUjjm41VRXs5mB+6yDPjYwDeHieXfiVfaA1oa0AAcAB2LlFq23mSRio5BERYMhERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREB/9k=" style="height:36px;object-fit:contain;margin-bottom:10px;">
-        <div style="font-size:11px;color:#9CA3AF;">v2.69.0 — 01 Nov 2026</div>
+        <div style="font-size:11px;color:#9CA3AF;">v2.70.0 — 10 Nov 2026</div>
       </div>
       <div style="display:grid;gap:8px;">
         <a href="https://engravis.com" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#F9FAFB;border-radius:8px;text-decoration:none;color:#111827;border:1px solid #E5E7EB;">
@@ -6406,6 +6443,7 @@ async function loadProjectOrdenes(p, content){
         '<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:1px;">'+
           (o.billing_type||'')+(o.amount?' · $'+parseFloat(o.amount).toLocaleString('es-EC',{minimumFractionDigits:2}):'')+
           (o.responsible_name?' · '+o.responsible_name:'')+
+          (o.origin==='adicional'?' · <span style="color:#B45309;">adicional</span>':'')+
         '</div>';
 
       var badge=document.createElement('span');
@@ -6443,6 +6481,14 @@ async function openNewOT(p, divs){
   // Load task templates
   var {data:tasks}=await sb.from('task_template').select('id,number,name,default_cost')
     .order('number');
+  // v2.70.0 — zonas y equipos del activo del proyecto + personal de la empresa
+  var _aid=p.asset_id||null;
+  var _q=await Promise.all([
+    _aid?sb.from('physical_space').select('id,name').eq('asset_id',_aid).order('name'):Promise.resolve({data:[]}),
+    _aid?sb.from('equipment').select('id,name').eq('asset_id',_aid).order('name'):Promise.resolve({data:[]}),
+    sb.from('user_profile').select('id,full_name,cargo').eq('company_id',company.id).eq('is_active',true).order('full_name')
+  ]);
+  var spaces=_q[0].data||[], equips=_q[1].data||[], people=_q[2].data||[];
 
   overlay.querySelector('.modal-body').innerHTML=
     '<div class="grid2">'+
@@ -6456,19 +6502,34 @@ async function openNewOT(p, divs){
         '</select>'+
       '</div>'+
     '</div>'+
-    '<div class="fg"><label class="fl">Tarea</label>'+
-      (tasks&&tasks.length ?
-        '<select class="fi" id="ot-task-name">'+
-          '<option value="">— Selecciona una tarea estándar —</option>'+
-          tasks.map(function(t){return '<option value="'+t.name.replace(/"/g,'&quot;')+'" data-cost="'+(t.default_cost||0)+'">'+(t.number?t.number+'. ':'')+t.name+'</option>';}).join('')+
-        '</select>'
-        :
-        '<div style="font-size:12px;color:var(--color-text-tertiary);border:1px dashed var(--color-border-tertiary);border-radius:8px;padding:10px 12px;">'+
-          'No hay tareas estándar cargadas todavía. '+
+    (divs.length?'':'<div style="font-size:12px;color:var(--color-text-tertiary);border:1px dashed var(--color-border-tertiary);border-radius:8px;padding:10px 12px;margin-bottom:10px;">Esta empresa aún no tiene divisiones. <a href="#" id="ot-seed-divs" style="color:var(--color-text-info);font-weight:600;">Cargar las 14 divisiones estándar de dique</a> (se pueden editar después).</div>')+
+    '<div class="fg"><label class="fl">Tarea *</label>'+
+      '<input class="fi" id="ot-task-name" list="ot-task-list" placeholder="Escribe la tarea o elige una estándar" autocomplete="off">'+
+      '<datalist id="ot-task-list">'+(tasks||[]).map(function(t){return '<option value="'+_otEsc(t.name)+'">';}).join('')+'</datalist>'+
+      ((tasks&&tasks.length)?'':
+        '<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px;">'+
+          'No hay tareas estándar cargadas. '+
           '<a href="#" id="ot-seed-tasks" style="color:var(--color-text-info);font-weight:600;">Cargar 87 tareas estándar de dique</a>'+
-        '</div>'
-      )+
+        '</div>')+
     '</div>'+
+    '<div class="grid2">'+
+      '<div class="fg"><label class="fl">Sistema (SFI)</label><select class="fi" id="ot-sfi"><option value="">— Selecciona —</option>'+
+        OT_SFI.map(function(x){return '<option value="'+x[0]+'">'+x[1]+'</option>';}).join('')+'</select></div>'+
+      '<div class="fg"><label class="fl">Origen del trabajo</label><select class="fi" id="ot-origin">'+
+        '<option value="base">Alcance base</option><option value="adicional">Trabajo adicional (surgió al abrir)</option></select></div>'+
+    '</div>'+
+    (_aid?
+      '<div class="grid2">'+
+        '<div class="fg"><label class="fl">Zona del buque</label><select class="fi" id="ot-space"><option value="">— Sin zona —</option>'+
+          spaces.map(function(x){return '<option value="'+x.id+'">'+_otEsc(x.name)+'</option>';}).join('')+
+          '<option value="__new__">＋ Nueva zona…</option></select>'+
+          '<input class="fi" id="ot-space-new" placeholder="Nombre de la zona (ej. Sala de máquinas)" style="display:none;margin-top:6px;"></div>'+
+        '<div class="fg"><label class="fl">Equipo</label><select class="fi" id="ot-equip"><option value="">'+(equips.length?'— Sin equipo —':'— Sin equipos registrados —')+'</option>'+
+          equips.map(function(x){return '<option value="'+x.id+'">'+_otEsc(x.name)+'</option>';}).join('')+'</select></div>'+
+      '</div>'
+      :'<div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:10px;">Para elegir zona y equipo, vincula primero un activo al proyecto.</div>')+
+    '<div class="fg"><label class="fl">Encargado</label><select class="fi" id="ot-resp"><option value="">— Selecciona —</option>'+
+      people.map(function(u){return '<option value="'+u.id+'" data-name="'+_otEsc(u.full_name||'')+'">'+_otEsc(u.full_name||'(sin nombre)')+(u.cargo?' · '+_otEsc(u.cargo):'')+'</option>';}).join('')+'</select></div>'+
     '<div class="fg"><label class="fl">Tipo de facturación</label>'+
       '<select class="fi" id="ot-billing">'+
         '<option value="">— Selecciona —</option>'+
@@ -6494,11 +6555,11 @@ async function openNewOT(p, divs){
       e.preventDefault();
       seedLink.textContent='Cargando...';
       var rows=ENGRAVIS_TASK_SEED.map(function(t){
-        return {company_id:company.id, number:t.n, name:t.name, default_cost:t.cost, is_active:true};
+        return {company_id:company.id, number:t.n, name:t.name, default_cost:t.cost};
       });
       var {error}=await sb.from('task_template').insert(rows);
       if(error){ toast('Error: '+error.message); return; }
-      toast('✓ 87 tareas cargadas');
+      toast('87 tareas cargadas');
       openNewOT(p, divs); // re-render con las tareas ya cargadas
     };
   },100);
@@ -6508,10 +6569,24 @@ async function openNewOT(p, divs){
     var taskSel=document.getElementById('ot-task-name');
     var amtInp=document.getElementById('ot-amount');
     if(taskSel) taskSel.addEventListener('change',function(){
-      var opt=this.options[this.selectedIndex];
-      var cost=opt?parseFloat(opt.getAttribute('data-cost')||'0'):0;
+      var nm=this.value, cost=0;
+      (tasks||[]).forEach(function(t){ if(t.name===nm) cost=parseFloat(t.default_cost)||0; });
       if(amtInp && !amtInp.value && cost>0) amtInp.value=cost.toFixed(2);
     });
+    // v2.70.0 — zona nueva escrita a mano
+    var spSel=document.getElementById('ot-space');
+    if(spSel) spSel.addEventListener('change',function(){
+      var ni=document.getElementById('ot-space-new'); if(ni){ ni.style.display=this.value==='__new__'?'block':'none'; if(this.value==='__new__') ni.focus(); }
+    });
+    // v2.70.0 — empresa sin divisiones: sembrar las 14 estándar de dique
+    var sdv=document.getElementById('ot-seed-divs');
+    if(sdv) sdv.onclick=async function(e){
+      e.preventDefault(); sdv.textContent='Cargando…';
+      var r=await sb.from('system').insert(OT_DIV_SEED.map(function(d){return {company_id:company.id,code:d[0],name:d[1]};})).select('id,code,name');
+      if(r.error){ toast('Error: '+r.error.message); return; }
+      toast('14 divisiones cargadas');
+      openNewOT(p, (r.data||[]).sort(function(a,b){return a.code<b.code?-1:1;}));
+    };
   },100);
 
   // v2.54.0 — FACTURACIÓN ADAPTATIVA REAL (fuente: BUQUES.xlsx hoja
@@ -6552,15 +6627,31 @@ async function openNewOT(p, divs){
 }
 
 async function saveNewOT(p){
-  var code=(document.getElementById('ot-code')||{value:''}).value.trim();
-  var divCode=(document.getElementById('ot-div')||{value:''}).value;
-  var taskName=(document.getElementById('ot-task-name')||{value:''}).value.trim();
+  var gv=function(id){ var e=document.getElementById(id); return e?(e.value||'').trim():''; };
+  var code=gv('ot-code'), divCode=gv('ot-div'), taskName=gv('ot-task-name');
   if(!code){toast('El código es requerido');return;}
   if(!divCode){toast('La división es requerida');return;}
   if(!taskName){toast('El nombre de la tarea es requerido');return;}
 
   var btn=document.getElementById('btn-save-co');
   btn.disabled=true; btn.textContent='Creando...';
+  function fail(msg){ btn.disabled=false; btn.textContent='Crear OT'; toast('Error: '+msg); }
+
+  // v2.70.0 — zona nueva escrita a mano: se crea como espacio físico del activo
+  var spaceId=gv('ot-space')||null;
+  if(spaceId==='__new__'){
+    var zn=gv('ot-space-new'); spaceId=null;
+    if(zn && p.asset_id){
+      var zr=await sb.from('physical_space').insert({company_id:company.id,asset_id:p.asset_id,name:zn}).select('id').single();
+      if(zr.error){ fail(zr.error.message); return; }
+      spaceId=zr.data.id;
+    }
+  }
+  var respSel=document.getElementById('ot-resp');
+  var respId=respSel&&respSel.value?respSel.value:null;
+  var respName=respId?respSel.options[respSel.selectedIndex].getAttribute('data-name'):null;
+  var billing=gv('ot-billing')||null;
+  var amount=parseFloat(gv('ot-amount'))||null;
 
   var payload={
     project_id:    p.id,
@@ -6568,26 +6659,275 @@ async function saveNewOT(p){
     code:          code,
     division_code: divCode,
     task_name:     taskName,
-    billing_type:  (document.getElementById('ot-billing')||{value:''}).value||null,
-    amount:        parseFloat((document.getElementById('ot-amount')||{value:'0'}).value)||null,
-    start_date:    (document.getElementById('ot-start')||{value:''}).value||null,
-    end_date:      (document.getElementById('ot-end')||{value:''}).value||null,
-    detail:        (document.getElementById('ot-detail')||{value:''}).value.trim()||null,
+    billing_type:  billing,
+    amount:        amount,
+    start_date:    gv('ot-start')||null,
+    end_date:      gv('ot-end')||null,
+    detail:        gv('ot-detail')||null,
     status:        'pendiente',
     created_by:    profile?profile.id:null,
+    sfi_group:     gv('ot-sfi')||null,
+    origin:        gv('ot-origin')||'base',
+    space_id:      spaceId,
+    equipment_id:  gv('ot-equip')||null,
+    responsible_id:respId,
+    responsible_name:respName
   };
 
-  var {error}=await sb.from('work_order').insert(payload);
+  var ins=await sb.from('work_order').insert(payload).select('*').single();
+  if(ins.error){ fail(ins.error.message); return; }
+  var ot=ins.data;
+
+  // v2.70.0 — si se llenó el tipo de cobro, queda como PRIMERA línea de cotización de la OT
+  if(billing && amount){
+    var map={PESO:'peso',AREA:'area',HH:'horas_hombre',MONTO:'monto'}, basis=map[billing]||'monto', pr={}, uv=parseFloat(gv('bf-costo'))||0;
+    if(basis==='peso'){
+      var mat=ENGRAVIS_MATERIAL_DENSITY.find(function(m){return m.code===gv('bf-mat');});
+      pr={l_mm:gv('bf-L'),w_mm:gv('bf-W'),t_mm:gv('bf-T'),cant:1,dens:mat?mat.density:7850};
+    } else if(basis==='area'){ pr={area:gv('bf-area'),factor:gv('bf-factor')||1};
+    } else if(basis==='horas_hombre'){ pr={dias:gv('bf-dias'),hombres:gv('bf-hombres')};
+    } else { pr={cant:1}; uv=amount; }
+    var lr=await sb.from('wo_line').insert({work_order_id:ot.id,company_id:company.id,line_type:'cotizacion',basis:basis,
+      description:taskName,params:pr,quantity:_otlQty(basis,pr),unit:OTL_BASIS[basis].unit,unit_value:uv,total:amount,created_by:profile?profile.id:null});
+    if(lr.error) console.warn('[ENGRAVIS] OT creada, pero la línea de cotización no se guardó:',lr.error.message);
+  }
   btn.disabled=false;
-  if(error){toast('Error: '+error.message);btn.textContent='Crear OT';return;}
-  closeModal();
   toast('OT creada: '+code);
-  // Reload OT tab
-  loadProjectOrdenes(p, document.getElementById('proj-tab-content'));
+  var tc=document.getElementById('proj-tab-content'); if(tc) loadProjectOrdenes(p, tc);
+  openOTDetail(ot, p);
 }
 
-function openOTDetail(o, p){
-  toast('Detalle OT '+o.code+' — próximamente');
+// ════ v2.70.0 — NÚCLEO DE OT: detalle con cotización, materiales, mano de obra, indirectos y fotos (DOC 08: PRY-10, PRY-11) ════
+// Una sola tabla (wo_line) guarda las cuatro clases de línea. PRECIO A COBRAR = Σ cotización.
+// COSTO NETO DEL VARADERO = Σ materiales que pone el varadero + Σ mano de obra + Σ indirectos.
+// Toda línea: total = cantidad × valor unitario; la cantidad sale de la BASE de cálculo (fórmulas
+// verificadas con el libro BUQUES: área×factor, L×W×T×densidad, días×hombres).
+var OTL_BASIS={
+  monto:{label:'Monto directo',unit:'u',f:[['cant','Cantidad',1]],uv:'Valor unitario [$]'},
+  horas_hombre:{label:'Días-hombre',unit:'d-h',f:[['dias','Días',''],['hombres','N° de hombres','']],uv:'Tarifa [$ por hombre y día]'},
+  area:{label:'Área',unit:'m²',f:[['area','Área [m²]',''],['factor','Factor',1]],uv:'Valor [$/m²]'},
+  peso:{label:'Peso',unit:'kg',f:[['l_mm','Largo [mm]',''],['w_mm','Ancho [mm]',''],['t_mm','Espesor [mm]',''],['cant','Cantidad',1],['dens','Densidad [kg/m³]',7850]],uv:'Valor [$/kg]'},
+  lineal:{label:'Lineal',unit:'m',f:[['metros','Longitud [m]','']],uv:'Valor [$/m]'},
+  volumen:{label:'Volumen',unit:'m³',f:[['m3','Volumen [m³]','']],uv:'Valor [$/m³]'},
+  fijo:{label:'Valor fijo',unit:'',f:[],uv:'Valor [$]'}
+};
+var OTL_SECTIONS=[
+  {t:'cotizacion',title:'Cotización',sub:'valor a cobrar al cliente',bases:['monto','horas_hombre','area','peso','lineal','volumen']},
+  {t:'material',title:'Materiales',sub:'indica quién los suministra'},
+  {t:'mano_obra',title:'Mano de obra',sub:'costo por cargo'},
+  {t:'indirecto',title:'Indirectos',sub:'con su base de cálculo',bases:['fijo','horas_hombre','area','peso','lineal','volumen']}
+];
+// Grupos principales SFI (codificación decidida el 10-Nov). Solo el primer nivel; el detalle se agrega después.
+var OT_SFI=[['1','1 · Buque en general'],['2','2 · Casco'],['3','3 · Equipo para carga'],['4','4 · Equipo del buque'],
+  ['5','5 · Equipo para tripulación y pasajeros'],['6','6 · Maquinaria principal'],['7','7 · Sistemas de la maquinaria principal'],['8','8 · Sistemas comunes del buque']];
+var OT_DIV_SEED=[['ADM','Administrativo'],['TEC','Técnico'],['MAN','Maniobras'],['BUC','Buceo'],['LIM','Limpieza'],['CAR','Carenado'],['SOL','Soldadura'],
+  ['PYG','Propulsión y gobierno'],['VAL','Válvulas'],['FON','Fondeo'],['SEG','Seguridad'],['ELE','Eléctrico'],['MEC','Mecánico'],['TAL','Talleres']];
+var _otCur=null;
+function _otEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function _otM(v){ return '$ '+(parseFloat(v)||0).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function _otN(v){ var n=parseFloat(v)||0; return n.toLocaleString('es-EC',{maximumFractionDigits:2}); }
+function _otlQty(b,pr){
+  var n=function(k,d){ var v=parseFloat(pr[k]); return isNaN(v)?(d==null?0:d):v; };
+  if(b==='monto') return n('cant',1);
+  if(b==='horas_hombre') return n('dias')*n('hombres');
+  if(b==='area') return n('area')*n('factor',1);
+  if(b==='peso') return (n('l_mm')/1000)*(n('w_mm')/1000)*(n('t_mm')/1000)*n('dens',7850)*n('cant',1);
+  if(b==='lineal') return n('metros');
+  if(b==='volumen') return n('m3');
+  return 1;
+}
+function _otTotals(lines){
+  var t={precio:0,mat_var:0,mat_cli:0,mo:0,ind:0,nq:0};
+  (lines||[]).forEach(function(l){ var v=parseFloat(l.total)||0;
+    if(l.line_type==='cotizacion'){ t.precio+=v; t.nq++; }
+    else if(l.line_type==='material'){ if(l.supplied_by==='cliente') t.mat_cli+=v; else t.mat_var+=v; }
+    else if(l.line_type==='mano_obra') t.mo+=v;
+    else if(l.line_type==='indirecto') t.ind+=v; });
+  t.costo=t.mat_var+t.mo+t.ind; t.margen=t.precio-t.costo; t.pct=t.precio>0?(t.margen/t.precio*100):null;
+  return t;
+}
+async function openOTDetail(o, p){
+  var overlay=document.getElementById('modal-co');
+  overlay.querySelector('.modal-title').textContent='OT — '+(o.code||'');
+  overlay.querySelector('.modal-body').innerHTML='<div style="padding:1.5rem;text-align:center;font-size:12px;color:var(--color-text-tertiary);">Cargando…</div>';
+  ['btn-delete-list','btn-delete-user','btn-del-div','btn-del-proj','btn-del-ot'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
+  var sv=document.getElementById('btn-save-co');
+  sv.disabled=false; sv.textContent='Listo';
+  sv.onclick=function(){ closeModal(); var tc=document.getElementById('proj-tab-content'); if(tc) loadProjectOrdenes(p, tc); };
+  overlay.classList.add('on');
+  var q=await Promise.all([
+    sb.from('wo_line').select('*').eq('work_order_id',o.id).order('created_at'),
+    o.space_id?sb.from('physical_space').select('name').eq('id',o.space_id).maybeSingle():Promise.resolve({data:null}),
+    o.equipment_id?sb.from('equipment').select('name').eq('id',o.equipment_id).maybeSingle():Promise.resolve({data:null}),
+    getListValues('personal','cargo').catch(function(){return [];})
+  ]);
+  _otCur={o:o,p:p,lines:q[0].data||[],space:q[1].data?q[1].data.name:null,equip:q[2].data?q[2].data.name:null,cargos:q[3]||[],err:q[0].error?q[0].error.message:null};
+  _otDetailRender();
+}
+function _otDetailRender(){
+  var c=_otCur; if(!c) return; var o=c.o;
+  var body=document.getElementById('modal-co').querySelector('.modal-body');
+  var sfi=null; OT_SFI.forEach(function(s){ if(s[0]===o.sfi_group) sfi=s[1]; });
+  var rows=[['División',o.division_code],['Sistema (SFI)',sfi],['Zona',c.space],['Equipo',c.equip],['Encargado',o.responsible_name],
+    ['Origen',o.origin==='adicional'?'Trabajo adicional':'Alcance base'],['Estado',(o.status||'').replace('_',' ')],
+    ['Fechas',(o.start_date||o.end_date)?((o.start_date||'—')+' → '+(o.end_date||'—')):null]].filter(function(r){return r[1];});
+  var h='<div style="font-size:14px;font-weight:500;margin-bottom:8px;">'+_otEsc(o.task_name||'Sin nombre')+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 14px;margin-bottom:10px;">'+
+    rows.map(function(r){ return '<div><div style="font-size:10px;color:var(--color-text-tertiary);">'+r[0]+'</div><div style="font-size:12px;">'+_otEsc(r[1])+'</div></div>'; }).join('')+'</div>'+
+    (o.detail?'<div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;white-space:pre-wrap;">'+_otEsc(o.detail)+'</div>':'');
+  if(c.err) h+='<div style="font-size:12px;color:#B45309;margin-bottom:8px;">No se pudieron leer las líneas: '+_otEsc(c.err)+'</div>';
+
+  // Resumen
+  var t=_otTotals(c.lines);
+  var box=function(lbl,val,col){ return '<div style="background:var(--color-background-secondary);border-radius:8px;padding:8px 10px;"><div style="font-size:10px;color:var(--color-text-tertiary);">'+lbl+'</div><div style="font-size:14px;font-weight:600;color:'+col+';">'+val+'</div></div>'; };
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:4px;">'+
+    box('Valor a cobrar',_otM(t.precio),'#1D5FA5')+box('Costo neto del varadero',_otM(t.costo),'#B45309')+
+    box('Margen',_otM(t.margen)+(t.pct==null?'':' · '+t.pct.toFixed(0)+'%'),t.margen>=0?'#15803D':'#B91C1C')+'</div>'+
+    (t.mat_cli>0?'<div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;">Material suministrado por el cliente: '+_otM(t.mat_cli)+' (no entra al costo)</div>':'');
+
+  // Fotos
+  var ph=Array.isArray(o.photos)?o.photos:[];
+  h+='<div style="margin:12px 0 4px;display:flex;justify-content:space-between;align-items:center;"><div style="font-size:12px;font-weight:600;">Fotos <span style="font-weight:400;color:var(--color-text-tertiary);">('+ph.length+')</span></div>'+
+    '<label class="btn-sm" style="cursor:pointer;">Agregar foto<input type="file" accept="image/*" multiple style="display:none;" onchange="_otPhotoAdd(this)"></label></div>'+
+    '<div id="ot-photos" style="display:flex;gap:6px;flex-wrap:wrap;">'+ph.map(function(f,i){
+      return '<div style="position:relative;"><a href="'+_otEsc(f.url)+'" target="_blank" rel="noopener"><img src="'+_otEsc(f.url)+'" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:6px;display:block;"></a>'+
+        '<button onclick="_otPhotoDel('+i+')" title="Quitar" style="position:absolute;top:2px;right:2px;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;line-height:1;background:rgba(255,255,255,.9);cursor:pointer;">×</button></div>'; }).join('')+'</div>';
+
+  // Secciones de líneas
+  OTL_SECTIONS.forEach(function(s){
+    var ls=c.lines.filter(function(l){return l.line_type===s.t;});
+    var sum=ls.reduce(function(a,l){return a+(parseFloat(l.total)||0);},0);
+    h+='<div style="margin-top:14px;border-top:1px solid var(--color-border-tertiary);padding-top:8px;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-size:12px;font-weight:600;">'+s.title+' <span style="font-weight:400;color:var(--color-text-tertiary);">· '+s.sub+'</span></div>'+
+      '<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;font-weight:600;">'+_otM(sum)+'</span><button class="btn-sm" onclick="_otlFormOpen(\''+s.t+'\')">Agregar</button></div></div>';
+    ls.forEach(function(l){
+      var d='';
+      if(s.t==='material') d=_otN(l.quantity)+' '+_otEsc(l.unit||'')+' × '+_otM(l.unit_value)+' · '+(l.supplied_by==='cliente'?'lo pone el cliente':'lo pone el varadero');
+      else if(s.t==='mano_obra') d=_otN(l.params&&l.params.personas)+' pers. × '+_otN(l.params&&l.params.dias)+' d × '+_otN(l.params&&l.params.horas_dia)+' h × '+_otM(l.unit_value)+'/h';
+      else d=(OTL_BASIS[l.basis]?OTL_BASIS[l.basis].label:l.basis)+(l.basis==='fijo'?'':' · '+_otN(l.quantity)+' '+_otEsc(l.unit||'')+' × '+_otM(l.unit_value));
+      h+='<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--color-border-tertiary);">'+
+        '<div style="min-width:0;"><div style="font-size:12px;">'+_otEsc(s.t==='mano_obra'?(l.position_name||l.description||'Mano de obra'):(l.description||'—'))+'</div><div style="font-size:11px;color:var(--color-text-tertiary);">'+d+'</div></div>'+
+        '<div style="text-align:right;flex-shrink:0;"><div style="font-size:12px;font-weight:500;">'+_otM(l.total)+'</div>'+
+        '<a href="#" onclick="_otlDel(\''+l.id+'\',this);return false;" style="font-size:10px;color:var(--color-text-tertiary);">Quitar</a></div></div>';
+    });
+    if(!ls.length) h+='<div style="font-size:11px;color:var(--color-text-tertiary);padding:6px 0;">Sin registros.</div>';
+    h+='<div id="otl-form-'+s.t+'"></div></div>';
+  });
+  body.innerHTML=h;
+}
+function _otlFormOpen(t,basis){
+  var s=null; OTL_SECTIONS.forEach(function(x){ if(x.t===t) s=x; });
+  var box=document.getElementById('otl-form-'+t); if(!box||!s) return;
+  var inp=function(k,lbl,def,type){ return '<div class="fg"><label class="fl">'+lbl+'</label><input class="fi" id="otl-'+k+'" type="'+(type||'number')+'" step="any" value="'+(def==null?'':def)+'"></div>'; };
+  var h='<div style="background:var(--color-background-secondary);border-radius:8px;padding:10px;margin-top:8px;" data-otl="'+t+'">';
+  if(t==='material'){
+    h+=inp('desc','Material','','text')+'<div class="grid2">'+inp('qty','Cantidad','')+inp('unit','Unidad','','text')+'</div>'+
+      '<div class="grid2">'+inp('uv','Costo unitario [$]','')+'<div class="fg"><label class="fl">Lo suministra</label><select class="fi" id="otl-sup"><option value="varadero">El varadero</option><option value="cliente">El cliente</option></select></div></div>';
+  } else if(t==='mano_obra'){
+    h+='<div class="fg"><label class="fl">Cargo</label><input class="fi" id="otl-cargo" list="otl-cargos" placeholder="Soldador, ayudante, mecánico…"><datalist id="otl-cargos">'+
+      (_otCur.cargos||[]).map(function(v){return '<option value="'+_otEsc(typeof v==='string'?v:(v.valor||v.value||''))+'">';}).join('')+'</datalist></div>'+
+      '<div class="grid2">'+inp('personas','N° de personas',1)+inp('dias','Días','')+'</div>'+
+      '<div class="grid2">'+inp('horas_dia','Horas por día',8)+inp('uv','Costo por hora [$]','')+'</div>';
+  } else {
+    basis=basis||s.bases[0]; var B=OTL_BASIS[basis];
+    h+=inp('desc',t==='cotizacion'?'Elemento / concepto':'Concepto del indirecto','','text')+
+      '<div class="fg"><label class="fl">'+(t==='cotizacion'?'Tipo de cobro':'Base de cálculo')+'</label><select class="fi" id="otl-basis" onchange="_otlFormOpen(\''+t+'\',this.value)">'+
+      s.bases.map(function(b){return '<option value="'+b+'"'+(b===basis?' selected':'')+'>'+OTL_BASIS[b].label+'</option>';}).join('')+'</select></div>';
+    for(var i=0;i<B.f.length;i+=2){
+      h+='<div class="grid2">'+inp('p-'+B.f[i][0],B.f[i][1],B.f[i][2])+(B.f[i+1]?inp('p-'+B.f[i+1][0],B.f[i+1][1],B.f[i+1][2]):'<div></div>')+'</div>';
+    }
+    h+=inp('uv',B.uv,'');
+  }
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-size:12px;">Total: <b id="otl-total">$ 0,00</b></div>'+
+    '<div><button class="btn-sm" onclick="document.getElementById(\'otl-form-'+t+'\').innerHTML=\'\'">Cancelar</button> '+
+    '<button class="edit-btn" id="otl-save" style="background:#1D5FA5;color:#fff;border-color:#1D5FA5;" onclick="_otlSave(\''+t+'\')">Guardar</button></div></div></div>';
+  // un solo formulario abierto a la vez (los ids se comparten)
+  OTL_SECTIONS.forEach(function(x){ var b=document.getElementById('otl-form-'+x.t); if(b&&x.t!==t) b.innerHTML=''; });
+  var keepDesc=(document.getElementById('otl-desc')||{}).value;
+  box.innerHTML=h;
+  if(keepDesc&&document.getElementById('otl-desc')) document.getElementById('otl-desc').value=keepDesc;
+  box.querySelectorAll('input,select').forEach(function(el){ if(el.id!=='otl-basis'){ el.addEventListener('input',function(){_otlRead(t);}); el.addEventListener('change',function(){_otlRead(t);}); } });
+  _otlRead(t);
+}
+function _otlRead(t){
+  var g=function(id){ var e=document.getElementById('otl-'+id); return e?(e.value||'').trim():''; };
+  var r={line_type:t,basis:'monto',description:g('desc')||null,params:{},unit:null,supplied_by:null,position_name:null};
+  r.unit_value=parseFloat(g('uv'))||0;
+  if(t==='material'){ r.quantity=parseFloat(g('qty'))||0; r.unit=g('unit')||null; r.supplied_by=g('sup')||'varadero'; }
+  else if(t==='mano_obra'){ r.basis='horas_hombre'; r.position_name=g('cargo')||null; r.description=r.position_name;
+    r.params={personas:parseFloat(g('personas'))||0,dias:parseFloat(g('dias'))||0,horas_dia:parseFloat(g('horas_dia'))||0};
+    r.quantity=r.params.personas*r.params.dias*r.params.horas_dia; r.unit='h'; }
+  else { r.basis=g('basis')||'monto'; OTL_BASIS[r.basis].f.forEach(function(f){ r.params[f[0]]=g('p-'+f[0]); });
+    r.quantity=_otlQty(r.basis,r.params); r.unit=OTL_BASIS[r.basis].unit||null; }
+  r.total=Math.round(r.quantity*r.unit_value*100)/100;
+  var out=document.getElementById('otl-total'); if(out) out.textContent=_otM(r.total)+(r.unit&&t!=='material'?'  ('+_otN(r.quantity)+' '+r.unit+')':'');
+  return r;
+}
+async function _otlSave(t){
+  var c=_otCur; if(!c) return; var r=_otlRead(t);
+  if(t==='mano_obra'&&!r.position_name){ toast('Indica el cargo'); return; }
+  if(t!=='mano_obra'&&!r.description){ toast('Escribe la descripción'); return; }
+  if(!(r.total>0)){ toast('El total debe ser mayor que cero'); return; }
+  var b=document.getElementById('otl-save'); if(b){ b.disabled=true; b.textContent='Guardando…'; }
+  r.work_order_id=c.o.id; r.company_id=c.o.company_id||company.id; r.created_by=profile?profile.id:null;
+  var ins=await sb.from('wo_line').insert(r).select('*').single();
+  if(ins.error){ toast('Error: '+ins.error.message); if(b){ b.disabled=false; b.textContent='Guardar'; } return; }
+  c.lines.push(ins.data);
+  await _otSyncAmount(); _otDetailRender();
+}
+async function _otlDel(id,a){
+  var c=_otCur; if(!c) return;
+  if(a&&a.getAttribute('data-sure')!=='1'){ a.setAttribute('data-sure','1'); a.textContent='¿Quitar? Toca otra vez'; a.style.color='#B91C1C'; return; }
+  var d=await sb.from('wo_line').delete().eq('id',id);
+  if(d.error){ toast('Error: '+d.error.message); return; }
+  c.lines=c.lines.filter(function(l){return l.id!==id;});
+  await _otSyncAmount(); _otDetailRender();
+}
+// El monto de la OT es la suma de su cotización (regla: una cotización siempre pertenece a una OT)
+async function _otSyncAmount(){
+  var c=_otCur; if(!c) return; var t=_otTotals(c.lines);
+  if(!t.nq) return;
+  var v=Math.round(t.precio*100)/100;
+  if(parseFloat(c.o.amount)===v) return;
+  var u=await sb.from('work_order').update({amount:v}).eq('id',c.o.id);
+  if(!u.error) c.o.amount=v;
+}
+function _otShrink(file){
+  return new Promise(function(res,rej){
+    var img=new Image(), url=URL.createObjectURL(file);
+    img.onload=function(){ var m=1600, k=Math.min(1,m/Math.max(img.width,img.height)), cv=document.createElement('canvas');
+      cv.width=Math.round(img.width*k); cv.height=Math.round(img.height*k);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); URL.revokeObjectURL(url);
+      cv.toBlob(function(b){ b?res(b):rej(new Error('No se pudo procesar la imagen')); },'image/jpeg',0.82); };
+    img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error('Archivo de imagen no válido')); };
+    img.src=url;
+  });
+}
+async function _otPhotoAdd(input){
+  var c=_otCur; if(!c||!input.files||!input.files.length) return;
+  var files=Array.prototype.slice.call(input.files), ph=Array.isArray(c.o.photos)?c.o.photos.slice():[], ok=0;
+  toast('Subiendo '+files.length+' foto(s)…');
+  for(var i=0;i<files.length;i++){
+    try{
+      var blob=await _otShrink(files[i]);
+      var path='ot/'+(c.o.company_id||company.id)+'/'+c.o.id+'/'+Date.now()+'-'+i+'.jpg';
+      var up=await sb.storage.from('models').upload(path,blob,{contentType:'image/jpeg',cacheControl:'3600'});
+      if(up.error) throw up.error;
+      ph.push({url:sb.storage.from('models').getPublicUrl(path).data.publicUrl,path:path,at:new Date().toISOString(),by:profile?profile.full_name:null});
+      ok++;
+    }catch(e){ console.warn('[ENGRAVIS] foto de OT no subida:',e&&e.message||e); toast('No se subió una foto: '+(e&&e.message||e)); }
+  }
+  if(ok){ var u=await sb.from('work_order').update({photos:ph}).eq('id',c.o.id);
+    if(u.error){ toast('Error: '+u.error.message); return; }
+    c.o.photos=ph; toast(ok+' foto(s) agregada(s)'); _otDetailRender(); }
+}
+async function _otPhotoDel(i){
+  var c=_otCur; if(!c) return; var ph=(c.o.photos||[]).slice(), f=ph[i]; if(!f) return;
+  ph.splice(i,1);
+  var u=await sb.from('work_order').update({photos:ph}).eq('id',c.o.id);
+  if(u.error){ toast('Error: '+u.error.message); return; }
+  c.o.photos=ph; if(f.path) sb.storage.from('models').remove([f.path]);
+  _otDetailRender();
 }
 
 async function openEditOT(o, p, divs){
