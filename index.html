@@ -5542,7 +5542,7 @@ function buildSidebar(){
   sec1.className='sidebar-section'; sec1.textContent='Trabajo diario';
   nav.appendChild(sec1);
   addNavItem(nav,'projects','📁','Proyectos',false);
-  if(!isClient) addNavItem(nav,'workorders','🔧','Órdenes de trabajo',true);
+  if(!isClient) addNavItem(nav,'workorders','🔧','Órdenes de trabajo',false); // v2.73.0 — ventana de todas las OT
   if(!isClient) addNavItem(nav,'logbook','📋','Bitácora',true);
   if(!isClient) addNavItem(nav,'viewer3d','🧊','Visor 3D',true);
   if(!isClient) addNavItem(nav,'documents','📄','Documentos',true);
@@ -7097,6 +7097,8 @@ function _otDetailRender(){
     h+='<div id="otl-form-'+s.t+'"></div></div>';
   });
   body.innerHTML=h;
+  // v2.73.0 — informe de la OT (con o sin cotización)
+  window._otiCur={o:o,p:p}; body.insertAdjacentHTML('afterbegin','<div style="text-align:right;margin-bottom:6px;"><a href="#" onclick="openOTInforme(window._otiCur.o,window._otiCur.p);return false;" style="font-size:12px;color:var(--color-text-info);">Generar informe de esta OT</a></div>');
 }
 function _otlFormOpen(t,basis){
   var s=null; OTL_SECTIONS.forEach(function(x){ if(x.t===t) s=x; });
@@ -14261,58 +14263,154 @@ async function deleteUser(userId, userName){
 
 
 // ── ASSETS MODULE (placeholder) ───────────────────────
+// ════ v2.73.0 — ÓRDENES DE TRABAJO DE LA EMPRESA + INFORME DE OT + GEMELO DEL ASTILLERO (DOC 08: PRY-25/26/27) ════
+// Una sola ventana con TODAS las OT de la empresa, filtrable por ámbito (Barcos / Astillero), estado,
+// proyecto y texto. El astillero es un activo más (asset_type 'astillero') con sus equipos; sus OT viven en
+// el proyecto "Mantenimiento del astillero" (etapa Operación). Informe de OT imprimible con o sin cotización.
+var YARD_TYPES=['astillero','Dique flotante','Galpón / Taller','Planta industrial'];
+function _isYard(a){ return !!a&&YARD_TYPES.indexOf(a.asset_type)>=0; }
+var YARD_EQUIP_SEED=[ // propuesta inicial; el usuario desmarca lo que no aplica
+ 'Parrilla de varada','Carro / cama de varada y rieles','Winche de varada N.° 1','Winche de varada N.° 2','Grúa / montacargas',
+ 'Compresor de aire','Equipo de sandblasting (tolva)','Equipo de pintura airless','Hidrolavadora de alta presión',
+ 'Máquinas de soldar','Equipo de oxicorte','Torno','Taladro de banco','Generador eléctrico','Tablero eléctrico principal',
+ 'Sistema contra incendio','Andamios','Bodega de materiales','Oficinas y vestidores'];
+var _woAll={ots:[],projs:{},assets:{},yard:null,f:{amb:'todos',st:'',pr:'',q:''}};
 async function renderWorkordersPage(){
-  var mc = document.getElementById('app-main');
-  mc.innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">'+
-      '<div><div class="page-title">🔧 Órdenes de Trabajo</div>'+
-        '<div class="page-sub" id="ot-count">Cargando...</div></div>'+
-    '</div>'+
-    '<div id="ot-global-list"></div>';
-
-  // Traer OTs de todos los proyectos de la empresa
-  var {data:projs} = await sb.from('project').select('id,name').eq('lead_company_id', company.id);
-  if(!projs || !projs.length){
-    document.getElementById('ot-count').textContent = 'Sin proyectos';
-    document.getElementById('ot-global-list').innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:#9CA3AF;">No hay proyectos activos.</div>';
-    return;
-  }
-
-  var projIds = projs.map(function(p){ return p.id; });
-  var projMap = {};
-  projs.forEach(function(p){ projMap[p.id] = p.name; });
-
-  var allOTs = [];
-  for(var i=0; i<projIds.length; i++){
-    var {data:ots} = await sb.from('work_order').select('*').eq('project_id', projIds[i]).order('created_at',{ascending:false});
-    if(ots) allOTs = allOTs.concat(ots);
-  }
-
-  var countEl = document.getElementById('ot-count');
-  var listEl  = document.getElementById('ot-global-list');
-  if(countEl) countEl.textContent = allOTs.length + ' orden' + (allOTs.length !== 1 ? 'es' : '');
-
-  if(!allOTs.length){
-    listEl.innerHTML = '<div class="card" style="text-align:center;padding:2rem;color:#9CA3AF;">No hay órdenes de trabajo. Créalas desde los proyectos.</div>';
-    return;
-  }
-
-  var statusColor = { pending:'#F59E0B', open:'#3B82F6', in_progress:'#8B5CF6', done:'#059669', completada:'#059669', pendiente:'#F59E0B', aprobada:'#3B82F6', en_ejecucion:'#8B5CF6' };
-
-  allOTs.forEach(function(ot){
-    var color = statusColor[ot.status] || '#9CA3AF';
-    var projName = projMap[ot.project_id] || 'Proyecto';
-    var row = document.createElement('div');
-    row.style.cssText = 'background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;';
-    row.innerHTML =
-      '<div style="width:10px;height:10px;border-radius:50%;background:'+color+';flex-shrink:0;"></div>'+
-      '<div style="flex:1;">'+
-        '<div style="font-size:13px;font-weight:600;color:#111827;">'+(ot.task_name||ot.name||'Sin nombre')+'</div>'+
-        '<div style="font-size:11px;color:#6B7280;margin-top:2px;">'+projName+' · '+(ot.responsible_name||'Sin asignar')+(ot.end_date?' · '+ot.end_date.slice(0,10):'')+'</div>'+
-      '</div>'+
-      '<span style="font-size:11px;padding:2px 8px;border-radius:4px;background:'+color+'20;color:'+color+';font-weight:500;">'+(ot.status||'pendiente')+'</span>';
-    listEl.appendChild(row);
-  });
+  var mc=document.getElementById('app-main');
+  mc.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:1rem;">'+
+    '<div><div class="page-title">Órdenes de trabajo</div><div class="page-sub" id="wo-count">Cargando…</div></div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="edit-btn" id="wo-yard-btn">Gemelo del astillero</button></div></div>'+
+    '<div id="wo-filters"></div><div id="wo-tiles"></div><div id="wo-list"></div>';
+  var q=await Promise.all([
+    sb.from('project').select('*').eq('lead_company_id',company.id),
+    sb.from('work_order').select('*').eq('company_id',company.id).order('created_at',{ascending:false}).limit(2000)
+  ]);
+  if(q[1].error){ document.getElementById('wo-count').textContent='Error: '+q[1].error.message; return; }
+  var projs={}, aids=[]; (q[0].data||[]).forEach(function(p){ projs[p.id]=p; if(p.asset_id&&aids.indexOf(p.asset_id)<0) aids.push(p.asset_id); });
+  var assets={}; if(aids.length){ var ar=await sb.from('asset').select('id,name,asset_type,registration_number').in('id',aids); (ar.data||[]).forEach(function(a){ assets[a.id]=a; }); }
+  var yr=await sb.from('asset').select('id,name,asset_type').eq('owner_company_id',company.id).in('asset_type',YARD_TYPES).limit(1);
+  _woAll.ots=q[1].data||[]; _woAll.projs=projs; _woAll.assets=assets; _woAll.yard=(yr.data||[])[0]||null;
+  var yb=document.getElementById('wo-yard-btn');
+  yb.textContent=_woAll.yard?'Gemelo del astillero':'Registrar el astillero como gemelo';
+  yb.onclick=function(){ _woAll.yard?_woOpenYard():openYardSetup(); };
+  _woRender();
+}
+function _woScope(o){ var p=_woAll.projs[o.project_id], a=p&&_woAll.assets[p.asset_id]; return _isYard(a)?'astillero':'barcos'; }
+function _woRender(){
+  var F=_woAll.f, E=_otEsc, M=_otM;
+  var seg=function(v,l){ var on=F.amb===v; return '<button onclick="_woAll.f.amb=\''+v+'\';_woRender()" style="border:none;background:'+(on?'#fff':'transparent')+';box-shadow:'+(on?'0 1px 2px rgba(0,0,0,.08)':'none')+';border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--color-text-primary);">'+l+'</button>'; };
+  var popts='<option value="">Todos los proyectos</option>'+Object.keys(_woAll.projs).map(function(id){ var p=_woAll.projs[id]; return '<option value="'+id+'"'+(F.pr===id?' selected':'')+'>'+E((p.code?p.code+' · ':'')+p.name)+'</option>'; }).join('');
+  var sts=[['','Todos los estados'],['pendiente','Pendiente'],['aprobada','Aprobada'],['en_ejecucion','En ejecución'],['completada','Completada'],['cancelada','Cancelada']];
+  document.getElementById('wo-filters').innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">'+
+    '<div style="display:inline-flex;background:var(--color-background-secondary);border-radius:8px;padding:3px;">'+seg('todos','Todos')+seg('barcos','Barcos')+seg('astillero','Astillero')+'</div>'+
+    '<select class="fi" style="width:auto;padding:6px 8px;font-size:12px;" onchange="_woAll.f.st=this.value;_woRender()">'+sts.map(function(s){ return '<option value="'+s[0]+'"'+(F.st===s[0]?' selected':'')+'>'+s[1]+'</option>'; }).join('')+'</select>'+
+    '<select class="fi" style="width:auto;max-width:220px;padding:6px 8px;font-size:12px;" onchange="_woAll.f.pr=this.value;_woRender()">'+popts+'</select>'+
+    '<input class="fi" placeholder="Buscar código o trabajo" value="'+E(F.q)+'" oninput="_woAll.f.q=this.value;clearTimeout(window._woT);window._woT=setTimeout(_woRender,250)" style="flex:1;min-width:160px;padding:6px 9px;font-size:12px;"></div>';
+  var qq=F.q.trim().toLowerCase();
+  var L=_woAll.ots.filter(function(o){ if(F.amb!=='todos'&&_woScope(o)!==F.amb) return false; if(F.st&&o.status!==F.st) return false; if(F.pr&&o.project_id!==F.pr) return false;
+    if(F.st!=='cancelada'&&!F.st&&o.status==='cancelada') return false;
+    return !qq||((o.code||'')+' '+(o.task_name||'')).toLowerCase().indexOf(qq)>=0; });
+  var c={pendiente:0,en_ejecucion:0,completada:0}, tot=0; L.forEach(function(o){ if(c[o.status]!=null) c[o.status]++; tot+=parseFloat(o.amount)||0; });
+  var tile=function(v,l){ return '<div style="background:var(--color-background-secondary);border-radius:10px;padding:10px 12px;"><div style="font-size:18px;font-weight:600;">'+v+'</div><div style="font-size:11px;color:var(--color-text-tertiary);">'+l+'</div></div>'; };
+  document.getElementById('wo-tiles').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px;">'+
+    tile(L.length,'Órdenes')+tile(c.pendiente,'Pendientes')+tile(c.en_ejecucion,'En ejecución')+tile(c.completada,'Completadas')+tile(M(tot),'Cotizado')+'</div>';
+  document.getElementById('wo-count').textContent=_woAll.ots.length+' órdenes en '+Object.keys(_woAll.projs).length+' proyectos'+(_woAll.yard?'':' · el astillero aún no está registrado');
+  var col={pendiente:'#B45309',aprobada:'#1D5FA5',en_ejecucion:'#7C3AED',completada:'#15803D',cancelada:'#9CA3AF'};
+  var lst=document.getElementById('wo-list');
+  if(!L.length){ lst.innerHTML='<div class="card" style="text-align:center;padding:2rem;color:var(--color-text-tertiary);font-size:13px;">No hay órdenes con estos filtros.</div>'; return; }
+  window._woL=L;
+  lst.innerHTML=L.slice(0,500).map(function(o,i){ var p=_woAll.projs[o.project_id]||{}, a=_woAll.assets[p.asset_id], yard=_isYard(a), k=col[o.status]||'#9CA3AF';
+    return '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--color-border-tertiary);border-radius:10px;margin-bottom:6px;background:var(--color-background-primary);">'+
+      '<div style="min-width:0;cursor:pointer;" onclick="_woOpen('+i+')"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+E(o.task_name||'(sin nombre)')+'</div>'+
+      '<div style="font-size:11px;color:var(--color-text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+E(o.code||'')+' · '+(yard?'<span style="color:#0F6E56;">Astillero</span>':'Barco')+' · '+E(a?a.name:(p.name||'—'))+(o.amount?' · '+M(o.amount):'')+'</div></div>'+
+      '<div style="display:flex;gap:6px;align-items:center;"><span style="font-size:10.5px;padding:2px 8px;border-radius:10px;color:'+k+';border:1px solid '+k+'40;white-space:nowrap;">'+E((o.status||'pendiente').replace('_',' '))+'</span>'+
+      '<button class="edit-btn" style="padding:4px 9px;font-size:11px;" onclick="_woInf('+i+')">Informe</button></div></div>'; }).join('')+
+    (L.length>500?'<div style="font-size:11px;color:var(--color-text-tertiary);text-align:center;">Se muestran 500 de '+L.length+'. Usa los filtros.</div>':'');
+}
+function _woOpen(i){ var o=window._woL[i], p=_woAll.projs[o.project_id]; if(p) openOTDetail(o,p); }
+function _woInf(i){ var o=window._woL[i]; openOTInforme(o,_woAll.projs[o.project_id]); }
+// — INFORME DE OT: datos, descripción, materiales, fotos y (opcional) cotización. Nunca muestra costos internos —
+function openOTInforme(o,p){
+  var overlay=document.getElementById('modal-co');
+  overlay.querySelector('.modal-title').textContent='Informe de OT — '+(o.code||'');
+  ['btn-delete-list','btn-delete-user','btn-del-div','btn-del-proj','btn-del-ot'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
+  overlay.querySelector('.modal-body').innerHTML='<label style="display:flex;gap:8px;align-items:center;font-size:13px;padding:6px 0;"><input type="checkbox" id="oti-q" style="accent-color:#1D5FA5;"> Incluir cotización (cantidades y valores)</label>'+
+    '<label style="display:flex;gap:8px;align-items:center;font-size:13px;padding:6px 0;"><input type="checkbox" id="oti-m" checked style="accent-color:#1D5FA5;"> Incluir materiales (sin costos)</label>'+
+    '<label style="display:flex;gap:8px;align-items:center;font-size:13px;padding:6px 0;"><input type="checkbox" id="oti-f" checked style="accent-color:#1D5FA5;"> Incluir fotos</label>'+
+    '<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:6px;">Los costos internos (costo neto, mano de obra, margen) no salen en este informe. Se abre en una pestaña nueva, lista para imprimir o guardar como PDF.</div>';
+  var sv=document.getElementById('btn-save-co'); sv.disabled=false; sv.textContent='Generar informe';
+  sv.onclick=function(){ var w=window.open('','_blank'); _otiBuild(o,p,{q:document.getElementById('oti-q').checked,m:document.getElementById('oti-m').checked,f:document.getElementById('oti-f').checked},w); };
+  overlay.classList.add('on');
+}
+async function _otiBuild(o,p,opt,w){
+  try{
+    var q=await Promise.all([
+      sb.from('wo_line').select('*').eq('work_order_id',o.id).order('created_at'),
+      p&&p.asset_id?sb.from('asset').select('*').eq('id',p.asset_id).maybeSingle():Promise.resolve({data:null}),
+      o.space_id?sb.from('physical_space').select('name').eq('id',o.space_id).maybeSingle():Promise.resolve({data:null}),
+      o.equipment_id?sb.from('equipment').select('name').eq('id',o.equipment_id).maybeSingle():Promise.resolve({data:null}),
+      o.division_code?sb.from('system').select('name').eq('company_id',company.id).eq('code',o.division_code).maybeSingle():Promise.resolve({data:null})
+    ]);
+    var E=_otEsc, M=_otM, N=_otN, ls=q[0].data||[], a=q[1].data||{}, yard=_isYard(a);
+    var sfi=null; OT_SFI.forEach(function(s){ if(s[0]===o.sfi_group) sfi=s[1]; });
+    var dd=[['Proyecto',p?((p.code?p.code+' · ':'')+p.name):null],[yard?'Instalación':'Buque',a.name],['Matrícula',a.registration_number],['División',q[4].data?q[4].data.name:o.division_code],
+      ['Sistema SFI',sfi],['Origen',o.origin==='adicional'?'Trabajo adicional':'Alcance base'],['Zona',q[2].data&&q[2].data.name],['Equipo',q[3].data&&q[3].data.name],['Encargado',o.responsible_name],
+      ['Inicio',o.start_date],['Fin',o.end_date],['Estado',(o.status||'').replace('_',' ')]].filter(function(x){ return x[1]; });
+    var cot=ls.filter(function(l){ return l.line_type==='cotizacion'; }), mat=ls.filter(function(l){ return l.line_type==='material'; }), ph=Array.isArray(o.photos)?o.photos:[];
+    var h='';
+    if(o.detail||o.description) h+='<h2>Descripción del trabajo</h2><div class="dt">'+E(o.description||o.detail)+'</div>';
+    if(opt.m&&mat.length) h+='<h2>Materiales</h2><table><tr><th>Material</th><th class="n">Cantidad</th><th>Suministra</th></tr>'+mat.map(function(l){ return '<tr><td>'+E(l.description||'')+'</td><td class="n">'+N(l.quantity)+' '+E(l.unit||'')+'</td><td>'+(l.supplied_by==='cliente'?'Cliente':'Varadero')+'</td></tr>'; }).join('')+'</table>';
+    if(opt.q){ var tq=0; h+='<h2>Cotización</h2>'+(cot.length?'<table><tr><th>Descripción</th><th class="n">Cantidad</th><th class="n">P. unitario</th><th class="n">Total</th></tr>'+cot.map(function(l){ tq+=parseFloat(l.total)||0; return '<tr><td>'+E(l.description||'')+'</td><td class="n">'+N(l.quantity)+' '+E(l.unit||'')+'</td><td class="n">'+M(l.unit_value)+'</td><td class="n">'+M(l.total)+'</td></tr>'; }).join('')+
+      '<tr class="sub"><td colspan="3">Total</td><td class="n">'+M(tq)+'</td></tr></table><p class="nt">Valores sin IVA.</p>':'<p class="nt">Esta orden aún no tiene cotización.</p>'); }
+    if(opt.f&&ph.length) h+='<h2>Registro fotográfico</h2><div class="ph">'+ph.map(function(f){ return '<figure><img src="'+E(f.url)+'">'+(f.caption||f.name?'<figcaption>'+E(f.caption||f.name)+'</figcaption>':'')+'</figure>'; }).join('')+'</div>';
+    h+='<div class="fr"><div>Elaborado por</div><div>Supervisor</div><div>Recibido por el cliente</div></div>';
+    var html='<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Informe '+E(o.code||'')+'</title><style>'+
+      'body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#1f2937;margin:0;background:#fff;font-size:12px;line-height:1.45}.w{max-width:860px;margin:0 auto;padding:24px 20px 60px}'+
+      'h1{font-size:19px;font-weight:600;margin:2px 0}h2{font-size:12px;font-weight:600;margin:20px 0 6px;color:#1D5FA5}.co{font-size:11px;color:#6b7280;letter-spacing:.06em;text-transform:uppercase}.sb{color:#6b7280;margin-bottom:10px}'+
+      '.vd{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px 14px;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;padding:10px 0}.vd span{display:block;font-size:10px;color:#6b7280}'+
+      'table{width:100%;border-collapse:collapse}th{font-size:10px;font-weight:500;color:#6b7280;text-align:left;border-bottom:1px solid #d1d5db;padding:5px 6px}td{padding:5px 6px;border-bottom:1px solid #f0f1f3;vertical-align:top}.n{text-align:right;white-space:nowrap}'+
+      '.sub td{font-weight:600;background:#f8fafc}.nt{font-size:10.5px;color:#6b7280}.dt{white-space:pre-wrap}.ph{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}.ph figure{margin:0;break-inside:avoid}.ph img{width:100%;height:140px;object-fit:cover;border-radius:5px}.ph figcaption{font-size:10px;color:#6b7280}'+
+      '.fr{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:56px;text-align:center;font-size:10.5px;color:#6b7280}.fr div{border-top:1px solid #9ca3af;padding-top:6px}'+
+      '.pb{position:fixed;right:16px;bottom:16px;background:#1D5FA5;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;cursor:pointer}@media print{.pb{display:none}.w{padding:0}}'+
+      '</style></head><body><div class="w"><div class="co">'+E(company.name||'')+'</div><h1>'+E(o.task_name||'Orden de trabajo')+'</h1><div class="sb">Informe de orden de trabajo · '+E(o.code||'')+' · '+new Date().toLocaleDateString('es-EC')+'</div>'+
+      '<div class="vd">'+dd.map(function(x){ return '<div><span>'+x[0]+'</span>'+E(x[1])+'</div>'; }).join('')+'</div>'+h+
+      '</div><button class="pb" onclick="window.print()">Imprimir o guardar PDF</button></body></html>';
+    if(w){ w.document.open(); w.document.write(html); w.document.close(); } else { window.location.href=URL.createObjectURL(new Blob([html],{type:'text/html'})); }
+    closeModal();
+  }catch(e){ if(w) w.close(); toast('No se pudo armar el informe: '+(e&&e.message||e)); }
+}
+// — GEMELO DEL ASTILLERO: activo + proyecto permanente de mantenimiento + equipos —
+async function _woOpenYard(){
+  var y=_woAll.yard; var pr=await sb.from('project').select('*').eq('lead_company_id',company.id).eq('asset_id',y.id).order('created_at').limit(1);
+  if(pr.data&&pr.data[0]) openProject(pr.data[0]); else toast('El astillero no tiene proyecto de mantenimiento');
+}
+function openYardSetup(){
+  var overlay=document.getElementById('modal-co'), E=_otEsc;
+  overlay.querySelector('.modal-title').textContent='Registrar el astillero como gemelo digital';
+  ['btn-delete-list','btn-delete-user','btn-del-div','btn-del-proj','btn-del-ot'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
+  overlay.querySelector('.modal-body').innerHTML='<div style="font-size:12px;color:var(--color-text-tertiary);margin-bottom:10px;">El astillero queda como un activo más, con sus equipos. Sus órdenes de trabajo se separan de las de los barcos y viven en el proyecto "Mantenimiento del astillero".</div>'+
+    '<label style="font-size:11px;color:var(--color-text-secondary);">Nombre<input class="fi" id="yd-name" value="'+E(company.trade_name||company.name||'Astillero')+'" style="width:100%;margin-top:3px;"></label>'+
+    '<div style="font-size:12px;font-weight:600;margin:12px 0 4px;">Equipos y sistemas <span style="font-weight:400;color:var(--color-text-tertiary);">(desmarca lo que no aplica; se pueden agregar más después)</span></div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 10px;">'+YARD_EQUIP_SEED.map(function(n){ return '<label style="font-size:12px;display:flex;gap:6px;align-items:center;padding:3px 0;"><input type="checkbox" class="yd-eq" checked value="'+E(n)+'" style="accent-color:#1D5FA5;">'+E(n)+'</label>'; }).join('')+'</div>'+
+    '<textarea class="fi" id="yd-more" rows="2" placeholder="Otros equipos, uno por línea" style="width:100%;margin-top:8px;font-size:12px;"></textarea>';
+  var sv=document.getElementById('btn-save-co'); sv.disabled=false; sv.textContent='Registrar astillero'; sv.onclick=function(){ _yardCreate(); };
+  overlay.classList.add('on');
+}
+async function _yardCreate(){
+  var sv=document.getElementById('btn-save-co'); sv.disabled=true; sv.textContent='Registrando…';
+  try{
+    var uid=(user&&user.id)||(profile&&(profile.auth_id||profile.id))||null, nm=(document.getElementById('yd-name').value||'Astillero').trim().slice(0,200);
+    var a=await sb.from('asset').insert({name:nm,asset_type:'astillero',owner_company_id:company.id,admin_user_id:uid,created_by:uid,status:'active'}).select('id').single();
+    if(a.error) throw new Error(a.error.message);
+    var yr=new Date().getFullYear();
+    var p=await sb.from('project').insert({name:'Mantenimiento del astillero',code:'AST-'+yr,project_type:'Operación',lead_company_id:company.id,asset_id:a.data.id,status:'active',created_by:profile?profile.id:null,
+      description:'Órdenes de trabajo del propio astillero: equipos, instalaciones y sistemas.'}).select('*').single();
+    if(p.error) throw new Error(p.error.message);
+    var eq=[].slice.call(document.querySelectorAll('.yd-eq:checked')).map(function(c){ return c.value; })
+      .concat((document.getElementById('yd-more').value||'').split('\n').map(function(s){ return s.trim(); }).filter(Boolean));
+    if(eq.length){ var e=await sb.from('equipment').insert(eq.map(function(n){ return {asset_id:a.data.id,name:n.slice(0,200)}; })); if(e.error) toast('Astillero creado; los equipos no se guardaron: '+e.error.message); }
+    closeModal(); toast('Astillero registrado con '+eq.length+' equipos'); openProject(p.data);
+  }catch(e){ sv.disabled=false; sv.textContent='Registrar astillero'; toast('Error: '+(e&&e.message||e)); }
 }
 
 async function renderAssetsPage(){
