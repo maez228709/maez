@@ -1823,6 +1823,8 @@
     cuentan Dique flotante, Galpón/Taller, Planta industrial); openYardSetup crea el activo, el proyecto
     permanente "Mantenimiento del astillero" (AST-año, etapa Operación) y sus equipos (lista propuesta de 19,
     editable). Sus OT usan el formulario normal (el selector de equipo ya lee equipment del activo).
+    + FIX LOGIN (era la PR #4 / v2.69.1, nunca unida): si Supabase no responde (proyecto pausado), ya no manda a
+    "Crear cuenta"; avisa "No hay conexión con el servidor". Causa real del 10-Nov: proyecto pausado por inactividad.
     PROBADO EN VIVO: ventana con las 25 OT de ANAHI y filtros; informe con y sin cotización. NO PROBADO: registrar
     el astillero (crea datos reales; lo hace el fundador con el botón) — posible fallo si equipment exige
     columnas extra.
@@ -4027,7 +4029,8 @@ async function loginDetectCompany(proceed){
   // Buscar si existe el usuario
   try{
     var lkr = await sb.rpc('login_lookup', {p_email: email});
-    var lk2 = (lkr && lkr.data) || {exists:false};
+    if(!lkr || lkr.error) throw (lkr && lkr.error) || new Error('sin respuesta'); // v2.73.0 — sin conexión no se adivina registro
+    var lk2 = lkr.data || {exists:false};
 
     if(lk2.exists){
       ariaFoundProfile = {email: email, full_name: lk2.first_name||''};
@@ -4039,9 +4042,10 @@ async function loginDetectCompany(proceed){
       ariaEntryStep = 'register';
     }
   } catch(e){
-    // Si falla la query, ir a contraseña por defecto (mejor UX)
+    // v2.73.0 — sin conexión con la base: no adivinar el paso (antes mandaba a registro y se creaban cuentas duplicadas)
     console.warn('loginDetectCompany error:', e);
-    ariaEntryStep = 'password';
+    if(proceed) document.getElementById('login-err-1').textContent='No hay conexión con el servidor. Intenta de nuevo en unos minutos.';
+    return;
   }
 
   if(!proceed) return;
