@@ -623,6 +623,9 @@
                cada bloque (13 campos de archivo del libro), listas de valores para los
                estados, y confirmar con el fundador las etiquetas PP/PR T (interpretadas
                como calados), GB y DD-HH
+    PRY-24  [PARC A] DIQUE · ASISTIDO (v2.72.0): OT estándar al crear el proyecto, datos clave por sistema y
+               preguntas sí/no de ARIA que activan o descartan OT (DIQ_RULES, diqSyncOT, openDiqAsistente).
+               FALTA: prueba en vivo con ANAHI, editar reglas desde la app, preguntas por LLM
     PRY-10  [PARC M] Editar proyecto: toda su info, secciones y bloques (DOC04
                F-05); subir GLB desde la plataforma (F-01)
 
@@ -1802,6 +1805,23 @@
     ejecutar, sin "cargar modelo abierto" ni "guardar" — no puede cambiar nada.
     PENDIENTE: persistir la animación con el asset para que el cliente la vea sin
     que el editor la cargue en la misma sesión.
+  v2.72.0 (13-Nov) DIQUE ASISTIDO: OT ESTÁNDAR AL CREAR + DATOS CLAVE + PREGUNTAS DE ARIA (DOC 08: PRY-24 NUEVO PARC).
+    Pedido del fundador: que el proyecto de dique nazca con sus OT estándar, que se pidan solo los datos clave
+    por sistema y que ARIA pregunte sí/no para activar o descartar trabajos. NUEVO (módulo "v2.72.0 — DIQUE
+    ASISTIDO"): (a) DIQ_RULES — cada partida de DIQ_CAT dice si va siempre o depende de una respuesta, y cómo
+    sale su cantidad de los datos (ej. lavado = OV+OM; aplicación OV = OV × capas, 3 por defecto; toma de luces
+    = n.° de ejes; permanencia y guardianía = días en parrilla). 24 OT nacen al crear el proyecto (sin
+    cantidades); 8 partidas raras quedan fuera de las reglas (se agregan en Alcance). (b) diqSyncOT —
+    sincroniza: crea las que faltan, reactiva canceladas, actualiza cantidad/monto de las pendientes y CANCELA
+    las pendientes que ya no aplican; nunca toca OT en ejecución ni creadas a mano; precio desde task_template.
+    (c) openDiqAsistente — paso 1 datos clave por sistema, paso 2 ocho preguntas de ARIA con voz (nSpeak),
+    algunas solo si aplica (confeccionar ejes / bocinas solo si se desmontan ejes), paso 3 resumen y aplicar.
+    Se abre solo al crear el proyecto y con el botón "Preparar con ARIA" en Órdenes. (d) Datos y respuestas se
+    guardan en los bloques B-DIQ (campos nuevos: dias_parrilla, diametro_eje, longitud_eje, n_timones, capas,
+    y 8 sí/no). (e) Alcance y cotización ya no duplica: marca las partidas con OT activa y las actualiza.
+    Nuevas partidas: reparación de hélice; confección de eje de cola nuevo. PROBADO: reglas en Node (datos
+    tipo ENDEMIC: 33 activas, 9 no aplican; 24 al crear). PENDIENTE: prueba en vivo con ANAHI; que las
+    reglas las ajuste el fundador desde la app (hoy en código); preguntas por LLM (hoy flujo fijo).
   v2.71.0 (12-Nov) FLUJO DE DIQUE DE PUNTA A PUNTA (DOC 08: PRY-18 y PRY-21 HECHO; PRY-22, PRY-23, CAP-13 PARC).
     Queja del fundador: demasiado formulario; el proyecto debe nacer de un documento del buque; cerrar dique.
     HALLAZGOS: (1) "Nuevo proyecto" creaba el activo SIN admin_user_id ni created_by (obligatorios): la base lo
@@ -3161,7 +3181,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 
     <div style="margin-top:1.5rem;text-align:center;">
       <div style="font-size:10px;color:#D1D5DB;">ENGRAVIS · Gestión Naval Digital</div>
-      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v2.71.0</div>
+      <div style="font-size:9px;color:#E5E7EB;margin-top:2px;font-family:monospace;" id="login-version">v2.72.0</div>
     </div>
   </div>
 </div>
@@ -3215,7 +3235,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
       Soportado por <a href="https://engravis.com" target="_blank" style="color:#1D5FA5;text-decoration:none;font-weight:500;">ENGRAVIS</a>
       · Desarrollado por <a href="https://www.sdcecuador.com" target="_blank" style="color:#1D5FA5;text-decoration:none;font-weight:500;">SDC Ecuador</a>
       · Una visión del <a href="https://www.sdcecuador.com" target="_blank" style="color:#9CA3AF;text-decoration:none;">Ing. Miguel Ángel Engracia</a>
-      · <span style="color:#CBD5E1;">v2.71.0</span>
+      · <span style="color:#CBD5E1;">v2.72.0</span>
     </div>
     <button onclick="openInfo()" style="background:none;border:none;cursor:pointer;color:#D1D5DB;font-size:14px;padding:2px 6px;border-radius:4px;transition:color .15s;" title="Información" onmouseover="this.style.color='#6B7280'" onmouseout="this.style.color='#D1D5DB'">ⓘ</button>
   </div>
@@ -3232,7 +3252,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
     <div class="modal-body">
       <div style="text-align:center;margin-bottom:1.5rem;">
         <img src="data:image/png;base64,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3neveOF2tI7/ANC5Pj1UtPWurt0lVLWVlPUyVBZ9JpzE1oa3d5F7ifbVXRZc5SzNY0oReKQVu11juklfVVFHcrfHFUSiUsqKB8rmnq2M4ObK3h4GeXariRYTayNpRUlgy1jYL8f7bWbyTJ8oQafv37LWbyVJ8oV0ottpLmabGnyLWOn792XazezaZPlCed+/dt3s3kmT5QrpRNpLmNhT5FrHT99/ZazePNqk+UINPXztutmPrWqX5QrpRNpLmNhT5FqnTt7I4XWzj8Fy/KF187d8J/VezgduLVJ+eoV2Im0lzGwp8i34dLUjjm41VRXs5mB+6yDPjYwDeHieXfiVfaA1oa0AAcAB2LlFq23mSRio5BERYMhERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREB/9k=" style="height:36px;object-fit:contain;margin-bottom:10px;">
-        <div style="font-size:11px;color:#9CA3AF;">v2.71.0 — 12 Nov 2026</div>
+        <div style="font-size:11px;color:#9CA3AF;">v2.72.0 — 13 Nov 2026</div>
       </div>
       <div style="display:grid;gap:8px;">
         <a href="https://engravis.com" target="_blank" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#F9FAFB;border-radius:8px;text-decoration:none;color:#111827;border:1px solid #E5E7EB;">
@@ -6378,7 +6398,8 @@ var DIQ_CAT=[
    ['Guardianía','día'],['Grúa móvil','h'],['Sistema contra incendio: conexión y servicio','día'],['Baños portátiles','mes'],['Oficina y comedor','mes'],['Retiro de escoria, residuos y basura','gl'],
    ['Certificado de gases (gas free) para trabajo en caliente','u'],['Inducción ambiental y de seguridad','u']]},
  {s:'Propulsión',d:'PYG',g:'6',i:[['Toma de luces de eje de cola','u'],['Desmontaje y montaje de funda guardacabo','u'],['Desmontaje y montaje de hélice','u'],['Desmontaje y montaje de eje de cola','u'],
-   ['Cambio de bocinas de tubo codaste','u'],['Limpieza y pulido de hélice','u'],['Limpieza y mantenimiento de prensaestopas','u']]},
+   ['Cambio de bocinas de tubo codaste','u'],['Limpieza y pulido de hélice','u'],['Limpieza y mantenimiento de prensaestopas','u'],
+   ['Reparación de hélice (soldadura, rectificado de aspas y balanceo)','u']]},
  {s:'Gobierno',d:'PYG',g:'4',i:[['Toma de luces del timón','u'],['Desmontaje y montaje de funda del timón','u'],['Desmontaje y montaje de pala de timón','u'],['Cambio de bocinas de timón','u'],['Revisión del servomotor','u']]},
  {s:'Protección catódica',d:'SOL',g:'2',i:[['Ánodos de zinc: suministro','u'],['Ánodos de zinc: instalación','u']]},
  {s:'Fondeo',d:'FON',g:'4',i:[['Arriado, estibado e izado de cadena y ancla','u'],['Arenado y pintura de cadenas y anclas','u'],['Calibración de cadenas y anclas','u']]},
@@ -6386,7 +6407,8 @@ var DIQ_CAT=[
  {s:'Carena (pintura de casco)',d:'CAR',g:'2',i:[['Lavado de casco a presión','m²'],['Arenado SA 2 obra viva','m²'],['Arenado SA 2 obra muerta','m²'],['Aplicación de pintura obra viva','m²·capa'],
    ['Aplicación de pintura obra muerta','m²·capa'],['Pintura obra viva (material)','m²'],['Pintura obra muerta (material)','m²'],['Marcas de calado, nombre, registro y línea de flotación','u'],['Calibración de espesores','pto']]},
  {s:'Calderería',d:'SOL',g:'2',i:[['Renovación de planchaje (con retiro y montaje)','kg'],['Corte y retiro sin reposición','kg']]},
- {s:'Torno y talleres',d:'TAL',g:'6',i:[['Rectificado de puños y caras de bridas de ejes','eje'],['Maquinados menores (bujes, pernos, chavetas)','gl']]},
+ {s:'Torno y talleres',d:'TAL',g:'6',i:[['Rectificado de puños y caras de bridas de ejes','eje'],['Maquinados menores (bujes, pernos, chavetas)','gl'],
+   ['Confección de eje de cola nuevo','u']]},
  {s:'Mecánica y pruebas',d:'MEC',g:'6',i:[['Revisión de motores principales y generadores','gl'],['Prueba de amarre y de mar','u']]}
 ];
 var _diqP=null;
@@ -6414,6 +6436,15 @@ async function openDiqAlcance(p){
   });
   h+='<div style="border-top:1px solid var(--color-border-tertiary);padding-top:10px;margin-top:6px;display:flex;justify-content:space-between;font-size:13px;font-weight:600;"><span>Total cotizado</span><span id="diq-total">$ 0,00</span></div>';
   var body=overlay.querySelector('.modal-body'); body.innerHTML=h;
+  // v2.72.0 — las partidas que ya tienen OT activa (estándar o de ARIA) vienen marcadas con su cantidad
+  try{ var eo=await sb.from('work_order').select('id,task_name,status,detail').eq('project_id',p.id).neq('status','cancelada');
+    var eq={}, eids=(eo.data||[]).map(function(o){ eq[o.task_name]={id:o.id,q:(function(m){ return m?parseFloat(m[1].replace(/\./g,'').replace(',','.')):null; })(/·\s*([\d.,]+)\s/.exec(o.detail||''))}; return o.id; });
+    if(eids.length){ var el=await sb.from('wo_line').select('work_order_id,quantity').eq('line_type','cotizacion').in('work_order_id',eids);
+      var qb={}; (el.data||[]).forEach(function(l){ qb[l.work_order_id]=parseFloat(l.quantity); });
+      Object.keys(eq).forEach(function(k){ if(qb[eq[k].id]>0) eq[k].q=qb[eq[k].id]; }); }
+    body.querySelectorAll('.diq-row').forEach(function(r){ var nm=r.querySelector('.diq-nm'); var e2=nm&&eq[nm.textContent.trim()];
+      if(e2){ r.querySelector('.diq-ck').checked=true; if(e2.q>0) r.querySelector('.diq-q').value=e2.q; } });
+  }catch(e){ console.warn('[ENGRAVIS] alcance: OT existentes',e&&e.message||e); }
   body.oninput=function(e){ var r=e.target.closest?e.target.closest('.diq-row'):null;
     if(r&&(e.target.classList.contains('diq-q')||e.target.classList.contains('diq-nm'))&&e.target.value) r.querySelector('.diq-ck').checked=true;
     _diqRecalc(); };
@@ -6446,12 +6477,23 @@ async function _diqSave(){
   // divisiones: si la empresa no tiene, se cargan las 14 estándar
   var dv=await sb.from('system').select('code').eq('company_id',company.id);
   if(!dv.error&&!(dv.data||[]).length){ var sd=await sb.from('system').insert(OT_DIV_SEED.map(function(d){return {company_id:company.id,code:d[0],name:d[1]};})); if(sd.error){ fail(sd.error.message); return; } }
-  var ex=await sb.from('work_order').select('id').eq('project_id',p.id); var n0=(ex.data||[]).length;
+  var ex=await sb.from('work_order').select('id,code,task_name,status').eq('project_id',p.id); var n0=(ex.data||[]).length;
   var uid=profile?profile.id:null;
-  var ots=rows.map(function(r,i){ var S=DIQ_CAT[r.si], num=('00'+(n0+i+1)).slice(-3);
+  // v2.72.0 — si la partida ya tiene su OT (estándar creada al nacer el proyecto) se actualiza, no se duplica
+  var exBy={}, codes={}; (ex.data||[]).forEach(function(o){ codes[o.code]=1; if(o.status!=='cancelada'&&!exBy[o.task_name]) exBy[o.task_name]=o; });
+  var allRows=rows.slice(), upd=rows.filter(function(r){ return exBy[r.name]; }); rows=rows.filter(function(r){ return !exBy[r.name]; });
+  for(var ui=0;ui<upd.length;ui++){ var ur=upd[ui], uo=exBy[ur.name];
+    var w=await sb.from('work_order').update({amount:ur.total||null,detail:DIQ_CAT[ur.si].s+' · '+_otN(ur.q)+' '+ur.unit}).eq('id',uo.id);
+    if(w.error){ fail(w.error.message); return; }
+    if(ur.total>0){ var cl=await sb.from('wo_line').select('id').eq('work_order_id',uo.id).eq('line_type','cotizacion').limit(1);
+      var lrow={quantity:ur.q,unit:ur.unit,unit_value:ur.p,total:ur.total,params:{cant:ur.q}};
+      if((cl.data||[]).length) await sb.from('wo_line').update(lrow).eq('id',cl.data[0].id);
+      else await sb.from('wo_line').insert(Object.assign({work_order_id:uo.id,company_id:company.id,line_type:'cotizacion',basis:'monto',description:ur.name.slice(0,250),created_by:uid},lrow)); } }
+  var _seq=n0; function _nextNum(S){ var c; do{ _seq++; c=(p.code||'PRJ')+'/'+S.d+'-'+('00'+_seq).slice(-3); }while(codes[c]); codes[c]=1; return ('00'+_seq).slice(-3); }
+  var ots=rows.map(function(r,i){ var S=DIQ_CAT[r.si], num=_nextNum(S);
     return {project_id:p.id,company_id:company.id,code:(p.code||'PRJ')+'/'+S.d+'-'+num,division_code:S.d,task_name:r.name.slice(0,250),billing_type:'MONTO',
       amount:r.total||null,status:'pendiente',origin:'base',sfi_group:S.g,detail:S.s+' · '+_otN(r.q)+' '+r.unit,created_by:uid}; });
-  var ins=await sb.from('work_order').insert(ots).select('id,code');
+  var ins=rows.length?await sb.from('work_order').insert(ots).select('id,code'):{data:[]};
   if(ins.error){ fail(ins.error.message); return; }
   var idBy={}; (ins.data||[]).forEach(function(o){ idBy[o.code]=o.id; });
   var lines=[]; rows.forEach(function(r,i){ var id=idBy[ots[i].code]; if(id&&r.total>0) lines.push({work_order_id:id,company_id:company.id,line_type:'cotizacion',basis:'monto',
@@ -6462,12 +6504,12 @@ async function _diqSave(){
     var tt=await sb.from('task_template').select('id,name,default_cost').eq('company_id',company.id), have={};
     (tt.data||[]).forEach(function(t){ have[t.name]=t; });
     var news=[], seen={};
-    for(var i=0;i<rows.length;i++){ var r=rows[i]; if(!(r.p>0)||seen[r.name]) continue; seen[r.name]=1;
+    for(var i=0;i<allRows.length;i++){ var r=allRows[i]; if(!(r.p>0)||seen[r.name]) continue; seen[r.name]=1;
       if(have[r.name]){ if(parseFloat(have[r.name].default_cost)!==r.p) await sb.from('task_template').update({default_cost:r.p}).eq('id',have[r.name].id); }
       else news.push({company_id:company.id,name:r.name.slice(0,250),default_cost:r.p,swbs_group:DIQ_CAT[r.si].s.slice(0,50)}); }
     if(news.length) await sb.from('task_template').insert(news);
   }catch(e){ console.warn('[ENGRAVIS] tarifario no actualizado:',e&&e.message||e); }
-  sv.disabled=false; closeModal(); toast(ots.length+' órdenes de trabajo creadas');
+  sv.disabled=false; closeModal(); toast(ots.length+' creadas'+(upd.length?', '+upd.length+' actualizadas':'')+' (órdenes de trabajo)');
   var tc=document.getElementById('proj-tab-content'); if(tc) loadProjectOrdenes(p, tc);
 }
 // — REPORTES: cotización para el cliente · costos para gerencia · trabajos realizados con fotos —
@@ -6587,6 +6629,10 @@ async function loadProjectOrdenes(p, content){
   var acts=document.createElement('div'); acts.style.cssText='display:flex;gap:6px;flex-wrap:wrap;';
   var alcBtn=document.createElement('button'); alcBtn.className='edit-btn'; alcBtn.textContent='Alcance y cotización'; alcBtn.onclick=function(){ openDiqAlcance(p); };
   var repBtn=document.createElement('button'); repBtn.className='edit-btn'; repBtn.textContent='Reportes'; repBtn.onclick=function(){ openOTReports(p); };
+  if(p.project_type==='Mantenimiento en dique'){ // v2.72.0 — asistente de ARIA
+    var ariBtn=document.createElement('button'); ariBtn.className='edit-btn'; ariBtn.textContent='Preparar con ARIA'; ariBtn.onclick=function(){ openDiqAsistente(p); };
+    acts.appendChild(ariBtn);
+  }
   acts.appendChild(alcBtn); acts.appendChild(repBtn); acts.appendChild(newBtn);
   hdr.appendChild(acts);
   content.appendChild(hdr);
@@ -12110,21 +12156,26 @@ var BLOCK_FIELDS = {
 // se llenan en cada varada). Los planos y esquemas (archivos) aún no se adjuntan aquí: quedan pendientes.
 (function(){
   var T=function(k,l){ return {key:k,label:l,type:'text'}; }, N=function(k,l,u){ return {key:k,label:l,type:'number',unit:u}; }, A=function(k,l){ return {key:k,label:l,type:'textarea'}; };
+  var Y=function(k,l){ return {key:k,label:l,type:'select',options:['Sí','No']}; }; // v2.72.0 — respuestas que activan/descartan OT
   var F={
     'B-DIQ-01':[N('calado_pp_insp','Calado a popa en la inspección','m'),N('calado_pr_insp','Calado a proa en la inspección','m'),T('matricula','Matrícula'),T('permiso_pesca','Permiso de pesca'),
       T('estado_casco','Estado del casco'),T('estado_pintura','Estado de la pintura'),N('n_zincs','N.° de zincs','u'),T('estado_zincs','Estado de los zincs'),T('bioincrustaciones','Bioincrustaciones'),
       T('estado_helice','Estado de la hélice'),T('estado_pala','Estado de la pala'),A('observaciones','Observaciones')],
-    'B-DIQ-02':[N('calado_pp_man','Calado a popa en la maniobra','m'),N('calado_pr_man','Calado a proa en la maniobra','m'),N('personas','N.° de personas','u'),T('condicion_varado','Condición de varado'),A('observaciones','Observaciones')],
+    'B-DIQ-02':[N('calado_pp_man','Calado a popa en la maniobra','m'),N('calado_pr_man','Calado a proa en la maniobra','m'),N('personas','N.° de personas','u'),T('condicion_varado','Condición de varado'),
+      N('dias_parrilla','Días estimados en parrilla','día'),A('observaciones','Observaciones')],
     'B-DIQ-03':[N('cunas','N.° de cuñas','u'),N('bloques','N.° de bloques','u'),A('observaciones','Observaciones')],
     'B-DIQ-04':[N('cajas_mar','N.° de cajas de mar','u'),N('rejillas','N.° de rejillas','u'),T('bow_thruster','Bow thruster'),T('bulbo_pr','Bulbo de proa'),T('bulbo_pp','Bulbo de popa'),
       T('gb','GB (cantidad)'),T('quilla_hw','Quilla H-W'),N('barquillas','N.° de barquillas','u'),N('sonar','N.° de sonares','u')],
     'B-DIQ-05':[T('estado_sistema','Estado del sistema de propulsión'),N('n_helices','N.° de hélices','u'),N('n_aspas','N.° de aspas','u'),T('diametro_helice','Diámetro de hélice'),T('paso_helice','Paso de hélice'),
-      N('n_ejes','N.° de ejes','u'),A('elementos_nuevos','Elementos nuevos'),A('elementos_desmontados','Elementos desmontados'),A('mantenimientos','Mantenimientos realizados')],
-    'B-DIQ-06':[T('estado_sistema','Estado del sistema de gobierno'),T('diametro_eje_timon','Diámetro del eje de timón'),A('observaciones','Observaciones')],
-    'B-DIQ-07':[N('n_cadenas','N.° de cadenas','u'),N('n_anclas','N.° de anclas','u'),A('observaciones','Observaciones')],
+      N('n_ejes','N.° de ejes','u'),N('diametro_eje','Diámetro del eje de cola','mm'),N('longitud_eje','Longitud del eje de cola','m'),
+      Y('desmontar_ejes','¿Se desmontan los ejes de cola?'),Y('confeccionar_ejes','¿Se confeccionan ejes nuevos?'),Y('cambiar_bocinas','¿Se cambian las bocinas del tubo codaste?'),Y('helice_danada','¿La hélice tiene daños (golpes, aspas dobladas, cavitación)?'),
+      A('elementos_nuevos','Elementos nuevos'),A('elementos_desmontados','Elementos desmontados'),A('mantenimientos','Mantenimientos realizados')],
+    'B-DIQ-06':[T('estado_sistema','Estado del sistema de gobierno'),N('n_timones','N.° de timones','u'),T('diametro_eje_timon','Diámetro del eje de timón'),Y('desmontar_timon','¿Se desmonta el timón?'),A('observaciones','Observaciones')],
+    'B-DIQ-07':[N('n_cadenas','N.° de cadenas','u'),N('n_anclas','N.° de anclas','u'),Y('bajar_fondeo','¿Se arrían cadenas y anclas para mantenimiento?'),A('observaciones','Observaciones')],
     'B-DIQ-08':[N('n_valvulas','N.° de válvulas','u'),A('observaciones','Observaciones')],
-    'B-DIQ-09':[N('ov_m2','Obra viva','m²'),N('om_m2','Obra muerta','m²'),N('adicional_m2','Área adicional','m²'),T('tipo_pintura','Tipo de pintura'),T('tipo_sand','Tipo de sandblasting'),A('observaciones','Observaciones')],
-    'B-DIQ-10':[N('n_puntos','N.° de puntos','u'),N('planchaje_kg','Planchaje renovado','kg'),A('observaciones','Observaciones')],
+    'B-DIQ-09':[N('ov_m2','Obra viva','m²'),N('om_m2','Obra muerta','m²'),N('adicional_m2','Área adicional','m²'),N('capas_ov','Capas de pintura en obra viva','u'),N('capas_om','Capas de pintura en obra muerta','u'),
+      Y('arenar_om','¿Se arena también la obra muerta?'),T('tipo_pintura','Tipo de pintura'),T('tipo_sand','Tipo de sandblasting'),A('observaciones','Observaciones')],
+    'B-DIQ-10':[N('n_puntos','N.° de puntos','u'),Y('renovar_planchaje','¿Hay renovación de planchaje?'),N('planchaje_kg','Planchaje renovado','kg'),A('observaciones','Observaciones')],
     'B-DIQ-11':[N('kwatts','Energía consumida','kW'),N('arena_granalla','Arena [m³] o granalla [sacos]',''),N('agua_gal','Agua','gal'),N('fuel_gal','Combustible','gal')],
     'B-DIQ-12':[T('dd_hh','DD-HH'),N('planchaje_kg','Planchaje total','kg'),N('gasto_usd','Gasto','$'),A('resumen','Resumen de la varada')]
   };
@@ -12139,6 +12190,231 @@ async function ensureDiqBlocks(projectId, companyId){
       return {company_id:companyId,project_id:projectId,block_type:b.type,block_name:b.name,position:parseInt(b.type.slice(-2),10),is_active:true,data:{}}; });
     if(rows.length){ var r=await sb.from('project_block').insert(rows); if(r.error) console.warn('[ENGRAVIS] bloques de dique:',r.error.message); }
   }catch(e){ console.warn('[ENGRAVIS] bloques de dique:',e&&e.message||e); }
+}
+
+// ════ v2.72.0 — DIQUE ASISTIDO: OT ESTÁNDAR + DATOS CLAVE + PREGUNTAS DE ARIA (DOC 08: PRY-24) ════
+// Al crear un proyecto de dique nacen sus OT estándar. Cada partida de DIQ_CAT tiene una REGLA: si va
+// siempre o depende de una respuesta sí/no, y cómo sale su cantidad de los datos clave del buque.
+// Los datos y respuestas se guardan en los bloques B-DIQ (un dato, un lugar). Sincronizar nunca toca una
+// OT que ya no está "pendiente" ni las OT que el usuario creó a mano. Reglas = propuesta, ajustables aquí.
+var DIQ_RULES=(function(){
+  function n(D,b,k){ var v=parseFloat(((D[b]||{})[k]+'').replace(',','.')); return isFinite(v)&&v>0?v:null; }
+  function y(D,b,k){ return (D[b]||{})[k]==='Sí'; }
+  function or(a,b){ return a!=null?a:b; }
+  function mul(a,b){ return (a!=null&&b!=null)?Math.round(a*b*100)/100:null; }
+  var ejes=function(D){ return or(n(D,'B-DIQ-05','n_ejes'),n(D,'B-DIQ-05','n_helices')); };
+  var hel=function(D){ return or(n(D,'B-DIQ-05','n_helices'),n(D,'B-DIQ-05','n_ejes')); };
+  var tim=function(D){ return n(D,'B-DIQ-06','n_timones'); };
+  var dias=function(D){ return n(D,'B-DIQ-02','dias_parrilla'); };
+  var ov=function(D){ return n(D,'B-DIQ-09','ov_m2'); }, om=function(D){ return n(D,'B-DIQ-09','om_m2'); };
+  var desm=function(D){ return y(D,'B-DIQ-05','desmontar_ejes')||y(D,'B-DIQ-05','confeccionar_ejes'); };
+  var uno=function(){ return 1; }, si=function(){ return true; };
+  var R={};
+  function r(name,on,q){ R[name]={on:on,q:q}; }
+  r('Varada y desvarada',si,uno);
+  r('Permanencia en parrilla / dique',si,dias);
+  r('Andamios: instalación y retiro',si,uno);
+  r('Energía eléctrica: conexión',si,uno);
+  r('Agua dulce: conexión y suministro',si,uno);
+  r('Guardianía',si,dias);
+  r('Retiro de escoria, residuos y basura',si,uno);
+  r('Inducción ambiental y de seguridad',si,uno);
+  r('Certificado de gases (gas free) para trabajo en caliente',function(D){ return y(D,'B-DIQ-10','renovar_planchaje'); },uno);
+  r('Toma de luces de eje de cola',si,ejes);
+  r('Desmontaje y montaje de funda guardacabo',desm,ejes);
+  r('Desmontaje y montaje de hélice',function(D){ return desm(D)||y(D,'B-DIQ-05','helice_danada'); },hel);
+  r('Desmontaje y montaje de eje de cola',desm,ejes);
+  r('Cambio de bocinas de tubo codaste',function(D){ return desm(D)&&y(D,'B-DIQ-05','cambiar_bocinas'); },ejes);
+  r('Limpieza y pulido de hélice',si,hel);
+  r('Limpieza y mantenimiento de prensaestopas',si,ejes);
+  r('Reparación de hélice (soldadura, rectificado de aspas y balanceo)',function(D){ return y(D,'B-DIQ-05','helice_danada'); },hel);
+  r('Toma de luces del timón',si,tim);
+  r('Desmontaje y montaje de funda del timón',function(D){ return y(D,'B-DIQ-06','desmontar_timon'); },tim);
+  r('Desmontaje y montaje de pala de timón',function(D){ return y(D,'B-DIQ-06','desmontar_timon'); },tim);
+  r('Cambio de bocinas de timón',function(D){ return y(D,'B-DIQ-06','desmontar_timon'); },tim);
+  r('Ánodos de zinc: suministro',si,function(D){ return n(D,'B-DIQ-01','n_zincs'); });
+  r('Ánodos de zinc: instalación',si,function(D){ return n(D,'B-DIQ-01','n_zincs'); });
+  r('Arriado, estibado e izado de cadena y ancla',function(D){ return y(D,'B-DIQ-07','bajar_fondeo'); },function(D){ return n(D,'B-DIQ-07','n_anclas'); });
+  r('Arenado y pintura de cadenas y anclas',function(D){ return y(D,'B-DIQ-07','bajar_fondeo'); },function(D){ return n(D,'B-DIQ-07','n_anclas'); });
+  r('Calibración de cadenas y anclas',function(D){ return y(D,'B-DIQ-07','bajar_fondeo'); },function(D){ return n(D,'B-DIQ-07','n_cadenas'); });
+  r('Rejillas de cajas de mar: desmontaje, mantenimiento y montaje',si,function(D){ return n(D,'B-DIQ-04','rejillas'); });
+  r('Válvulas de fondo: mantenimiento',si,function(D){ return n(D,'B-DIQ-08','n_valvulas'); });
+  r('Lavado de casco a presión',si,function(D){ var a=ov(D), b=om(D); return (a||b)?Math.round(((a||0)+(b||0))*100)/100:null; });
+  r('Arenado SA 2 obra viva',si,ov);
+  r('Arenado SA 2 obra muerta',function(D){ return y(D,'B-DIQ-09','arenar_om'); },om);
+  r('Aplicación de pintura obra viva',si,function(D){ return mul(ov(D),or(n(D,'B-DIQ-09','capas_ov'),3)); });
+  r('Aplicación de pintura obra muerta',si,function(D){ return mul(om(D),or(n(D,'B-DIQ-09','capas_om'),2)); });
+  r('Pintura obra viva (material)',si,ov);
+  r('Pintura obra muerta (material)',si,om);
+  r('Marcas de calado, nombre, registro y línea de flotación',si,uno);
+  r('Calibración de espesores',function(D){ return y(D,'B-DIQ-10','renovar_planchaje'); },function(D){ return n(D,'B-DIQ-10','n_puntos'); });
+  r('Renovación de planchaje (con retiro y montaje)',function(D){ return y(D,'B-DIQ-10','renovar_planchaje'); },function(D){ return n(D,'B-DIQ-10','planchaje_kg'); });
+  r('Rectificado de puños y caras de bridas de ejes',desm,ejes);
+  r('Maquinados menores (bujes, pernos, chavetas)',desm,uno);
+  r('Confección de eje de cola nuevo',function(D){ return y(D,'B-DIQ-05','confeccionar_ejes'); },ejes);
+  r('Prueba de amarre y de mar',si,uno);
+  return R;
+})();
+// Datos clave que se piden al usuario, agrupados por sistema: [bloque, campo, etiqueta, unidad]
+var DIQ_KEYS=[
+  ['Varada',[['B-DIQ-02','dias_parrilla','Días estimados en parrilla','día']]],
+  ['Propulsión',[['B-DIQ-05','n_ejes','N.° de ejes','u'],['B-DIQ-05','diametro_eje','Diámetro del eje','mm'],['B-DIQ-05','longitud_eje','Longitud del eje','m'],
+    ['B-DIQ-05','n_helices','N.° de hélices','u'],['B-DIQ-05','n_aspas','N.° de aspas','u'],['B-DIQ-05','diametro_helice','Diámetro de hélice','pulg'],['B-DIQ-05','paso_helice','Paso de hélice','pulg']]],
+  ['Gobierno',[['B-DIQ-06','n_timones','N.° de timones','u'],['B-DIQ-06','diametro_eje_timon','Diámetro del eje de timón','mm']]],
+  ['Carena',[['B-DIQ-09','ov_m2','Obra viva','m²'],['B-DIQ-09','om_m2','Obra muerta','m²'],['B-DIQ-09','capas_ov','Capas obra viva','u'],['B-DIQ-09','capas_om','Capas obra muerta','u']]],
+  ['Casco y agua de mar',[['B-DIQ-01','n_zincs','N.° de ánodos de zinc','u'],['B-DIQ-04','rejillas','N.° de rejillas de cajas de mar','u'],['B-DIQ-08','n_valvulas','N.° de válvulas de fondo','u']]],
+  ['Fondeo',[['B-DIQ-07','n_anclas','N.° de anclas','u'],['B-DIQ-07','n_cadenas','N.° de cadenas','u']]]
+];
+// Preguntas de ARIA (sí/no). "si" = solo se pregunta cuando se cumple.
+var DIQ_QUESTIONS=[
+  {b:'B-DIQ-05',k:'desmontar_ejes',t:'¿Se desmontan los ejes de cola en esta varada?'},
+  {b:'B-DIQ-05',k:'confeccionar_ejes',t:'¿Hay que confeccionar ejes nuevos?',si:function(D){ return (D['B-DIQ-05']||{}).desmontar_ejes==='Sí'; }},
+  {b:'B-DIQ-05',k:'cambiar_bocinas',t:'¿Se cambian las bocinas del tubo codaste?',si:function(D){ var d=D['B-DIQ-05']||{}; return d.desmontar_ejes==='Sí'||d.confeccionar_ejes==='Sí'; }},
+  {b:'B-DIQ-05',k:'helice_danada',t:'¿La hélice tiene daños, como golpes, aspas dobladas o cavitación?'},
+  {b:'B-DIQ-06',k:'desmontar_timon',t:'¿Se desmonta el timón?'},
+  {b:'B-DIQ-07',k:'bajar_fondeo',t:'¿Se arrían cadenas y anclas para darles mantenimiento?'},
+  {b:'B-DIQ-09',k:'arenar_om',t:'¿Se arena también la obra muerta, o solo se lava y pinta?'},
+  {b:'B-DIQ-10',k:'renovar_planchaje',t:'¿Hay renovación de planchaje en el casco?'}
+];
+function _diqItem(name){ for(var si=0;si<DIQ_CAT.length;si++){ var S=DIQ_CAT[si]; for(var j=0;j<S.i.length;j++){ if(S.i[j][0]===name) return {S:S,si:si,unit:S.i[j][1]}; } } return null; }
+// Datos de los bloques B-DIQ del proyecto → {'B-DIQ-05':{...}, ...} + ids para guardar
+async function _diqLoadData(projectId){
+  var r=await sb.from('project_block').select('id,block_type,data').eq('project_id',projectId).eq('is_active',true).like('block_type','B-DIQ-%');
+  var D={}, ids={}; (r.data||[]).forEach(function(b){ D[b.block_type]=Object.assign({},b.data||{}); ids[b.block_type]=b.id; });
+  return {D:D,ids:ids};
+}
+async function _diqSaveData(L){
+  for(var bt in L.ids){ if(!L.dirty||!L.dirty[bt]) continue;
+    var u=await sb.from('project_block').update({data:L.D[bt],updated_at:new Date().toISOString()}).eq('id',L.ids[bt]);
+    if(u.error) throw new Error(u.error.message); }
+}
+// Lleva las OT del proyecto al estado que dictan las reglas. Devuelve {creadas, activadas, descartadas, actualizadas}
+async function diqSyncOT(p, D){
+  var q=await Promise.all([
+    sb.from('work_order').select('id,code,task_name,status,amount').eq('project_id',p.id),
+    sb.from('task_template').select('name,default_cost').eq('company_id',company.id)
+  ]);
+  if(q[0].error) throw new Error(q[0].error.message);
+  var ots=q[0].data||[], price={}, byName={}, codes={};
+  (q[1].data||[]).forEach(function(t){ var v=parseFloat(t.default_cost); if(v>0) price[t.name]=v; });
+  ots.forEach(function(o){ codes[o.code]=1; if(!byName[o.task_name]||byName[o.task_name].status==='cancelada') byName[o.task_name]=o; });
+  var ids=ots.map(function(o){return o.id;}), lineBy={};
+  if(ids.length){ var lr=await sb.from('wo_line').select('id,work_order_id').eq('line_type','cotizacion').in('work_order_id',ids); (lr.data||[]).forEach(function(l){ if(!lineBy[l.work_order_id]) lineBy[l.work_order_id]=l.id; }); }
+  var dv=await sb.from('system').select('code').eq('company_id',company.id);
+  if(!dv.error&&!(dv.data||[]).length) await sb.from('system').insert(OT_DIV_SEED.map(function(d){return {company_id:company.id,code:d[0],name:d[1]};}));
+  var uid=profile?profile.id:null, seq=ots.length, out={creadas:0,activadas:0,descartadas:0,actualizadas:0}, nuevas=[], meta=[];
+  function code(S){ var c; do{ seq++; c=(p.code||'PRJ')+'/'+S.d+'-'+('00'+seq).slice(-3); }while(codes[c]); codes[c]=1; return c; }
+  async function setLine(otId,name,qty,unit,pu){
+    if(!(qty>0&&pu>0)) return; var tot=Math.round(qty*pu*100)/100;
+    var row={quantity:qty,unit:unit,unit_value:pu,total:tot,params:{cant:qty}};
+    if(lineBy[otId]) await sb.from('wo_line').update(row).eq('id',lineBy[otId]);
+    else await sb.from('wo_line').insert(Object.assign({work_order_id:otId,company_id:company.id,line_type:'cotizacion',basis:'monto',description:name.slice(0,250),created_by:uid},row));
+  }
+  for(var name in DIQ_RULES){
+    var it=_diqItem(name); if(!it) continue;
+    var rule=DIQ_RULES[name], want=!!rule.on(D), qty=rule.q(D), pu=price[name]||null, ex=byName[name];
+    var amount=(qty>0&&pu>0)?Math.round(qty*pu*100)/100:null;
+    var detail=it.S.s+' · '+(qty?_otN(qty)+' '+it.unit:'cantidad por definir');
+    if(want){
+      if(!ex){ nuevas.push({project_id:p.id,company_id:company.id,code:code(it.S),division_code:it.S.d,task_name:name.slice(0,250),billing_type:'MONTO',
+          amount:amount,status:'pendiente',origin:'base',sfi_group:it.S.g,detail:detail,created_by:uid}); meta.push({name:name,qty:qty,unit:it.unit,pu:pu}); }
+      else if(ex.status==='cancelada'||ex.status==='pendiente'){
+        var upd={detail:detail}; if(amount!=null) upd.amount=amount; if(ex.status==='cancelada'){ upd.status='pendiente'; out.activadas++; } else out.actualizadas++;
+        await sb.from('work_order').update(upd).eq('id',ex.id); await setLine(ex.id,name,qty,it.unit,pu);
+      }
+    } else if(ex&&ex.status==='pendiente'){
+      await sb.from('work_order').update({status:'cancelada'}).eq('id',ex.id); out.descartadas++;
+    }
+  }
+  if(nuevas.length){
+    var ins=await sb.from('work_order').insert(nuevas).select('id,code');
+    if(ins.error) throw new Error(ins.error.message);
+    var idBy={}; (ins.data||[]).forEach(function(o){ idBy[o.code]=o.id; });
+    for(var i=0;i<nuevas.length;i++){ var m=meta[i]; if(idBy[nuevas[i].code]) await setLine(idBy[nuevas[i].code],m.name,m.qty,m.unit,m.pu); }
+    out.creadas=nuevas.length;
+  }
+  return out;
+}
+// Al crear el proyecto: bloques + OT estándar (las que van siempre, sin cantidades aún)
+async function diqEnsureStandard(p){
+  try{ await ensureDiqBlocks(p.id, company.id); var L=await _diqLoadData(p.id); return await diqSyncOT(p, L.D); }
+  catch(e){ console.warn('[ENGRAVIS] OT estándar de dique:',e&&e.message||e); toast('No se pudieron crear las OT estándar: '+(e&&e.message||e)); return null; }
+}
+// — ASISTENTE: 1) datos clave por sistema · 2) preguntas de ARIA (sí/no) · 3) resumen y aplicar —
+var _diqA=null;
+async function openDiqAsistente(p){
+  var overlay=document.getElementById('modal-co');
+  ['btn-delete-list','btn-delete-user','btn-del-div','btn-del-proj','btn-del-ot'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
+  overlay.querySelector('.modal-title').textContent='Preparar varada con ARIA — '+(p.code||p.name);
+  overlay.querySelector('.modal-body').innerHTML='<div style="font-size:12px;color:var(--color-text-tertiary);">Cargando datos del buque…</div>';
+  overlay.classList.add('on');
+  await ensureDiqBlocks(p.id, company.id);
+  var L=await _diqLoadData(p.id); L.dirty={};
+  _diqA={p:p,L:L,step:'datos',qi:0};
+  _diqAStep();
+}
+function _diqAMsg(t){ return '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;"><div style="flex:0 0 26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#BFE3F7,#1D5FA5);"></div>'+
+  '<div style="background:var(--color-background-secondary);border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.45;">'+t+'</div></div>'; }
+function _diqASay(t){ try{ if(typeof nSpeak==='function') nSpeak(t); }catch(e){} }
+function _diqAStep(){
+  var A=_diqA, body=document.querySelector('#modal-co .modal-body'), sv=document.getElementById('btn-save-co'), E=_otEsc;
+  sv.disabled=false;
+  if(A.step==='datos'){
+    var h=_diqAMsg('Voy a preparar las órdenes de trabajo de esta varada. Primero, los datos clave del buque. Lo que no sepas, déjalo en blanco: la OT se crea igual y la cantidad queda por definir.');
+    DIQ_KEYS.forEach(function(G){
+      h+='<div style="font-size:12px;font-weight:600;margin:12px 0 6px;">'+G[0]+'</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;">';
+      G[1].forEach(function(f){ var v=(A.L.D[f[0]]||{})[f[1]];
+        h+='<label style="font-size:11px;color:var(--color-text-secondary);">'+E(f[2])+' <span style="color:var(--color-text-tertiary);">'+E(f[3])+'</span>'+
+          '<input class="fi diqa-k" data-b="'+f[0]+'" data-k="'+f[1]+'" type="number" step="any" inputmode="decimal" value="'+(v!=null&&v!==''?E(v+''):'')+'" style="width:100%;padding:6px 8px;font-size:13px;margin-top:3px;box-sizing:border-box;"></label>'; });
+      h+='</div>'; });
+    body.innerHTML=h; sv.textContent='Siguiente'; sv.onclick=function(){ _diqAReadKeys(); A.step='preguntas'; A.qi=0; _diqAStep(); };
+    return;
+  }
+  if(A.step==='preguntas'){
+    var qs=DIQ_QUESTIONS.filter(function(Q){ return !Q.si||Q.si(A.L.D); });
+    if(A.qi>=qs.length){ A.step='resumen'; _diqAStep(); return; }
+    var Q=qs[A.qi], cur=(A.L.D[Q.b]||{})[Q.k];
+    var btn=function(v,lab){ var on=cur===v; return '<button class="edit-btn" onclick="_diqAAnswer(\''+v+'\')" style="flex:1;padding:10px;font-size:14px;'+(on?'background:#1D5FA5;color:#fff;border-color:#1D5FA5;':'')+'">'+lab+'</button>'; };
+    body.innerHTML='<div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:10px;">Pregunta '+(A.qi+1)+' de '+qs.length+'</div>'+_diqAMsg(E(Q.t))+
+      '<div style="display:flex;gap:8px;margin-top:6px;">'+btn('Sí','Sí')+btn('No','No')+'</div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:14px;font-size:12px;"><a href="#" onclick="_diqA.qi>0?_diqA.qi--:(_diqA.step=\'datos\');_diqAStep();return false;" style="color:var(--color-text-info);">← Atrás</a>'+
+      '<a href="#" onclick="_diqAAnswer(null);return false;" style="color:var(--color-text-tertiary);">Aún no lo sé</a></div>';
+    sv.textContent='Ir al resumen'; sv.onclick=function(){ A.step='resumen'; _diqAStep(); };
+    _diqASay(Q.t); return;
+  }
+  // resumen: qué OT quedan activas y cuáles se descartan, con su cantidad
+  var act='', off='', na=0, no=0;
+  DIQ_CAT.forEach(function(S){ S.i.forEach(function(itm){ var R=DIQ_RULES[itm[0]]; if(!R) return; var qn=R.q(A.L.D);
+    var row='<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid var(--color-border-tertiary);"><span>'+E(itm[0])+'</span><span style="color:var(--color-text-tertiary);white-space:nowrap;">'+(qn?_otN(qn)+' '+E(itm[1]):'por definir')+'</span></div>';
+    if(R.on(A.L.D)){ act+=row; na++; } else { off+=row; no++; } }); });
+  body.innerHTML=_diqAMsg('Listo. Quedan <b>'+na+'</b> órdenes de trabajo activas. Las de la derecha no aplican con tus respuestas: si ya existen y siguen pendientes, se marcan como canceladas. Las OT que creaste a mano o que ya están en ejecución no se tocan.')+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;"><div><div style="font-size:12px;font-weight:600;margin-bottom:4px;">Se crean o actualizan ('+na+')</div>'+act+'</div>'+
+    '<div><div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--color-text-tertiary);">No aplican ('+no+')</div><div style="opacity:.6;">'+off+'</div></div></div>'+
+    '<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:10px;">Los precios salen del tarifario de la empresa. Para ponerlos o cambiarlos, usa "Alcance y cotización".</div>'+
+    '<a href="#" onclick="_diqA.step=\'preguntas\';_diqA.qi=0;_diqAStep();return false;" style="font-size:12px;color:var(--color-text-info);display:inline-block;margin-top:8px;">← Revisar respuestas</a>';
+  sv.textContent='Aplicar a las órdenes de trabajo'; sv.onclick=function(){ _diqAApply(); };
+  _diqASay('Listo. Quedan '+na+' órdenes de trabajo activas. Revisa el resumen y aplica.');
+}
+function _diqAReadKeys(){
+  var A=_diqA; document.querySelectorAll('#modal-co .diqa-k').forEach(function(i){
+    var b=i.getAttribute('data-b'), k=i.getAttribute('data-k'); if(!A.L.D[b]) return; var v=i.value.trim(), old=A.L.D[b][k];
+    var nv=v===''?undefined:parseFloat(v.replace(',','.')); if(nv!==old){ if(nv===undefined) delete A.L.D[b][k]; else A.L.D[b][k]=nv; A.L.dirty[b]=1; } });
+}
+function _diqAAnswer(v){
+  var A=_diqA, qs=DIQ_QUESTIONS.filter(function(Q){ return !Q.si||Q.si(A.L.D); }), Q=qs[A.qi];
+  if(Q&&A.L.D[Q.b]){ if(v===null) delete A.L.D[Q.b][Q.k]; else A.L.D[Q.b][Q.k]=v; A.L.dirty[Q.b]=1; }
+  A.qi++; _diqAStep();
+}
+async function _diqAApply(){
+  var A=_diqA, sv=document.getElementById('btn-save-co'); sv.disabled=true; sv.textContent='Aplicando…';
+  try{
+    await _diqSaveData(A.L);
+    var o=await diqSyncOT(A.p, A.L.D);
+    closeModal();
+    var msg=o.creadas+' creadas, '+o.activadas+' reactivadas, '+o.actualizadas+' actualizadas, '+o.descartadas+' descartadas';
+    toast('Órdenes de trabajo: '+msg); _diqASay('Listo. '+msg+'.');
+    var tc=document.getElementById('proj-tab-content'); if(tc) loadProjectOrdenes(A.p, tc);
+  }catch(e){ sv.disabled=false; sv.textContent='Aplicar a las órdenes de trabajo'; toast('Error: '+(e&&e.message||e)); }
 }
 
 // ── BLOQUES POR SISTEMA + INFORME DE CONDICIÓN INICIAL (v2.49.0) ──────
@@ -13003,8 +13279,9 @@ async function saveNewProject(){
     ).catch(function(){});
   }
   if(newProj) await ensureSystemBlocks(newProj.id, company.id, selectedSystems);
-  if(newProj && newProj.project_type==='Mantenimiento en dique') await ensureDiqBlocks(newProj.id, company.id); // v2.71.0
-  if(newProj) openProject(newProj);
+  var _isDiq = newProj && newProj.project_type==='Mantenimiento en dique';
+  if(_isDiq) await diqEnsureStandard(newProj); // v2.72.0 — bloques B-DIQ + OT estándar
+  if(newProj){ await openProject(newProj); if(_isDiq) openDiqAsistente(newProj); } // v2.72.0 — ARIA pide datos clave y pregunta
   else renderProjectsPage();
 }
 
