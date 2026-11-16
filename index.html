@@ -1816,7 +1816,11 @@
   v2.75.0 (16-Nov) BANDEJA: VELOCIDAD DE GIRO SEGÚN N.° DE PROYECTOS (DOC 08: UI-23 HECHO).
     Con 2 proyectos el giro era muy rápido. Ahora: giro por bordes = min(1,6; 0,25 × n) rad/s (2 proyectos → 0,5);
     arrastre con tope de 1 vuelta cada 1,5 anchos de pantalla (antes 1 proyecto cada 22 % del ancho). Rueda y
-    flechas siguen avanzando de a un proyecto. NO PROBADO en vivo (cambio de constantes).
+    flechas siguen avanzando de a un proyecto. + MÓVIL (<768 px): la bandeja gira en un plano VERTICAL (pedido del
+    fundador) y se cambia de proyecto deslizando arriba/abajo (touch-action:none en el carrusel).
+    + EDITAR PROYECTO: caja "Llenar desde un documento del buque" (antes solo en Nuevo proyecto y Vincular activo):
+    con buque muestra qué datos cambian (actual → documento) y actualiza la ficha; sin buque, crea y vincula.
+    NO PROBADO en vivo.
   v2.74.0 (13-Nov) FOTO DEL PROYECTO MIENTRAS NO HAY GEMELO 3D (DOC 08: UI-24 NUEVO HECHO).
     Pedido del fundador: al inicio de todo proyecto no existe modelo 3D; la bandeja y el visor se veían vacíos.
     AHORA: (a) en la bandeja, un proyecto sin modelo muestra su FOTO (etiqueta "Foto · sin gemelo 3D"); sin foto,
@@ -2969,7 +2973,7 @@ body{font-family:Inter,sans-serif;font-size:13px;background:#F0F2F5;color:#11182
 .main:has(#gd-wrap) #proj-list>.user-card{max-width:1100px;}
 /* v2.65.2 — móvil: la barra lateral es un menú flotante (cerrado por defecto) en vez de quitar 210px al contenido */
 @media (max-width:767px){ .sidebar{position:fixed;top:52px;bottom:0;left:0;z-index:600;box-shadow:2px 0 16px rgba(0,0,0,.14);} .sidebar.collapsed{box-shadow:none;} }
-@media (max-width:767px){ .app-content .main:has(#gd-wrap){padding:.75rem .75rem 1.25rem;} #gd-wrap{touch-action:pan-y;} }
+@media (max-width:767px){ .app-content .main:has(#gd-wrap){padding:.75rem .75rem 1.25rem;} #gd-wrap{touch-action:none;} } /* v2.75.0 — en móvil la bandeja gira en vertical: el deslizar vertical es del carrusel */
 /* v2.59.3 — Visor 3D a todo el ancho: sin límite de 900px, sin márgenes, encabezado compacto */
 #proj-slim{display:none;}
 .app-content .main.v3d-wide{max-width:none;margin:0;padding:0;}
@@ -12758,7 +12762,8 @@ async function openEditProject(projectId){
     return '<input class="fi" id="'+id+'" type="'+(type||'text')+'" value="'+(val||'')+'">';
   }
 
-  overlay.querySelector('.modal-body').innerHTML=
+  window._epProj=p; // v2.75.0 — documento del buque también al editar
+  overlay.querySelector('.modal-body').innerHTML=_docxBox('ep-docx','_epDocPick')+
     '<div class="fg"><label class="fl">Nombre *</label>'+makeInput2('ep-name',p.name)+'</div>'+
     '<div class="grid2">'+
       '<div class="fg"><label class="fl">Código</label>'+makeInput2('ep-code',p.code)+'</div>'+
@@ -13045,6 +13050,35 @@ async function _npDocPick(input){
     _docxStatus('np-docx','<div style="font-size:12px;color:#B45309;">'+_otEsc(e&&e.message||e)+'. Puedes llenar los datos a mano.</div>');
   }
   input.value='';
+}
+// — En "Editar proyecto" (v2.75.0): con buque → muestra diferencias y actualiza su ficha; sin buque → crea y vincula —
+var _EP_LBL={name:'Nombre',registration_number:'Matrícula',omi_number:'OMI',vessel_type:'Tipo de nave',loa_m:'Eslora total (m)',length_m:'Eslora (m)',beam_m:'Manga (m)',width_m:'Ancho (m)',height_m:'Puntal (m)',draft_m:'Calado (m)',trb:'TRB',trn:'TRN',year_built:'Año de construcción',owner_name:'Armador',flag:'Bandera',hull_type:'Material del casco',country_built:'Lugar de construcción'};
+async function _epDocPick(input){
+  if(!input.files||!input.files.length) return;
+  var p=window._epProj; _docxStatus('ep-docx','<div style="font-size:12px;color:var(--color-text-tertiary);">Leyendo el documento…</div>');
+  try{
+    var f=await _docxExtract(Array.prototype.slice.call(input.files)); window._epDoc=f;
+    if(!p.asset_id){ window._vincDoc=f; window._vincProj=p;
+      _docxStatus('ep-docx',_docxSummary(f)+'<div style="margin-top:10px;text-align:right;"><button class="edit-btn" id="vinc-docx-go" style="background:#1D5FA5;color:#fff;border-color:#1D5FA5;" onclick="closeModal();_vincDocCreate()">Crear buque y vincular</button></div>');
+    } else {
+      var cur=(await sb.from('asset').select('*').eq('id',p.asset_id).single()).data||{}, pay=_docxAssetPayload(f), E=_otEsc, rows='', ch={};
+      ['owner_company_id','admin_user_id','created_by','asset_type'].forEach(function(k){ delete pay[k]; });
+      Object.keys(pay).forEach(function(k){ if(String(cur[k]==null?'':cur[k])!==String(pay[k])){ ch[k]=pay[k];
+        rows+='<tr><td style="padding:3px 6px;color:var(--color-text-tertiary);">'+E(_EP_LBL[k]||k)+'</td><td style="padding:3px 6px;">'+E(cur[k]==null?'—':cur[k])+'</td><td style="padding:3px 6px;font-weight:500;">'+E(pay[k])+'</td></tr>'; } });
+      window._epChg=ch;
+      _docxStatus('ep-docx',Object.keys(ch).length?'<div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;">Leído de: '+E(f.documento_tipo||'documento')+'. Estos datos del buque cambian:</div>'+
+        '<table style="width:100%;font-size:12px;border-collapse:collapse;"><tr style="font-size:10.5px;color:var(--color-text-tertiary);"><td style="padding:3px 6px;">Campo</td><td style="padding:3px 6px;">Actual</td><td style="padding:3px 6px;">Documento</td></tr>'+rows+'</table>'+
+        '<div style="margin-top:10px;text-align:right;"><button class="edit-btn" style="background:#1D5FA5;color:#fff;border-color:#1D5FA5;" onclick="_epDocApply(this)">Actualizar ficha del buque</button></div>'
+        :'<div style="font-size:12px;">La ficha del buque ya coincide con el documento.</div>');
+    }
+  }catch(e){ _docxStatus('ep-docx','<div style="font-size:12px;color:#B45309;">'+_otEsc(e&&e.message||e)+'</div>'); }
+  input.value='';
+}
+async function _epDocApply(btn){
+  var p=window._epProj, ch=window._epChg||{}; btn.disabled=true; btn.textContent='Guardando…';
+  var u=await sb.from('asset').update(ch).eq('id',p.asset_id);
+  if(u.error){ btn.disabled=false; btn.textContent='Actualizar ficha del buque'; toast('Error: '+u.error.message); return; }
+  _docxStatus('ep-docx','<div style="font-size:12px;color:#15803D;">Ficha del buque actualizada ('+Object.keys(ch).length+' datos).</div>'); toast('Ficha del buque actualizada');
 }
 // — En "Vincular activo" de un proyecto que ya existe —
 async function _vincDocPick(input){
@@ -13620,8 +13654,11 @@ function _gdRingBuild(host,projects){
     else if(!S.drag){ S.target=Math.round(S.target/step)*step; } // al soltar, se acomoda en el elemento más cercano
     S.ang+=(S.target-S.ang)*Math.min(1,dt*7);
     var W=wrap.clientWidth, H=wrap.clientHeight, k=Math.min(1.15,Math.max(0.62,W/1100)), rx=Math.max(110,W*0.34), ry=H*0.09, cy=H*0.36;
+    var vert=W<768; // v2.75.0 — en celular la rueda gira en un plano VERTICAL (se aprovecha la altura de la pantalla)
+    if(vert){ k=Math.min(1,Math.max(0.7,W/400)); }
     for(var i=0;i<n;i++){
       var th=i*step+S.ang, dep=Math.cos(th), x=W/2+rx*Math.sin(th), y=cy+ry*dep;
+      if(vert){ x=W/2+W*0.03*dep; y=H*0.33-H*0.22*Math.sin(th); }
       var sc=(0.5+0.5*(dep+1)/2)*k;
       els[i].style.transform='translate('+(x-IW/2)+'px,'+(y-IH/2)+'px) scale('+sc.toFixed(3)+')';
       els[i].style.opacity=(0.3+0.7*(dep+1)/2).toFixed(3);
@@ -13640,11 +13677,11 @@ function _gdRingBuild(host,projects){
   wrap.addEventListener('mouseleave',function(){ S.vel=0; });
   // deslizar (táctil o mouse): arrastrar gira la bandeja; al soltar se acomoda
   var dr=null;
-  wrap.addEventListener('pointerdown',function(e){ if(e.target.closest&&e.target.closest('button')) return; dr={x:e.clientX,t:S.target,on:false}; });
+  wrap.addEventListener('pointerdown',function(e){ if(e.target.closest&&e.target.closest('button')) return; dr={x:e.clientX,y:e.clientY,t:S.target,on:false}; });
   wrap.addEventListener('pointermove',function(e){
-    if(!dr) return; var dx=e.clientX-dr.x;
+    if(!dr) return; var vert=wrap.clientWidth<768, dx=vert?(dr.y-e.clientY):(e.clientX-dr.x), span=vert?wrap.clientHeight:wrap.clientWidth; // v2.75.0 — móvil: deslizar arriba/abajo
     if(!dr.on&&Math.abs(dx)>8){ dr.on=true; S.drag=true; S.vel=0; try{wrap.setPointerCapture(e.pointerId);}catch(_){} }
-    if(dr.on){ S.target=dr.t+dx*Math.min(step/Math.max(120,wrap.clientWidth*0.22), 2*Math.PI/(wrap.clientWidth*1.5)); S.moved=true; } // v2.75.0 — con pocos proyectos el arrastre ya no se dispara (máx. 1 vuelta cada 1,5 anchos)
+    if(dr.on){ S.target=dr.t+dx*Math.min(step/Math.max(120,span*0.22), 2*Math.PI/(span*1.5)); S.moved=true; } // v2.75.0 — con pocos proyectos el arrastre ya no se dispara (máx. 1 vuelta cada 1,5 anchos)
   });
   function endDrag(){ if(dr&&dr.on){ S.drag=false; setTimeout(function(){S.moved=false;},60); } dr=null; }
   wrap.addEventListener('pointerup',endDrag); wrap.addEventListener('pointercancel',endDrag);
