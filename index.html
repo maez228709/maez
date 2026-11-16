@@ -358,16 +358,26 @@
     UI-04  [HECHO v2.59.3] Pieza seleccionada queda visible y al centro
     UI-05  [HECHO v2.60.0] Botones del visor agrupados (Vista / Color /
                Animación / Modelo / pantalla completa)
-    UI-06  [PARC M] Un solo flujo de trabajo sin pestañas confusas (hoy solo se
-               ocultan las "pronto" en el visor)
+    UI-06  [PARC A] Un solo flujo de trabajo sin pestañas confusas (hoy solo se
+               ocultan las "pronto" en el visor). 16-Nov, revisión del fundador sobre la
+               vista de proyecto de dique (ANAHI, cuenta de Henry): 12 pestañas (6 "pronto"),
+               Técnica/Sistemas/Datos del activo repetidas, Visor 3D vacío como primera
+               pestaña, 2 botones de reporte, 4 botones sobre las OT, "MONTO" en cada OT,
+               total engañoso ($25 de 1 OT), 24 OT estándar sin cantidad como "pendientes".
+               Propuesta (POR APROBAR, no programar): 4 pestañas Resumen·Órdenes·Buque·
+               Informes; "pronto" ocultas; OT estándar sin datos = "por confirmar". Se hace
+               dentro de la renovación de interfaz (UI-08) con maqueta aprobada antes.
     UI-07  [HECHO v2.65.0] Bandeja de gemelos digitales con miniaturas,
                giratoria en anillo (mouse en bordes, rueda, flechas, teclado) en la vista
                Proyectos; asset.thumbnail_url creado
-    UI-08  [PEND M] Interfaz minimalista, futurista, con microanimaciones (hoy
-               solo hay tokens de color)
+    UI-08  [PEND A] Interfaz minimalista, futurista, con microanimaciones (hoy
+               solo hay tokens de color). 16-Nov: el fundador pregunta cuándo; va con
+               UI-10 + UI-06 + UI-21 en un solo frente, empezando por MAQUETA aprobada
     UI-09  [PEND M] El color de marca de la empresa tiñe toda la app
-    UI-10  [PEND M] Navegación EMPRESA → PROYECTOS;
-               Órdenes/Bitácora/Visor/Documentos hoy sueltos (DOC04 P-02)
+    UI-10  [PEND A] Navegación EMPRESA → PROYECTOS;
+               Órdenes/Bitácora/Visor/Documentos hoy sueltos (DOC04 P-02). 16-Nov: al
+               entrar, 2 opciones principales (Mi empresa con sus recursos · Proyectos),
+               distinto por usuario según su empresa, rol y etapa que más atiende
     UI-11  [PEND M] Separar la info del PROYECTO de la info del GEMELO
                (editable)
     UI-12  [PARC M] Formularios adaptativos; re-verificar en vivo el botón
@@ -396,6 +406,8 @@
                formularios → resto
     UI-22  [PEND M] Bandeja de proyectos: la miniatura del frente se agranda un
                poco y/o muestra vista explotada del gemelo al estar al frente
+    UI-25  [PARC M] Bandeja en MÓVIL: giro en plano VERTICAL y deslizar arriba/abajo (pedido 16-Nov;
+               programado en v2.75.0 SIN aprobación previa — el fundador decide si queda)
     UI-24  [HECHO v2.74.0] Proyecto sin modelo 3D: foto en la bandeja y en el visor + aviso de cargar el
                gemelo digital (foto por proyecto, project_attributes.foto_url)
     UI-23  [HECHO v2.75.0] Bandeja de proyectos: la velocidad de rotación debe
@@ -631,6 +643,8 @@
     PRY-25  [HECHO v2.73.0] Ventana con TODAS las OT de la empresa (filtros barcos/astillero, estado,
                proyecto, texto) desde el menú lateral
     PRY-26  [HECHO v2.73.0] Informe de UNA OT, imprimible, con o sin cotización (sin costos internos)
+    PRY-28  [PARC M] Editar proyecto: "Llenar desde un documento del buque" (antes solo en Nuevo y
+               Vincular activo). v2.75.0, no probado en vivo
     PRY-27  [PARC A] El ASTILLERO como gemelo digital: activo 'astillero' + proyecto "Mantenimiento del
                astillero" + equipos (v2.73.0). FALTA: probar el registro real, modelo 3D del astillero,
                sistemas (agrupar equipos), historial de mantenimiento por equipo
@@ -669,6 +683,10 @@
                leer más de 3 páginas
 
   ── ARIA · ARIA  (0 hechos de 11; abiertos: 11) ──
+    ARIA-12  [PEND A] 16-Nov: el fundador pregunta cuándo ARIA será más inteligente. Plan: LLM con
+               lectura de datos del proyecto (OT, cotización, bloques) y acciones vía funciones
+               de la plataforma; va DESPUÉS de UI-08 (vivirá en las pantallas nuevas); decidir
+               proveedor (hoy Groq) y costo mensual. Relacionado ARIA-01/ARIA-10
     ARIA-01  [PARC A] Proactividad por LLM; hoy son plantillas rígidas (DOC04
                A-01)
     ARIA-02  [PEND M] Silencio conversacional: modula, no es un botón (A-02)
@@ -722,6 +740,10 @@
     5. cp a /mnt/user-data/outputs/index.html + present_files.
 
   CÓMO TRABAJAR CON EL FUNDADOR (esto es lo que lo lleva al éxito):
+    · (16-Nov-2026, por reclamo suyo) NINGÚN pedido se programa directo: 1) registrar en
+      DOC 08, 2) proponer en texto o maqueta, 3) esperar su aprobación, 4) programar,
+      5) registrar en DOC 06. Él puede equivocarse o cambiar de idea: confirmar antes.
+    · Ahorrar tokens: preferir lectura de texto/consultas a capturas; avisar si algo es caro.
     · UN tema a la vez; cerrar antes de abrir. Él mismo lo exige — respetarlo
       incluso cuando ÉL pida saltar (recordárselo con respeto).
     · Su mayor riesgo es la dispersión: genera ideas brillantes sin parar.
@@ -1820,7 +1842,9 @@
     fundador) y se cambia de proyecto deslizando arriba/abajo (touch-action:none en el carrusel).
     + EDITAR PROYECTO: caja "Llenar desde un documento del buque" (antes solo en Nuevo proyecto y Vincular activo):
     con buque muestra qué datos cambian (actual → documento) y actualiza la ficha; sin buque, crea y vincula.
-    NO PROBADO en vivo.
+    NO PROBADO en vivo. LECCIÓN (16-Nov, reclamo del fundador): se programaron pedidos sin confirmar
+    si eran definitivos ni mirar el conjunto → pantalla de proyecto recargada. DESDE AHORA (DOC 00):
+    pedido nuevo → registrar en DOC 08 → proponer (maqueta/texto) → aprobación → programar → DOC 06.
   v2.74.0 (13-Nov) FOTO DEL PROYECTO MIENTRAS NO HAY GEMELO 3D (DOC 08: UI-24 NUEVO HECHO).
     Pedido del fundador: al inicio de todo proyecto no existe modelo 3D; la bandeja y el visor se veían vacíos.
     AHORA: (a) en la bandeja, un proyecto sin modelo muestra su FOTO (etiqueta "Foto · sin gemelo 3D"); sin foto,
