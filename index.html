@@ -1838,8 +1838,10 @@
     BD (con autorización explícita): SDC vacía eliminada; SDC duplicada fusionada en la principal
     (usuarios, proyecto y todas las FK movidas); 2 assets TEST de TAERA eliminados; CAT-20M_BRISA
     recodificado DE01 → DE03.
-    VALIDADO: los 3 scripts inline compilan (new Function). PENDIENTE: probar en vivo el flujo
-    demo; KPIs de la consola superadmin; duplicación de código repetido (botones de borrar en
+    VALIDADO: los 3 scripts inline compilan (new Function). PROBADO EN VIVO (24-Nov): selector
+    lista 3 empresas; "Crear empresa demo" generó D01-01T1 (24 OT estándar, 25 bloques),
+    OP01-02T1 y DE01-03T1 (13 bloques c/u). HALLAZGO: recargar la página cierra la sesión
+    (registrar como ACC nuevo). PENDIENTE: KPIs de la consola superadmin; modelos 3D demo; duplicación de código repetido (botones de borrar en
     modales, 6 copias) registrada para refactor futuro.
   v2.75.0 (16-Nov) BANDEJA: VELOCIDAD DE GIRO SEGÚN N.° DE PROYECTOS (DOC 08: UI-23 HECHO).
     Con 2 proyectos el giro era muy rápido. Ahora: giro por bordes = min(1,6; 0,25 × n) rad/s (2 proyectos → 0,5);
